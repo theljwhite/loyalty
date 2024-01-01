@@ -1,8 +1,13 @@
 import { type Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import { type AppType } from "next/app";
-
+import { WagmiConfig } from "wagmi";
+import { RainbowKitProvider, lightTheme } from "@rainbow-me/rainbowkit";
+import { chains, configForWagmi } from "~/configs/wagmi";
 import { api } from "~/utils/api";
+
+//TEMP
+import LandingNav from "~/components/Navbars/LandingNav";
 
 import "~/styles/globals.css";
 
@@ -12,7 +17,16 @@ const MyApp: AppType<{ session: Session | null }> = ({
 }) => {
   return (
     <SessionProvider session={session}>
-      <Component {...pageProps} />
+      <WagmiConfig config={configForWagmi}>
+        <RainbowKitProvider
+          chains={chains}
+          theme={lightTheme()}
+          modalSize="wide"
+        >
+          <LandingNav />
+          <Component {...pageProps} />
+        </RainbowKitProvider>
+      </WagmiConfig>
     </SessionProvider>
   );
 };
