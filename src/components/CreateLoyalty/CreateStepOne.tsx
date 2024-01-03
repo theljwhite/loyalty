@@ -11,6 +11,8 @@ import "react-datepicker/dist/react-datepicker-cssmodules.css";
 import { useDeployEscrowStore } from "~/customHooks/useDeployEscrow/store";
 import { useDeployEscrow } from "~/customHooks/useDeployEscrow/useDeployEscrow";
 import EscrowApprovals from "./EscrowApprovals";
+import { type EscrowType } from "~/customHooks/useDeployEscrow/store";
+import { signIn } from "next-auth/react";
 
 //TODO - make points limit of 10,000? or something else - in a global constant
 //     - as well as a MAX_OBJECTIVES_LENGTH global constant
@@ -97,9 +99,13 @@ export default function CreateStepOne() {
   };
 
   const selectRewardType = (e: React.ChangeEvent<HTMLSelectElement>): void => {
-    console.log("e", e.target.value);
-    setRewardType(Number(e.target.value));
-    setEscrowType("ERC20");
+    const { value } = e.target;
+    setRewardType(Number(value));
+
+    if (Number(value) != RewardType.Points) {
+      const escrowType = RewardType[Number(value)] as EscrowType;
+      setEscrowType(escrowType);
+    }
   };
 
   const handleSetProgramEnd = (date: Date | null): void => {
@@ -250,6 +256,12 @@ export default function CreateStepOne() {
         className="mt-10 rounded-3xl bg-blue-900 p-4 text-white"
       >
         Submit program details
+      </button>
+      <button
+        className="mt-10 rounded-3xl bg-green-900 p-4 text-white"
+        onClick={() => signIn()}
+      >
+        Test Sign in
       </button>
       <button
         className="mt-10 rounded-3xl bg-violet-800 p-4 text-white"

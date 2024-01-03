@@ -6,6 +6,8 @@ import { useDeployLoyaltyStore } from "./store";
 import { useContractFactoryStore } from "../useContractFactory";
 import { useEthersSigner } from "~/helpers/ethers";
 import { useError } from "../useError";
+import { api } from "~/utils/api";
+import { Authority, RewardType } from "./types";
 
 export function useDeployLoyalty() {
   const loyaltyDeployState = useContractFactoryStore((state) => state);
@@ -15,16 +17,18 @@ export function useDeployLoyalty() {
     authorities,
     tiers,
     rewardType,
+    programStart,
     programEndsAt,
     contractRequirements,
     setDeployLoyaltyData,
-    setIsLoading,
   } = useDeployLoyaltyStore((state) => state);
 
   const { chain } = useNetwork();
   const { address } = useAccount();
   const signer = useEthersSigner();
   const { error, handleErrorFlow } = useError();
+  const { mutate: createDbLoyaltyProgramRecord } =
+    api.loyaltyPrograms.createLoyaltyProgramWithObjectives.useMutation();
 
   const deployLoyaltyProgram = async (): Promise<void> => {
     try {
@@ -51,9 +55,6 @@ export function useDeployLoyalty() {
       const loyaltyContractAddress = await loyaltyContract.getAddress();
       const transaction = loyaltyContract.deploymentTransaction();
 
-      console.log("loyalty contract address -->", loyaltyContractAddress);
-      console.log("tx -->", transaction);
-
       if (transaction) {
         const deployReceipt = await waitForTransaction({
           chainId: chain?.id,
@@ -68,8 +69,28 @@ export function useDeployLoyalty() {
           address as string,
         );
 
-        //TODO - database stuff
-        console.log("receipt", deployReceipt);
+        const objectivesDbRecord = objectives.map((obj, index) => ({
+          title: obj.title,
+          reward: obj.reward,
+          authority: authorities[index] as Authority,
+          indexInContract: index,
+        }));
+
+        createDbLoyaltyProgramRecord({
+          name,
+          state: "Idle",
+          address: loyaltyContractAddress,
+          creatorId: "userIdHere",
+          objectives: objectivesDbRecord,
+          chainId: chain?.id ?? 0,
+          chain: chain?.name ?? "",
+          programStart,
+          programEnd: programEndsAt,
+          rewardType,
+        });
+
+        console.log("loyalty contract address -->", loyaltyContractAddress);
+        console.log("tx -->", transaction);
       }
     } catch (error) {
       console.log("error", error);

@@ -6,24 +6,69 @@ generator client {
 }
 
 datasource db {
-    provider = "sqlite"
-    // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
-    // Further reading:
-    // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
-    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
-    url      = env("DATABASE_URL")
+    provider  = "postgresql"
+    url       = env("DATABASE_URL")
+    directUrl = env("DIRECT_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model LoyaltyProgram {
+    id            String       @id @unique @default(cuid())
+    address       String       @unique
+    creatorId     String       @unique
+    creator       User         @relation(fields: [creatorId], references: [id])
+    name          String
+    objectives    Objective[]
+    tiers         Tier[]
+    state         ProgramState
+    chain         String
+    chainId       Int
+    tiersActive   Boolean      @default(false)
+    programStart  DateTime
+    programEnd    DateTime
+    rewardType    RewardType
+    escrowAddress String?      @unique
+    escrow        Escrow?
+    createdAt     DateTime     @default(now())
+    updatedAt     DateTime     @updatedAt
+}
 
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
+model Escrow {
+    id               String         @id @default(cuid())
+    address          String         @unique
+    rewardAddress    String         @default("")
+    senderAddress    String         @default("")
+    creatorId        String         @unique
+    creator          User           @relation(fields: [creatorId], references: [id])
+    escrowType       EscrowType
+    state            EscrowState
+    depositKey       String         @default(cuid())
+    depositEndDate   DateTime?
+    isSenderApproved Boolean        @default(false)
+    isRewardApproved Boolean        @default(false)
+    isDepositKeySet  Boolean        @default(false)
+    loyaltyAddress   String         @unique
+    loyalty          LoyaltyProgram @relation(fields: [loyaltyAddress], references: [address])
+    createdAt        DateTime       @default(now())
+    updatedAt        DateTime       @updatedAt
+}
 
-    @@index([name])
+model Objective {
+    id               String          @id @default(cuid())
+    indexInContract  Int
+    title            String
+    reward           Int
+    authority        Authority
+    LoyaltyProgram   LoyaltyProgram? @relation(fields: [loyaltyProgramId], references: [id])
+    loyaltyProgramId String?
+}
+
+model Tier {
+    id               String          @id @default(cuid())
+    indexInContract  Int
+    name             String
+    rewardsRequired  Int
+    LoyaltyProgram   LoyaltyProgram? @relation(fields: [loyaltyProgramId], references: [id])
+    loyaltyProgramId String?
 }
 
 // Necessary for Next auth
@@ -33,12 +78,12 @@ model Account {
     type              String
     provider          String
     providerAccountId String
-    refresh_token     String? // @db.Text
-    access_token      String? // @db.Text
+    refresh_token     String?
+    access_token      String?
     expires_at        Int?
     token_type        String?
     scope             String?
-    id_token          String? // @db.Text
+    id_token          String?
     session_state     String?
     user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -54,14 +99,15 @@ model Session {
 }
 
 model User {
-    id            String    @id @default(cuid())
-    name          String?
-    email         String?   @unique
-    emailVerified DateTime?
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
-    posts         Post[]
+    id              String           @id @unique @default(cuid())
+    address         String           @unique
+    email           String?
+    emailVerified   DateTime?
+    loyaltyPrograms LoyaltyProgram[]
+    escrowContracts Escrow[]
+    accounts        Account[]
+    sessions        Session[]
+    role            UserRole         @default(User)
 }
 
 model VerificationToken {
@@ -70,4 +116,47 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+enum UserRole {
+    User
+    Creator
+    Team
+}
+
+enum RewardType {
+    Points
+    ERC20
+    ERC721
+    ERC1155
+}
+
+enum EscrowType {
+    ERC20
+    ERC721
+    ERC1155
+}
+
+enum ProgramState {
+    Idle
+    AwaitingEscrowSetup
+    Active
+    Completed
+    Canceled
+}
+
+enum EscrowState {
+    Idle
+    AwaitingEscrowApprovals
+    DepositPeriod
+    AwaitingEscrowSettings
+    InIssuance
+    Completed
+    Frozen
+    Canceled
+}
+
+enum Authority {
+    USER
+    CREATOR
 }

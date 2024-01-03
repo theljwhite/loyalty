@@ -34,11 +34,11 @@ export function useEscrowApprovals() {
 
   const approveRewards = async (): Promise<void> => {
     setIsLoading(true);
+    const isApproved = true;
     const contractConfig = {
       address: rewardAddress as `0x${string}`,
       abi,
     };
-    const isApproved = true;
     try {
       if (escrowType === "ERC20" && (await isERC20Verified())) {
         const approveRewards = await writeContract({

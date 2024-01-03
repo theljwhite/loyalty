@@ -10,6 +10,7 @@ import {
   waitForTransaction,
 } from "wagmi/actions";
 import Loyalty from "~/contractsAndAbis/Loyalty/Loyalty.json";
+import { api } from "~/utils/api";
 
 export function useDeployEscrow() {
   const {
@@ -27,6 +28,8 @@ export function useDeployEscrow() {
   const { error, handleErrorFlow } = useError();
   const signer = useEthersSigner();
   const factoryParams = useContractFactoryParams();
+  const { mutate: createEscrowDbRecord } =
+    api.escrow.createEscrow.useMutation();
 
   const deployEscrowContract = async (): Promise<void> => {
     setIsLoading(true);
@@ -45,13 +48,18 @@ export function useDeployEscrow() {
       if (transaction) {
         const escrowContractAddress = await escrowContract.getAddress();
         setDeployEscrowData(transaction.hash, escrowContractAddress);
-
         await attachEscrowToLoyalty();
 
         setIsLoading(false);
         setIsSuccess(true);
 
-        //TODO - database calls
+        createEscrowDbRecord({
+          address: escrowContractAddress,
+          creatorId: "userId here",
+          escrowType,
+          state: "AwaitingEscrowApprovals",
+          loyaltyAddress: deployLoyaltyData.address,
+        });
       }
     } catch (e) {
       setError(error);

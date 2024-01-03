@@ -1,4 +1,5 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { UserRole } from "@prisma/client";
 import { type GetServerSidePropsContext } from "next";
 import {
   getServerSession,
@@ -6,7 +7,6 @@ import {
   type NextAuthOptions,
 } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
-
 import { env } from "~/env";
 import { db } from "~/server/db";
 
@@ -20,15 +20,16 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: DefaultSession["user"] & {
       id: string;
-      // ...other properties
       // role: UserRole;
     };
   }
 
-  // interface User {
-  //   // ...other properties
-  //   // role: UserRole;
-  // }
+  interface User {
+    id: string;
+    address: string;
+    email?: string;
+    role: UserRole;
+  }
 }
 
 /**
@@ -38,14 +39,45 @@ declare module "next-auth" {
  */
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    // session: ({ session, user }) => ({
+    //   ...session,
+    //   user: {
+    //     ...session.user,
+    //     id: user.id,
+    //     address: user.address,
+    //     role: user.role,
+    //   },
+    // }),
+    session: ({ session, user }) => {
+      console.log("session", session);
+      console.log("user", user);
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: user.id,
+          address: user.address,
+          role: user.role,
+        },
+      };
+    },
+    signIn: ({ user, account, profile }) => {
+      const existingUser = db.user.findUnique({ where: { id: user.id } });
+
+      if (!existingUser) {
+        db.user.create({
+          data: {
+            address: user.address,
+            email: user.email ?? null,
+            role: user.role,
+          },
+        });
+      }
+
+      return true;
+    },
   },
+
   adapter: PrismaAdapter(db),
   providers: [
     DiscordProvider({

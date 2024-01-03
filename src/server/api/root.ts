@@ -1,13 +1,17 @@
-import { postRouter } from "~/server/api/routers/post";
 import { createTRPCRouter } from "~/server/api/trpc";
+import { loyaltyProgramsRouter } from "~/server/api/routers/loyaltyPrograms";
+import { escrowRouter } from "./routers/escrow";
+import { userRouter } from "~/server/api/routers/user";
 
 /**
- * This is the primary router for your server.
+ * This is the primary router for the server.
  *
- * All routers added in /api/routers should be manually added here.
+ *
  */
 export const appRouter = createTRPCRouter({
-  post: postRouter,
+  loyaltyPrograms: loyaltyProgramsRouter,
+  users: userRouter,
+  escrow: escrowRouter,
 });
 
 // export type definition of API
