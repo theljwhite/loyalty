@@ -7,9 +7,13 @@ import {
 import { TRPCError } from "@trpc/server";
 
 export const userRouter = createTRPCRouter({
-  test: publicProcedure
-    .input(z.object({ message: z.string() }))
+  giveCreatorRole: protectedProcedure
+    .input(z.object({ userId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      return input.message;
+      const userUpdate = await ctx.db.user.update({
+        where: { id: input.userId },
+        data: { role: "Creator" },
+      });
+      return userUpdate.role;
     }),
 });

@@ -91,17 +91,20 @@ model Account {
 }
 
 model Session {
-    id           String   @id @default(cuid())
-    sessionToken String   @unique
-    userId       String
-    expires      DateTime
-    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    id                         String   @id @default(cuid())
+    sessionToken               String   @unique
+    provider_providerAccountId String?  @unique
+    userId                     String
+    expires                    DateTime
+    user                       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model User {
     id              String           @id @unique @default(cuid())
-    address         String           @unique
-    email           String?
+    address         String?          @unique
+    name            String?
+    email           String?          @unique
+    image           String?
     emailVerified   DateTime?
     loyaltyPrograms LoyaltyProgram[]
     escrowContracts Escrow[]

@@ -1,7 +1,11 @@
 //TODO - entire file is temporary for testing purposes
 //NONE of it is actually styled yet, only placeholder styling
 
-import React, { useState } from "react";
+//It will be reformatted so that each step is done in separate components...
+//...and a stepper will be tracked for each step, etc.
+//This was just a template to prove what I'm doing was even possible first
+
+import React, { useEffect, useState } from "react";
 import { useDeployLoyaltyStore } from "~/customHooks/useDeployLoyalty/store";
 import { Authority, RewardType } from "~/customHooks/useDeployLoyalty/types";
 import { useDeployLoyalty } from "~/customHooks/useDeployLoyalty/useDeployLoyalty";
@@ -12,6 +16,8 @@ import { useDeployEscrowStore } from "~/customHooks/useDeployEscrow/store";
 import { useDeployEscrow } from "~/customHooks/useDeployEscrow/useDeployEscrow";
 import EscrowApprovals from "./EscrowApprovals";
 import { type EscrowType } from "~/customHooks/useDeployEscrow/store";
+import { useWalletAuth } from "~/customHooks/useWalletAuth/useWalletAuth";
+import { signOut, useSession } from "next-auth/react";
 import { signIn } from "next-auth/react";
 
 //TODO - make points limit of 10,000? or something else - in a global constant
@@ -46,6 +52,15 @@ export default function CreateStepOne() {
   } = useDeployLoyaltyStore((state) => state);
   const { setEscrowType } = useDeployEscrowStore();
   const { deployEscrowContract } = useDeployEscrow();
+  const { handleWalletAuth } = useWalletAuth();
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    console.log("session initially is -->", session);
+    if (session && session.user) {
+      console.log("session -->", session);
+    }
+  }, [session]);
 
   const changeProgramName = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setName(e.target.value);
@@ -128,6 +143,11 @@ export default function CreateStepOne() {
 
   const handleContractDeploy = (): void => {
     deployLoyaltyProgram();
+  };
+
+  const testSignOut = async (): Promise<void> => {
+    console.log("signing out **** .....");
+    await signOut();
   };
   return (
     <div className="flex flex-col items-center justify-center space-y-10 px-8 py-10">
@@ -259,9 +279,22 @@ export default function CreateStepOne() {
       </button>
       <button
         className="mt-10 rounded-3xl bg-green-900 p-4 text-white"
-        onClick={() => signIn()}
+        onClick={() => handleWalletAuth()}
       >
-        Test Sign in
+        Test Sign in (wallet)
+      </button>
+      <button
+        onClick={() => signIn("discord")}
+        className="mt-10 rounded-3xl bg-purple-600 p-4 text-white"
+      >
+        Test Discord Sign In
+      </button>
+
+      <button
+        onClick={testSignOut}
+        className="mt-10 rounded-3xl bg-red-600 p-4 text-white"
+      >
+        Sign Out
       </button>
       <button
         className="mt-10 rounded-3xl bg-violet-800 p-4 text-white"

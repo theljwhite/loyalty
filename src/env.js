@@ -30,6 +30,7 @@ export const env = createEnv({
     ),
     DISCORD_CLIENT_ID: z.string(),
     DISCORD_CLIENT_SECRET: z.string(),
+    MORALIS_API_KEY: z.string(),
   },
 
   /**
@@ -40,6 +41,9 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_ALCHEMY_PROV: z.string(),
     NEXT_PUBLIC_WALLET_CONNECT_ID: z.string(),
+    NEXT_PUBLIC_MORALIS_API_KEY: z.string(),
+    NEXT_PUBLIC_PROJECT_NAME: z.string(),
+    NEXT_PUBLIC_DOMAIN_URL: z.string(),
   },
 
   /**
@@ -55,6 +59,10 @@ export const env = createEnv({
     DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET,
     NEXT_PUBLIC_ALCHEMY_PROV: process.env.NEXT_PUBLIC_ALCHEMY_PROV,
     NEXT_PUBLIC_WALLET_CONNECT_ID: process.env.NEXT_PUBLIC_WALLET_CONNECT_ID,
+    MORALIS_API_KEY: process.env.MORALIS_API_KEY,
+    NEXT_PUBLIC_MORALIS_API_KEY: process.env.NEXT_PUBLIC_MORALIS_API_KEY,
+    NEXT_PUBLIC_PROJECT_NAME: process.env.NEXT_PUBLIC_PROJECT_NAME,
+    NEXT_PUBLIC_DOMAIN_URL: process.env.NEXT_PUBLIC_DOMAIN_URL,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

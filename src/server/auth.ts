@@ -7,8 +7,14 @@ import {
   type NextAuthOptions,
 } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
+import { MoralisNextAuthProvider } from "@moralisweb3/next";
 import { env } from "~/env";
 import { db } from "~/server/db";
+import {
+  AdapterAccount,
+  AdapterSession,
+  AdapterUser,
+} from "next-auth/adapters";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -39,43 +45,15 @@ declare module "next-auth" {
  */
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    // session: ({ session, user }) => ({
-    //   ...session,
-    //   user: {
-    //     ...session.user,
-    //     id: user.id,
-    //     address: user.address,
-    //     role: user.role,
-    //   },
-    // }),
-    session: ({ session, user }) => {
-      console.log("session", session);
-      console.log("user", user);
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: user.id,
-          address: user.address,
-          role: user.role,
-        },
-      };
-    },
-    signIn: ({ user, account, profile }) => {
-      const existingUser = db.user.findUnique({ where: { id: user.id } });
-
-      if (!existingUser) {
-        db.user.create({
-          data: {
-            address: user.address,
-            email: user.email ?? null,
-            role: user.role,
-          },
-        });
-      }
-
-      return true;
-    },
+    session: ({ session, user }) => ({
+      ...session,
+      user: {
+        ...session.user,
+        id: user.id,
+        address: user.address,
+        role: user.role,
+      },
+    }),
   },
 
   adapter: PrismaAdapter(db),
@@ -84,6 +62,7 @@ export const authOptions: NextAuthOptions = {
       clientId: env.DISCORD_CLIENT_ID,
       clientSecret: env.DISCORD_CLIENT_SECRET,
     }),
+    MoralisNextAuthProvider(),
     /**
      * ...add more providers here.
      *

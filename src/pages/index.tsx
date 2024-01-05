@@ -1,7 +1,4 @@
-import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
-import Link from "next/link";
-import { api } from "~/utils/api";
 
 export default function Home() {
   return (
@@ -12,33 +9,30 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className=" flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
-        adajloyalty
+      <main className="ease-soft-in-out mt-0 transition-all duration-200">
+        <section className="mb-32 min-h-screen">
+          <div className="min-h-50-screen relative m-4 flex items-start overflow-hidden rounded-xl bg-gradient-to-r from-indigo-400 to-violet-700 pb-56 pt-12">
+            <span className="absolute left-0 top-0 h-full w-full" />
+            <div className="mx-auto my-auto w-full px-4">
+              <div className="-mx-3 flex flex-wrap justify-center">
+                <div className="lg:flex-0 mx-auto mt-0 w-full max-w-full shrink-0 px-3 text-center lg:w-5/12">
+                  <h1
+                    className="mb-2 mt-12 text-3xl
+                  font-bold text-white
+                  "
+                  >
+                    Work in progress
+                  </h1>
+                  <p className="text-sm text-white">
+                    Hang tight while the app is developed
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="text-center">Content here</div>
+        </section>
       </main>
     </>
   );
 }
-
-// function AuthShowcase() {
-//   const { data: sessionData } = useSession();
-
-//   const { data: secretMessage } = api.post.getSecretMessage.useQuery(
-//     undefined, // no input
-//     { enabled: sessionData?.user !== undefined }
-//   );
-
-//   return (
-//     <div className="flex flex-col items-center justify-center gap-4">
-//       <p className="text-center text-2xl text-white">
-//         {sessionData && <span>Logged in as {sessionData.user?.name}</span>}
-//         {secretMessage && <span> - {secretMessage}</span>}
-//       </p>
-//       <button
-//         className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
-//         onClick={sessionData ? () => void signOut() : () => void signIn()}
-//       >
-//         {sessionData ? "Sign out" : "Sign in"}
-//       </button>
-//     </div>
-//   );
-// }
