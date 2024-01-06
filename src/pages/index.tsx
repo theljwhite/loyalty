@@ -11,26 +11,25 @@ export default function Home() {
 
       <main className="ease-soft-in-out mt-0 transition-all duration-200">
         <section className="mb-32 min-h-screen">
-          <div className="min-h-50-screen relative m-4 flex items-start overflow-hidden rounded-xl bg-gradient-to-r from-indigo-400 to-violet-700 pb-56 pt-12">
+          <div className="min-h-50-screen relative m-4 flex items-start overflow-hidden rounded-xl  pb-56 pt-12">
             <span className="absolute left-0 top-0 h-full w-full" />
             <div className="mx-auto my-auto w-full px-4">
               <div className="-mx-3 flex flex-wrap justify-center">
                 <div className="lg:flex-0 mx-auto mt-0 w-full max-w-full shrink-0 px-3 text-center lg:w-5/12">
                   <h1
-                    className="mb-2 mt-12 text-3xl
-                  font-bold text-white
+                    className="font-lunch text-primary-1 mb-2 mt-12
+                  text-3xl font-bold tracking-tight
                   "
                   >
-                    Work in progress
+                    Work in progress...
                   </h1>
-                  <p className="text-sm text-white">
-                    Hang tight while the app is developed
+                  <p className="font-lunch text-neutral-8 text-sm">
+                    Please hang tight while the app is being developed
                   </p>
                 </div>
               </div>
             </div>
           </div>
-          <div className="text-center">Content here</div>
         </section>
       </main>
     </>

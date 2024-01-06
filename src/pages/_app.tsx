@@ -5,12 +5,12 @@ import { WagmiConfig } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { chains, configForWagmi } from "~/configs/wagmi";
 import { api } from "~/utils/api";
+import { customRainbowTheme } from "~/configs/rainbowkit";
 import "node_modules/@rainbow-me/rainbowkit/dist/index.css";
+import "~/styles/globals.css";
 
 //TEMP
 import LandingNav from "~/components/Navbars/LandingNav";
-
-import "~/styles/globals.css";
 
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
@@ -19,7 +19,11 @@ const MyApp: AppType<{ session: Session | null }> = ({
   return (
     <SessionProvider session={session}>
       <WagmiConfig config={configForWagmi}>
-        <RainbowKitProvider chains={chains} modalSize="compact">
+        <RainbowKitProvider
+          chains={chains}
+          theme={customRainbowTheme}
+          modalSize="wide"
+        >
           <LandingNav />
           <Component {...pageProps} />
         </RainbowKitProvider>
