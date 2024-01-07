@@ -1,9 +1,11 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 import { ConnectWalletButton } from "../UI/ConnectWalletButton";
 
 export default function LandingNav() {
+  const { data: session } = useSession();
   return (
     <header className="sticky top-0 z-10 border-b border-gray-100 bg-white/60 backdrop-blur-lg">
       <div className="mx-auto flex w-[94vw] max-w-screen-xl items-center justify-between py-4">
@@ -16,6 +18,9 @@ export default function LandingNav() {
               alt="project logo"
             />
           </Link>
+          {/* <span className="font-lunch text-3xl font-medium text-gray-200">
+            /
+          </span> */}
           <div className="flex items-center gap-4">
             <span className="border-top h-6 w-6 border-neutral-2"></span>
             <button
@@ -31,9 +36,20 @@ export default function LandingNav() {
                     src="utilityImages/blankAvatar.svg"
                   />
                 </span>
-                <span className="truncate font-lunch text-lg font-medium">
-                  Engage / Create
-                </span>
+                <div>
+                  <Link href="/programs">
+                    <span className="truncate font-lunch text-lg font-medium hover:text-primary-1">
+                      Engage{" "}
+                    </span>
+                  </Link>
+                  <span className="font-lunch text-lg font-medium">/</span>
+                  <Link href="/dashboard">
+                    <span className="truncate font-lunch text-lg font-medium hover:text-primary-1">
+                      {" "}
+                      Create
+                    </span>
+                  </Link>
+                </div>
               </span>
               <span className="pl-4 opacity-60 transition-opacity group-hover:opacity-100">
                 <svg
