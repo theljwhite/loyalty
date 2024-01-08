@@ -1,4 +1,5 @@
 import { type Session } from "next-auth";
+import { type ReactNode } from "react";
 import Head from "next/head";
 import { SessionProvider } from "next-auth/react";
 import { type AppType } from "next/app";

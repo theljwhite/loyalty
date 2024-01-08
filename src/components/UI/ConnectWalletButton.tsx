@@ -39,7 +39,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletBtnProps> = ({
             {!isConnected ? (
               <button
                 type="button"
-                className="bg-neutral-2 flex items-center gap-1 rounded-xl px-3 py-2 text-[18px] font-bold"
+                className="flex items-center gap-1 rounded-xl bg-neutral-2 px-3 py-2 text-[18px] font-bold"
                 onClick={openConnectModal}
               >
                 Connect Wallet
@@ -49,7 +49,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletBtnProps> = ({
                 <button
                   type="button"
                   onClick={openChainModal}
-                  className="bg-neutral-2 flex items-center gap-1 rounded-xl px-3 py-2 text-[18px] font-bold"
+                  className="flex items-center gap-1 rounded-xl bg-neutral-2 px-3 py-2 text-[18px] font-bold"
                 >
                   {chain.hasIcon && (
                     <div
@@ -62,7 +62,6 @@ export const ConnectWalletButton: React.FC<ConnectWalletBtnProps> = ({
                       {chain.iconUrl && (
                         <Image
                           src={chain.iconUrl}
-                          // src="utilityImages/connectedWhite.svg"
                           width={24}
                           height={24}
                           alt={chain.name ?? "Chain icon"}
@@ -82,7 +81,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletBtnProps> = ({
                 </button>
                 {!showOnlyChainSwitcher && (
                   <button
-                    className="bg-neutral-2 flex items-center rounded-xl px-3 py-2 text-[18px] font-bold"
+                    className="flex items-center rounded-xl bg-neutral-2 px-3 py-2 text-[18px] font-bold"
                     onClick={openAccountModal}
                     type="button"
                   >

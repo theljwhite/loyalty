@@ -3,6 +3,7 @@ import Image from "next/image";
 import React from "react";
 import { signIn } from "next-auth/react";
 import { useWalletAuth } from "~/customHooks/useWalletAuth/useWalletAuth";
+import { useRouter } from "next/router";
 
 type SignInOption = {
   id: number;
@@ -53,7 +54,12 @@ export default function SignIn() {
                 {signInOptions.map((option) => {
                   return (
                     <button
-                      onClick={() => signIn(option.provider)}
+                      onClick={() =>
+                        signIn(option.provider, {
+                          redirect: true,
+                          callbackUrl: "/",
+                        })
+                      }
                       type="button"
                       key={option.id}
                       className="group relative m-0 inline-flex min-h-[2.25rem] w-full cursor-pointer items-center justify-start gap-4 truncate rounded-md border border-solid border-[rgba(0,0,0,0.08)] bg-[unset] px-5 py-2.5 text-sm font-normal leading-none tracking-[0.5px] text-black outline-none duration-100 [transition-property:background-color,_border-color,_color,_fill,_stroke,_opacity,_box-shadow,_transform] hover:bg-neutral-2"
@@ -83,7 +89,7 @@ export default function SignIn() {
                         className="h-[1em] min-h-[1rem] w-[1em] min-w-[1rem] shrink-0 text-neutral-19  opacity-0 [transition:all_100ms_ease_0s] group-hover:-translate-x-2 group-hover:opacity-100"
                       >
                         <path
-                          stroke-linecap="round"
+                          strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth="2"
                           d="M3.3 10h13.4m-5-5 5 5-5 5"
@@ -129,7 +135,7 @@ export default function SignIn() {
                   className="h-[1em] min-h-[1rem] w-[1em] min-w-[1rem] shrink-0 text-neutral-19  opacity-0 [transition:all_100ms_ease_0s] group-hover:-translate-x-2 group-hover:opacity-100"
                 >
                   <path
-                    stroke-linecap="round"
+                    strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="2"
                     d="M3.3 10h13.4m-5-5 5 5-5 5"

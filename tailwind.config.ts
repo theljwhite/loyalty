@@ -50,6 +50,13 @@ export default {
         error: {
           1: "#be123c",
         },
+        dashboard: {
+          primary: "#eeeef0",
+          secondary: "#b7b8c2",
+          body: "#292929",
+          body2: "#212126",
+          activeTab: "#2f3037",
+        },
       },
     },
   },

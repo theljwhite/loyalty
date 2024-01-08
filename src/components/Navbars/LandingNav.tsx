@@ -5,7 +5,9 @@ import { useSession } from "next-auth/react";
 import { ConnectWalletButton } from "../UI/ConnectWalletButton";
 
 export default function LandingNav() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const isAuthed = status === "authenticated";
+
   return (
     <header className="sticky top-0 z-10 border-b border-gray-100 bg-white/60 backdrop-blur-lg">
       <div className="mx-auto flex w-[94vw] max-w-screen-xl items-center justify-between py-4">
@@ -33,7 +35,11 @@ export default function LandingNav() {
                     width={40}
                     height={40}
                     alt="user avatar"
-                    src="utilityImages/blankAvatar.svg"
+                    src={
+                      isAuthed && session?.user.image
+                        ? session.user.image
+                        : "utilityImages/blankAvatar.svg"
+                    }
                   />
                 </span>
                 <div>
