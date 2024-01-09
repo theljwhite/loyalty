@@ -21,6 +21,7 @@ export interface DeployLoyaltyState {
     creator: string;
   };
   name: string;
+  description: string | null;
   objectives: Objective[];
   authorities: Authority[];
   tiers: Tier[] | null;
@@ -34,6 +35,7 @@ export interface DeployLoyaltyState {
   step: number;
   furthestStep: number;
   setName: (name: string) => void;
+  setDescription: (description: string | null) => void;
   setObjectives: (objectives: Objective[]) => void;
   setAuthorities: (authorities: Authority[]) => void;
   setTiers: (tiers: Tier[]) => void;
@@ -50,6 +52,8 @@ export interface DeployLoyaltyState {
     address: string,
     creator: string,
   ) => void;
+  setStep: (step: number) => void;
+  setFurthestStep: (furthestStep: number) => void;
   reset: () => void;
 }
 
@@ -67,6 +71,7 @@ export const useDeployLoyaltyStore = create<DeployLoyaltyState>((set, get) => {
       creator: "",
     },
     name: "",
+    description: "",
     objectives: [],
     authorities: [],
     tiers: [],
@@ -113,6 +118,7 @@ export const useDeployLoyaltyStore = create<DeployLoyaltyState>((set, get) => {
         },
       }),
     setName: (name: string) => set({ name }),
+    setDescription: (description: string | null) => set({ description }),
     setObjectives: (objectives: Objective[]) => set({ objectives }),
     setAuthorities: (authorities: Authority[]) => set({ authorities }),
     setTiers: (tiers: Tier[]) => set({ tiers }),

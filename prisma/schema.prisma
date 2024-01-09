@@ -17,6 +17,7 @@ model LoyaltyProgram {
     creatorId     String       @unique
     creator       User         @relation(fields: [creatorId], references: [id])
     name          String
+    description   String?
     objectives    Objective[]
     tiers         Tier[]
     state         ProgramState

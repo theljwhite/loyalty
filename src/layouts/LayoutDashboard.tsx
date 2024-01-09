@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { getLayout } from "./Base";
 import type { ReactNode } from "react";
 import Image from "next/image";
@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useAccount, useNetwork } from "wagmi";
+import shortenEthereumAddress from "~/helpers/shortenEthAddress";
 import {
   useAccountModal,
   useChainModal,
@@ -60,32 +61,36 @@ type NavLink = {
   icon: JSX.Element;
 };
 
-const activeTabClass =
-  "text-dashboard-primary flex items-center justify-between rounded-md bg-dashboard-activeTab px-3 py-2 shadow-[inset_0_1px_0_theme(colors.white/4%),inset_0_0_0_1px_theme(colors.white/2%),0_0_0_1px_theme(colors.black/20%),0_2px_2px_-1px_theme(colors.black/20%),0_4px_4px_-2px_theme(colors.black/20%)]";
-const inactiveTabClass =
-  "flex items-center justify-between rounded-md px-3 py-2 text-dashboard-secondary hover:bg-dashboard-body hover:text-dashboard-primary";
+const NavLink: React.FC<NavLinkProps> = ({ link, pathname }): JSX.Element => {
+  const activeTabClass =
+    "text-dashboard-primary flex items-center justify-between rounded-md bg-dashboard-activeTab px-3 py-2 shadow-[inset_0_1px_0_theme(colors.white/4%),inset_0_0_0_1px_theme(colors.white/2%),0_0_0_1px_theme(colors.black/20%),0_2px_2px_-1px_theme(colors.black/20%),0_4px_4px_-2px_theme(colors.black/20%)]";
+  const inactiveTabClass =
+    "flex items-center justify-between rounded-md px-3 py-2 text-dashboard-secondary hover:bg-dashboard-body hover:text-dashboard-primary";
 
-const NavLink: React.FC<NavLinkProps> = ({ link, pathname }): JSX.Element => (
-  <div key={link.id}>
-    <Link
-      href={link.href}
-      className="mt-[calc(0.125rem * calc(1))] mb-[calc(0.125rem)] block"
-    >
-      <button className="relative w-full">
-        <span
-          className={link.href === pathname ? activeTabClass : inactiveTabClass}
-        >
-          <span className="flex items-center justify-between gap-3">
-            {link.icon}
-            <span className="flex items-center gap-2 text-base text-sm font-medium ">
-              {link.label}
+  return (
+    <div key={link.id}>
+      <Link
+        href={link.href}
+        className="mt-[calc(0.125rem * calc(1))] mb-[calc(0.125rem)] block"
+      >
+        <button className="relative w-full">
+          <span
+            className={
+              link.href === pathname ? activeTabClass : inactiveTabClass
+            }
+          >
+            <span className="flex items-center justify-between gap-3">
+              {link.icon}
+              <span className="flex items-center gap-2 text-base text-sm font-medium ">
+                {link.label}
+              </span>
             </span>
           </span>
-        </span>
-      </button>
-    </Link>
-  </div>
-);
+        </button>
+      </Link>
+    </div>
+  );
+};
 
 const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
   const { children } = props;
@@ -96,8 +101,13 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
   const { openAccountModal } = useAccountModal();
   const { openConnectModal } = useConnectModal();
   const { openChainModal } = useChainModal();
+  const [isClient, setIsClient] = useState<boolean>();
 
-  const connected = isConnected && address;
+  const connected = isConnected && address && isClient;
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const navLinks: NavLink[] = [
     {
@@ -182,9 +192,9 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
 
   return (
     <>
-      <div className="bg-dashboard-body2 relative m-0 min-h-full font-lunch text-base antialiased">
+      <div className="relative m-0 min-h-full bg-dashboard-body2 font-lunch text-base antialiased">
         <div className="flex h-[100dvh]">
-          <aside className="before:z-2 text-dashboard-primary relative isolate flex h-full w-[17.5rem] shrink-0 flex-col before:pointer-events-none before:absolute before:inset-x-0 before:bottom-0 before:h-[6.25rem] before:bg-gradient-to-t before:from-gray-900/90">
+          <aside className="before:z-2 relative isolate flex h-full w-[17.5rem] shrink-0 flex-col text-dashboard-primary before:pointer-events-none before:absolute before:inset-x-0 before:bottom-0 before:h-[6.25rem] before:bg-gradient-to-t before:from-gray-900/90">
             <div className="relative border-b border-gray-900 px-4 pb-6 pt-5 shadow-[0_1px_0] shadow-gray-800">
               <button
                 type="button"
@@ -217,7 +227,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                   type="button"
                   className="group flex w-full items-center justify-between text-sm focus:outline-none"
                 >
-                  <span className="text-dashboard-secondary flex items-center gap-3 px-3 py-1.5">
+                  <span className="flex items-center gap-3 px-3 py-1.5 text-dashboard-secondary">
                     <span className="relative">
                       <WalletIcon size={16} color="currentColor" />
                       <span
@@ -228,10 +238,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                     </span>
                     <span className="truncate text-sm">
                       {connected
-                        ? `${address.slice(0, 8)}...${address.slice(
-                            -8,
-                            address.length,
-                          )}`
+                        ? `${shortenEthereumAddress(address as string, 8, 8)}`
                         : "Connect wallet"}
                     </span>
                   </span>
@@ -242,7 +249,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                   type="button"
                   className="group flex w-full items-center justify-between text-sm focus:outline-none"
                 >
-                  <span className="text-dashboard-secondary flex items-center gap-3 px-3 py-1.5">
+                  <span className="flex items-center gap-3 px-3 py-1.5 text-dashboard-secondary">
                     <ChainIcon size={16} color="currentColor" />
                     <span className="text-sm">
                       {connected && chain ? chain.name : "Switch chains"}
@@ -313,7 +320,9 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
             </div>
           </aside>
           <main className="relative isolate h-[calc(100%-0.5rem)] flex-1 self-end rounded-tl-2xl bg-white shadow-[0_0_0_1px,-2px_0_2px_-1px,-4px_0_4px_-2px] shadow-black/60">
-            {children}
+            <div className="mx-auto h-full min-w-[42rem] max-w-6xl overflow-y-auto rounded-[inherit] p-10 pb-20 font-lunch">
+              {children}
+            </div>
           </main>
         </div>
       </div>

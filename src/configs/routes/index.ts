@@ -17,4 +17,7 @@ export const ROUTE_DASHBOARD_USER_COMPLETION = "/dashboard/users/completion";
 export const ROUTE_DASHBOARD_API_KEY = "/dashboard/dev/api";
 export const ROUTE_DASHBOARD_DOMAINS = "/dashboard/dev/domains";
 
+//DOCS
+export const ROUTE_DOCS_MAIN = "/docs";
+
 //...etc

@@ -341,3 +341,78 @@ export const UpDownChevron = ({ color, size }: IconProps): JSX.Element => (
     />
   </svg>
 );
+
+export const AddIcon = ({ color, size }: IconProps): JSX.Element => (
+  <svg
+    width={size}
+    height={size}
+    fill={color}
+    id="Layer_1"
+    enableBackground="new 0 0 32 32"
+    version="1.1"
+    viewBox="0 0 32 32"
+    xmlSpace="preserve"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlnsXlink="http://www.w3.org/1999/xlink"
+  >
+    <path d="M28,14H18V4c0-1.104-0.896-2-2-2s-2,0.896-2,2v10H4c-1.104,0-2,0.896-2,2s0.896,2,2,2h10v10c0,1.104,0.896,2,2,2  s2-0.896,2-2V18h10c1.104,0,2-0.896,2-2S29.104,14,28,14z" />
+  </svg>
+);
+
+export const ArrowIcon = ({
+  color,
+  size,
+  right,
+}: IconProps & { right: boolean }): JSX.Element => (
+  <svg
+    width={size}
+    height={size}
+    fill={color}
+    viewBox="0 0 48 48"
+    className={right ? "rotate-180" : ""}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M0 0h48v48h-48z" fill="none" />
+    <path d="M40 22h-24.34l11.17-11.17-2.83-2.83-16 16 16 16 2.83-2.83-11.17-11.17h24.34v-4z" />
+  </svg>
+);
+
+export const ReadIcon = ({ color, size }: IconProps): JSX.Element => (
+  <svg
+    width={size}
+    height={size}
+    fill={color}
+    viewBox="0 0 512 512"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M0 219.2v212.5c0 14.25 11.62 26.25 26.5 27C75.32 461.2 180.2 471.3 240 511.9V245.2C181.4 205.5 79.99 194.8 29.84 192C13.59 191.1 0 203.6 0 219.2zM482.2 192c-50.09 2.848-151.3 13.47-209.1 53.09C272.1 245.2 272 245.3 272 245.5v266.5c60.04-40.39 164.7-50.76 213.5-53.28C500.4 457.9 512 445.9 512 431.7V219.2C512 203.6 498.4 191.1 482.2 192zM352 96c0-53-43-96-96-96S160 43 160 96s43 96 96 96S352 149 352 96z" />
+  </svg>
+);
+
+export const InfoIcon = ({ color, size }: IconProps): JSX.Element => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <title />
+    <path
+      d="M12,2A10,10,0,1,0,22,12,10,10,0,0,0,12,2Zm-.5,3A1.5,1.5,0,1,1,10,6.5,1.5,1.5,0,0,1,11.5,5ZM14,18H13a2,2,0,0,1-2-2V12a1,1,0,0,1,0-2h1a1,1,0,0,1,1,1v5h1a1,1,0,0,1,0,2Z"
+      fill={color}
+    />
+  </svg>
+);
+
+export const FormErrorIcon = ({ color, size }: IconProps): JSX.Element => (
+  <svg
+    width={size}
+    height={size}
+    fill={color}
+    viewBox="0 0 48 48"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M0 0h48v48H0V0z" fill="none" />
+    <path d="M22 30h4v4h-4zm0-16h4v12h-4zm1.99-10C12.94 4 4 12.95 4 24s8.94 20 19.99 20S44 35.05 44 24 35.04 4 23.99 4zM24 40c-8.84 0-16-7.16-16-16S15.16 8 24 8s16 7.16 16 16-7.16 16-16 16z" />
+  </svg>
+);

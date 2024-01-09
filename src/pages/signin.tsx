@@ -3,7 +3,6 @@ import Image from "next/image";
 import React from "react";
 import { signIn } from "next-auth/react";
 import { useWalletAuth } from "~/customHooks/useWalletAuth/useWalletAuth";
-import { useRouter } from "next/router";
 
 type SignInOption = {
   id: number;

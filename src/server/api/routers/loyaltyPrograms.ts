@@ -79,12 +79,30 @@ export const loyaltyProgramsRouter = createTRPCRouter({
         loyaltyProgramId: loyaltyProgram.id,
       }));
 
-      console.log("objectives with loyalty id", objectivesWithLoyaltyId);
-
       const createdObjectives = await ctx.db.objective.createMany({
         data: objectivesWithLoyaltyId,
       });
 
       return { loyaltyProgram, createdObjectives };
+    }),
+  getBasicInfoByCreatorId: protectedProcedure
+    .input(z.object({ creatorId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const programs = await ctx.db.loyaltyProgram.findMany({
+        where: { creatorId: input.creatorId },
+        select: {
+          id: true,
+          address: true,
+          chain: true,
+          chainId: true,
+          name: true,
+          state: true,
+          rewardType: true,
+          updatedAt: true,
+        },
+      });
+
+      if (programs.length > 0) return programs;
+      else return null;
     }),
 });
