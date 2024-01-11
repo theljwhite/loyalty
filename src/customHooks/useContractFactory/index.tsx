@@ -46,6 +46,6 @@ export function useContractFactoryStore<T>(
   selector: (state: ContractFactory) => T,
 ) {
   const store = useContext(ContractFactoryContext);
-  if (!store) throw new Error("Missing wrapper in the tree");
+  if (!store) throw new Error("Forgot to use contract factory wrapper");
   return useStore(store, selector);
 }

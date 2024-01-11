@@ -2,30 +2,25 @@ import React, { useState, useEffect } from "react";
 import { useDeployLoyaltyStore } from "~/customHooks/useDeployLoyalty/store";
 import { validationFuncs } from "~/utils/loyaltyValidation";
 import { InfoIcon, FormErrorIcon } from "../UI/Dashboard/Icons";
-import type { ObjectiveInput } from "./CreateObjectives";
 import {
   MAX_OBJECTIVE_TITLE_LENGTH,
   MIN_OBJECTIVE_TITLE_LENGTH,
   MIN_OBJECTIVE_POINTS_VALUE,
   MAX_OBJECTIVE_POINTS_VALUE,
 } from "~/constants/loyaltyConstants";
-import { Authority } from "~/customHooks/useDeployLoyalty/types";
+import { Authority, Objective } from "~/customHooks/useDeployLoyalty/types";
 
 //TODO - this can prob be refactored to eliminate the need for additional state variables,
-//minor prop drilling, and to eliminate the useEffect that is used here.
+//and to eliminate the useEffect that is used here.
 
 interface ObjectiveEditorProps {
-  objectiveId: number;
+  activeObjective: number;
   setIsEditorOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  objectivesInput: ObjectiveInput[];
-  setObjectivesInput: React.Dispatch<React.SetStateAction<ObjectiveInput[]>>;
 }
 
 export default function CreateObjectiveEditor({
-  objectiveId,
+  activeObjective,
   setIsEditorOpen,
-  objectivesInput,
-  setObjectivesInput,
 }: ObjectiveEditorProps) {
   const [title, setTitle] = useState<string>("");
   const [authority, setAuthority] = useState<Authority>("USER");
@@ -37,20 +32,21 @@ export default function CreateObjectiveEditor({
     isError: false,
     message: "",
   });
-  const isNewObjective = objectiveId == objectivesInput.length;
+  const { objectives, setObjectives } = useDeployLoyaltyStore();
+  const isNewObjective = activeObjective == objectives.length;
 
   const { step } = useDeployLoyaltyStore();
   const objectivesValidation = validationFuncs.get(step);
 
   useEffect(() => {
     if (!isNewObjective) {
-      const existingObjective = objectivesInput.find(
-        (obj) => obj.id == objectiveId,
+      const existingObjective = objectives.find(
+        (obj) => obj.id == activeObjective,
       );
       if (existingObjective) {
         setTitle(existingObjective?.title ?? "");
         setAuthority(existingObjective?.authority);
-        setPoints(String(existingObjective?.points));
+        setPoints(String(existingObjective?.reward));
       }
     }
   }, []);
@@ -70,29 +66,29 @@ export default function CreateObjectiveEditor({
 
   const addNewObjective = (): void => {
     if (isValidated()) {
-      const newObjective: ObjectiveInput = {
-        id: objectivesInput.length,
+      const newObjective: Objective = {
+        id: objectives.length,
         title,
         authority,
-        points: Number(points),
+        reward: Number(points),
       };
-      const newObjectives = [...objectivesInput, newObjective];
-      setObjectivesInput(newObjectives);
+      const newObjectives = [...objectives, newObjective];
+      setObjectives(newObjectives);
       setIsEditorOpen(false);
     }
   };
 
   const editExistingObjective = (): void => {
     if (!isNewObjective && isValidated()) {
-      const updatedValues: Partial<ObjectiveInput> = {
+      const updatedValues: Partial<Objective> = {
         title,
         authority,
-        points: Number(points),
+        reward: Number(points),
       };
-      const editedObjective = objectivesInput.map((obj) =>
-        obj.id == objectiveId ? { ...obj, ...updatedValues } : { ...obj },
+      const editedObjectives = objectives.map((obj) =>
+        obj.id == activeObjective ? { ...obj, ...updatedValues } : { ...obj },
       );
-      setObjectivesInput(editedObjective);
+      setObjectives(editedObjectives);
       setIsEditorOpen(false);
     }
   };
@@ -127,7 +123,7 @@ export default function CreateObjectiveEditor({
             </label>
             <select
               onChange={(e) => setAuthority(e.target.value as Authority)}
-              defaultValue={authority}
+              // defaultValue={authority}
               value={authority}
               className="relative h-10 w-full min-w-0 rounded-md border-2 border-solid border-transparent bg-dashboard-input pl-2 text-base outline-none ring-0 focus:ring-2 focus:ring-primary-1"
             >

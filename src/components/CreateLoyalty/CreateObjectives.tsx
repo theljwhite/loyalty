@@ -13,57 +13,69 @@ import {
 } from "../UI/Dashboard/Icons";
 import CreateObjectiveEditor from "./CreateObjectiveEditor";
 import CreateNextButton from "./CreateNextButton";
-import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-
-//TODO 1/12 - refactor this, get rid of objectiveInput and use zustand store objectives array
-//...so that progress is changed when changing "tabs"
-
-export type ObjectiveInput = {
-  id: number;
-  title: string;
-  points: number;
-  authority: "USER" | "CREATOR";
-};
+import { type Objective } from "~/customHooks/useDeployLoyalty/types";
+import {
+  DragDropContext,
+  Draggable,
+  Droppable,
+  type DropResult,
+} from "@hello-pangea/dnd";
 
 export default function CreateObjectives() {
   const [isEditorOpen, setIsEditorOpen] = useState<boolean>(false);
-  const [objectivesInput, setObjectivesInput] = useState<ObjectiveInput[]>([
-    {
-      id: 0,
-      title: "My first objective goes here",
-      authority: "CREATOR",
-      points: 200,
-    },
-  ]);
-  const [objectiveId, setObjectiveId] = useState<number>(
-    objectivesInput.length,
+  const { objectives, setObjectives, errors, step } = useDeployLoyaltyStore();
+  const [activeObjective, setActiveObjective] = useState<number>(
+    objectives.length,
   );
 
-  const { objectives, setObjectives, errors, step } = useDeployLoyaltyStore();
   const currentStepError = errors.find((error) => error.step === step);
-
   const objectivesValidation = validationFuncs.get(step);
   const onNextStep = useNextLoyaltyStep([
-    () => objectivesValidation?.[1]?.validation(objectivesInput),
+    () => objectivesValidation?.[1]?.validation(objectives),
   ]);
 
   const editExistingObjective = (id: number): void => {
-    setObjectiveId(id);
+    setActiveObjective(id);
     setIsEditorOpen(true);
   };
 
   const addNewObjective = (): void => {
-    setObjectiveId(objectivesInput.length);
+    setActiveObjective(objectives.length);
     setIsEditorOpen(true);
   };
 
   const removeObjective = (id: number): void => {
-    const removed = objectivesInput.filter((obj) => obj.id !== id);
-    setObjectivesInput(removed);
+    const removed = objectives.filter((obj) => obj.id !== id);
+    setObjectives(removed);
   };
 
-  const handleObjectivesReorder = (result: any): void => {
-    //TODO
+  const handleObjectivesReorder = (result: DropResult): void => {
+    if (!result.destination) return;
+
+    const objectiveId: number = result.source.index;
+    const listIndex: number = result.destination.index;
+
+    if (objectiveId === listIndex) return;
+
+    const reordered = objectives
+      .reduce(
+        (
+          prev: Objective[],
+          curr: Objective,
+          index: number,
+          self: Objective[],
+        ) => {
+          if (objectiveId === listIndex) prev.push(curr);
+          if (index === objectiveId) return prev;
+          if (objectiveId < listIndex) prev.push(curr);
+          if (index === listIndex) prev.push(self[objectiveId] as Objective);
+          if (objectiveId > listIndex) prev.push(curr);
+          return prev;
+        },
+        [],
+      )
+      .map((obj: Objective, index: number) => ({ ...obj, id: index }));
+    setObjectives(reordered);
   };
 
   return (
@@ -114,10 +126,8 @@ export default function CreateObjectives() {
       </div>
       {isEditorOpen ? (
         <CreateObjectiveEditor
-          objectiveId={objectiveId}
+          activeObjective={activeObjective}
           setIsEditorOpen={setIsEditorOpen}
-          objectivesInput={objectivesInput}
-          setObjectivesInput={setObjectivesInput}
         />
       ) : (
         <div className="border-box block border-spacing-[2px] overflow-hidden rounded-lg border border-solid border-dashboard-input bg-white">
@@ -147,7 +157,7 @@ export default function CreateObjectives() {
               <Droppable droppableId="objectives">
                 {(provided) => (
                   <tbody {...provided.droppableProps} ref={provided.innerRef}>
-                    {objectivesInput.map((obj) => {
+                    {objectives.map((obj) => {
                       return (
                         <Draggable
                           index={obj.id}
@@ -192,7 +202,7 @@ export default function CreateObjectives() {
                                 className="cursor-pointer py-0 pe-4 ps-4 text-start text-sm leading-4 "
                                 role="gridcell"
                               >
-                                <div className="block py-4">{obj.points}</div>
+                                <div className="block py-4">{obj.reward}</div>
                               </td>
                               <td
                                 className="cursor-pointer py-0 pe-4 ps-4 text-center text-sm leading-4 "
@@ -227,20 +237,27 @@ export default function CreateObjectives() {
                 )}
               </Droppable>
             </DragDropContext>
-            <caption></caption>
           </table>
         </div>
       )}
 
       {!isEditorOpen && (
-        <div className="mt-6 flex flex-row items-center">
-          <CreateNextButton step={step} onClick={onNextStep} />
-          {currentStepError && (
-            <span className="flex flex-row gap-1 truncate pl-4 font-medium text-error-1">
-              <FormErrorIcon size={20} color="currentColor" />{" "}
-              {currentStepError.message}
+        <div>
+          <div className="py-3 pe-4 ps-4">
+            <span className="text-dashboard-tooltip">
+              Showing {objectives.length} objectives
             </span>
-          )}
+          </div>
+
+          <div className="mt-6 flex flex-row items-center">
+            <CreateNextButton step={step} onClick={onNextStep} />
+            {currentStepError && (
+              <span className="flex flex-row gap-1 truncate pl-4 font-medium text-error-1">
+                <FormErrorIcon size={20} color="currentColor" />{" "}
+                {currentStepError.message}
+              </span>
+            )}
+          </div>
         </div>
       )}
     </>

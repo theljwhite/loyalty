@@ -7,8 +7,10 @@ export enum RewardType {
 }
 
 export type Objective = {
+  id: number;
   title: string;
   reward: number;
+  authority: Authority;
 };
 export type Tier = {
   index: number;

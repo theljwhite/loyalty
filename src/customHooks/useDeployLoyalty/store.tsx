@@ -72,7 +72,14 @@ export const useDeployLoyaltyStore = create<DeployLoyaltyState>((set, get) => {
     },
     name: "",
     description: "",
-    objectives: [],
+    objectives: [
+      {
+        id: 0,
+        title: "My objective goes here",
+        reward: 1000,
+        authority: "USER" as Authority,
+      },
+    ],
     authorities: [],
     tiers: [],
     rewardType: RewardType.Points,

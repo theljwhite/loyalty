@@ -11,6 +11,7 @@ import CreateProgramEnd from "~/components/CreateLoyalty/CreateProgramEnd";
 import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
 import { ReadIcon } from "~/components/UI/Dashboard/Icons";
 import { ROUTE_DOCS_MAIN } from "~/configs/routes";
+import { ContractFactoryWrapper } from "~/customHooks/useContractFactory";
 
 export type CreationStep = {
   id: number;
@@ -30,26 +31,28 @@ const Create: NextPage = (props) => {
 
   return (
     <>
-      <DashboardHeader
-        title="Create Loyalty Program"
-        info="Create and deploy your custom loyalty program smart contract"
-      />
-      <div className="mb-8 flex items-start gap-[0.5rem] rounded-md bg-neutral-2 p-3 text-sm font-[0.8125rem] leading-[1.125rem] text-dashboard-lightGray">
-        <span className="text-neutral-3">
-          <ReadIcon size={14} color="currentColor" />
-        </span>
-        <div className="break-word inline-block">
-          Learn about how your smart contract will work or read our
-          documentation for help.{" "}
-          <Link
-            href={ROUTE_DOCS_MAIN}
-            className="cursor-pointer text-primary-1"
-          >
-            View docs
-          </Link>
+      <ContractFactoryWrapper>
+        <DashboardHeader
+          title="Create Loyalty Program"
+          info="Create and deploy your custom loyalty program smart contract"
+        />
+        <div className="mb-8 flex items-start gap-[0.5rem] rounded-md bg-neutral-2 p-3 text-sm font-[0.8125rem] leading-[1.125rem] text-dashboard-lightGray">
+          <span className="text-neutral-3">
+            <ReadIcon size={14} color="currentColor" />
+          </span>
+          <div className="break-word inline-block">
+            Learn about how your smart contract will work or read our
+            documentation for help.{" "}
+            <Link
+              href={ROUTE_DOCS_MAIN}
+              className="cursor-pointer text-primary-1"
+            >
+              View docs
+            </Link>
+          </div>
         </div>
-      </div>
-      <CreateStepper steps={creationSteps} />
+        <CreateStepper steps={creationSteps} />
+      </ContractFactoryWrapper>
     </>
   );
 };

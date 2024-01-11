@@ -7,7 +7,8 @@ import {
   MIN_OBJECTIVE_POINTS_VALUE,
   MIN_OBJECTIVE_TITLE_LENGTH,
 } from "~/constants/loyaltyConstants";
-import { Authority } from "~/customHooks/useDeployLoyalty/types";
+import { LEADING_ZERO_REGEX } from "~/constants/regularExpressions";
+import { Authority, Objective } from "~/customHooks/useDeployLoyalty/types";
 
 export type StateKey =
   | "name"
@@ -50,15 +51,29 @@ const validateObjectiveInputs = (
   if (points > MAX_OBJECTIVE_POINTS_VALUE) {
     return "Can not award more than 10,000 points for a single objective";
   }
+
   if (points < MIN_OBJECTIVE_POINTS_VALUE) {
     return "Must award a points value of at least 1";
+  }
+  if (LEADING_ZERO_REGEX.test(String(points))) {
+    return "Amount of points cannot start with a 0";
   }
 
   return "";
 };
 
-const validateObjectives = (): string => {
-  //TODO
+//TODO - finish
+const validateObjectives = (objectives: Objective[]): string => {
+  if (objectives.length > MAX_OBJECTIVES_LENGTH) {
+    return "Max objectives length exceeded";
+  }
+  const objectiveTitles = objectives.map((obj) => obj.title);
+  const isDuplicateTitle = objectiveTitles.some(
+    (obj, index) => objectiveTitles.indexOf(obj) != index,
+  );
+
+  if (isDuplicateTitle) return "Objectives cannot have the same exact titles";
+
   return "";
 };
 const validateTiers = (): string => {
