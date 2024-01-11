@@ -15,7 +15,7 @@ export default function CreateProgramName() {
 
   const onNextStep = useNextLoyaltyStep([
     () => nameValidation?.[0]?.validation(name),
-    () => descriptionValidation?.[0]?.validation(name),
+    () => descriptionValidation?.[1]?.validation(description),
   ]);
 
   return (

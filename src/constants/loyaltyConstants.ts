@@ -1,3 +1,8 @@
 export const MAX_LOYALTY_NAME_LENGTH = 32;
 export const MAX_OBJECTIVES_LENGTH = 10;
 export const MAX_TIERS_LENGTH = 8;
+
+export const MAX_OBJECTIVE_TITLE_LENGTH = 120;
+export const MIN_OBJECTIVE_TITLE_LENGTH = 3;
+export const MAX_OBJECTIVE_POINTS_VALUE = 10_000;
+export const MIN_OBJECTIVE_POINTS_VALUE = 1;

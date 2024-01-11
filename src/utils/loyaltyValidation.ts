@@ -1,12 +1,18 @@
 import {
   MAX_LOYALTY_NAME_LENGTH,
   MAX_OBJECTIVES_LENGTH,
+  MAX_OBJECTIVE_POINTS_VALUE,
+  MAX_OBJECTIVE_TITLE_LENGTH,
   MAX_TIERS_LENGTH,
+  MIN_OBJECTIVE_POINTS_VALUE,
+  MIN_OBJECTIVE_TITLE_LENGTH,
 } from "~/constants/loyaltyConstants";
+import { Authority } from "~/customHooks/useDeployLoyalty/types";
 
 export type StateKey =
   | "name"
   | "description"
+  | "objectives_input"
   | "objectives"
   | "tiers"
   | "rewardType";
@@ -21,6 +27,33 @@ const validateName = (name: string): string => {
 
 const validateDescription = (desc: string): string => {
   if (desc.length > 80) return "Description is too long";
+  return "";
+};
+
+const validateObjectiveInputs = (
+  title: string,
+  authority: Authority,
+  points: number,
+): string => {
+  if (title.length >= MAX_OBJECTIVE_TITLE_LENGTH) {
+    return "Objective title cannot exceed 120 characters";
+  }
+
+  if (title.length < MIN_OBJECTIVE_TITLE_LENGTH) {
+    return "Objective title must exceed 3 characters";
+  }
+
+  if (authority !== "CREATOR" && authority !== "USER") {
+    return "Invalid authority type";
+  }
+
+  if (points > MAX_OBJECTIVE_POINTS_VALUE) {
+    return "Can not award more than 10,000 points for a single objective";
+  }
+  if (points < MIN_OBJECTIVE_POINTS_VALUE) {
+    return "Must award a points value of at least 1";
+  }
+
   return "";
 };
 
@@ -49,7 +82,13 @@ export const validationFuncs = new Map<
     ],
   ],
 
-  [1, [{ validation: validateObjectives, stateKey: ["objectives"] }]],
+  [
+    1,
+    [
+      { validation: validateObjectiveInputs, stateKey: ["objectives_input"] },
+      { validation: validateObjectives, stateKey: ["objectives"] },
+    ],
+  ],
 ]);
 
 export const validateStep = (step: number, state: any): string | null => {
