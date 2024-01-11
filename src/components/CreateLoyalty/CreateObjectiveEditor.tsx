@@ -48,7 +48,7 @@ export default function CreateObjectiveEditor({
         (obj) => obj.id == objectiveId,
       );
       if (existingObjective) {
-        setTitle(existingObjective?.title);
+        setTitle(existingObjective?.title ?? "");
         setAuthority(existingObjective?.authority);
         setPoints(String(existingObjective?.points));
       }

@@ -1,9 +1,22 @@
 import React, { useState } from "react";
 import { useDeployLoyaltyStore } from "~/customHooks/useDeployLoyalty/store";
+import { useNextLoyaltyStep } from "~/customHooks/useNextLoyaltyStep/useNextLoyaltyStep";
+import { usePreviousLoyaltyStep } from "~/customHooks/useLoyaltyPrevStep/useLoyaltyPrevStep";
 import { validationFuncs } from "~/utils/loyaltyValidation";
-import { AddIcon, EditPencil, ThumbDots } from "../UI/Dashboard/Icons";
+import {
+  AddIcon,
+  EditPencil,
+  ThumbDots,
+  RightChevron,
+  TrashcanDelete,
+  FormErrorIcon,
+} from "../UI/Dashboard/Icons";
 import CreateObjectiveEditor from "./CreateObjectiveEditor";
-import { RightChevron, TrashcanDelete } from "../UI/Dashboard/Icons";
+import CreateNextButton from "./CreateNextButton";
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+
+//TODO 1/12 - refactor this, get rid of objectiveInput and use zustand store objectives array
+//...so that progress is changed when changing "tabs"
 
 export type ObjectiveInput = {
   id: number;
@@ -30,6 +43,9 @@ export default function CreateObjectives() {
   const currentStepError = errors.find((error) => error.step === step);
 
   const objectivesValidation = validationFuncs.get(step);
+  const onNextStep = useNextLoyaltyStep([
+    () => objectivesValidation?.[1]?.validation(objectivesInput),
+  ]);
 
   const editExistingObjective = (id: number): void => {
     setObjectiveId(id);
@@ -44,6 +60,10 @@ export default function CreateObjectives() {
   const removeObjective = (id: number): void => {
     const removed = objectivesInput.filter((obj) => obj.id !== id);
     setObjectivesInput(removed);
+  };
+
+  const handleObjectivesReorder = (result: any): void => {
+    //TODO
   };
 
   return (
@@ -107,74 +127,120 @@ export default function CreateObjectives() {
           >
             <thead className="table-header-group border-collapse border-spacing-[2px] overflow-hidden break-words border-none align-middle">
               <tr
-                className="table-row border-collapse break-words bg-dashboard-input align-middle"
+                className="table-row border-collapse overflow-hidden break-words border border-dashboard-divider bg-dashboard-input align-middle"
                 role="row"
               >
-                <th className="text-dashboard-table1 h-10 w-[80%]  py-1 pe-4 ps-4 text-start text-xs font-semibold uppercase leading-4">
+                <th className="h-10 w-[80%] py-1  pe-4 ps-4 text-start text-xs font-semibold uppercase leading-4 text-dashboard-table1">
                   Title
                 </th>
-                <th className="text-dashboard-table1 h-10 min-w-[70px] py-1 pe-4 ps-4 text-end text-xs font-semibold uppercase leading-4">
+                <th className="h-10 min-w-[70px] py-1 pe-4 ps-4 text-end text-xs font-semibold uppercase leading-4 text-dashboard-table1">
                   Authority
                 </th>
-                <th className="text-dashboard-table1 h-10 min-w-[100px] py-1 pe-4 ps-4 text-start text-xs font-semibold uppercase leading-4">
+                <th className="h-10 min-w-[100px] py-1 pe-4 ps-4 text-start text-xs font-semibold uppercase leading-4 text-dashboard-table1">
                   Points
                 </th>
-                <th className="text-dashboard-table1 h-10 min-w-[50px] py-1 pe-4 ps-4 text-center text-xs font-semibold uppercase leading-4"></th>
+                <th className="h-10 min-w-[50px] py-1 pe-4 ps-4 text-center text-xs font-semibold uppercase leading-4 text-dashboard-table1"></th>
                 {/* border border-solid border-dashboard-menuInner  */}
               </tr>
             </thead>
-            <tbody>
-              {objectivesInput.map((obj) => {
-                return (
-                  <tr
-                    className="table-row border-collapse break-words bg-white align-middle"
-                    role="row"
-                    key={obj.id}
-                  >
-                    <td
-                      className="cursor-pointer py-0 pe-4 ps-4 text-start text-sm leading-4 "
-                      role="gridcell"
-                    >
-                      <div className="block py-4">
-                        <div className="flex flex-row items-center">
-                          <ThumbDots size={16} />
-                          <span className="ms-4 flex min-h-9 flex-col justify-center">
-                            {obj.title}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                    <td
-                      className="cursor-pointer py-0 pe-4 ps-4 text-start text-sm leading-4 "
-                      role="gridcell"
-                    >
-                      <div className="block py-4">{obj.authority}</div>
-                    </td>
-                    <td
-                      className="cursor-pointer py-0 pe-4 ps-4 text-start text-sm leading-4 "
-                      role="gridcell"
-                    >
-                      <div className="block py-4">{obj.points}</div>
-                    </td>
-                    <td
-                      className="cursor-pointer py-0 pe-4 ps-4 text-center text-sm leading-4 "
-                      role="gridcell"
-                    >
-                      <div className="flex flex-row gap-2 py-4 text-gray-400">
-                        <span onClick={() => editExistingObjective(obj.id)}>
-                          <EditPencil size={16} color="currentColor" />
-                        </span>
-                        <span onClick={() => removeObjective(obj.id)}>
-                          <TrashcanDelete size={16} color="currentColor" />
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
+            <DragDropContext onDragEnd={handleObjectivesReorder}>
+              <Droppable droppableId="objectives">
+                {(provided) => (
+                  <tbody {...provided.droppableProps} ref={provided.innerRef}>
+                    {objectivesInput.map((obj) => {
+                      return (
+                        <Draggable
+                          index={obj.id}
+                          key={obj.id}
+                          draggableId={`${obj.id}`}
+                        >
+                          {(provided) => (
+                            <tr
+                              className="table-row border-collapse border-spacing-[2px] overflow-hidden break-words border border-dashboard-divider bg-white align-middle"
+                              role="row"
+                              key={obj.id}
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                            >
+                              <td
+                                className="cursor-pointer py-0 pe-4 ps-4 text-start text-sm leading-4 "
+                                role="gridcell"
+                              >
+                                <div className="block py-4">
+                                  <div className="flex flex-row items-center">
+                                    <span
+                                      {...provided.dragHandleProps}
+                                      className="cursor-grab"
+                                    >
+                                      <ThumbDots size={16} />
+                                    </span>
+                                    <span className="ms-4 flex min-h-9 flex-col justify-center">
+                                      {obj.title}
+                                    </span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td
+                                className="cursor-pointer py-0 pe-4 ps-4 text-start text-sm leading-4 "
+                                role="gridcell"
+                              >
+                                <div className="block py-4">
+                                  {obj.authority}
+                                </div>
+                              </td>
+                              <td
+                                className="cursor-pointer py-0 pe-4 ps-4 text-start text-sm leading-4 "
+                                role="gridcell"
+                              >
+                                <div className="block py-4">{obj.points}</div>
+                              </td>
+                              <td
+                                className="cursor-pointer py-0 pe-4 ps-4 text-center text-sm leading-4 "
+                                role="gridcell"
+                              >
+                                <div className="flex flex-row gap-2 py-4 text-gray-400">
+                                  <span
+                                    onClick={() =>
+                                      editExistingObjective(obj.id)
+                                    }
+                                  >
+                                    <EditPencil
+                                      size={16}
+                                      color="currentColor"
+                                    />
+                                  </span>
+                                  <span onClick={() => removeObjective(obj.id)}>
+                                    <TrashcanDelete
+                                      size={16}
+                                      color="currentColor"
+                                    />
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </Draggable>
+                      );
+                    })}
+                    {provided.placeholder}
+                  </tbody>
+                )}
+              </Droppable>
+            </DragDropContext>
             <caption></caption>
           </table>
+        </div>
+      )}
+
+      {!isEditorOpen && (
+        <div className="mt-6 flex flex-row items-center">
+          <CreateNextButton step={step} onClick={onNextStep} />
+          {currentStepError && (
+            <span className="flex flex-row gap-1 truncate pl-4 font-medium text-error-1">
+              <FormErrorIcon size={20} color="currentColor" />{" "}
+              {currentStepError.message}
+            </span>
+          )}
         </div>
       )}
     </>
