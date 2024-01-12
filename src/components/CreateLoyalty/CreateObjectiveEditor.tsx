@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useDeployLoyaltyStore } from "~/customHooks/useDeployLoyalty/store";
-import { validationFuncs } from "~/utils/loyaltyValidation";
 import { InfoIcon, FormErrorIcon } from "../UI/Dashboard/Icons";
 import {
   MAX_OBJECTIVE_TITLE_LENGTH,
   MIN_OBJECTIVE_TITLE_LENGTH,
   MIN_OBJECTIVE_POINTS_VALUE,
   MAX_OBJECTIVE_POINTS_VALUE,
+  MAX_OBJECTIVES_LENGTH,
 } from "~/constants/loyaltyConstants";
 import { Authority, Objective } from "~/customHooks/useDeployLoyalty/types";
+import { validateObjectiveInputs } from "~/utils/loyaltyValidation";
 
 //TODO - this can prob be refactored to eliminate the need for additional state variables,
 //and to eliminate the useEffect that is used here.
@@ -35,9 +36,6 @@ export default function CreateObjectiveEditor({
   const { objectives, setObjectives } = useDeployLoyaltyStore();
   const isNewObjective = activeObjective == objectives.length;
 
-  const { step } = useDeployLoyaltyStore();
-  const objectivesValidation = validationFuncs.get(step);
-
   useEffect(() => {
     if (!isNewObjective) {
       const existingObjective = objectives.find(
@@ -52,10 +50,10 @@ export default function CreateObjectiveEditor({
   }, []);
 
   const isValidated = (): boolean => {
-    const errorMessage = objectivesValidation?.[0]?.validation(
+    const errorMessage = validateObjectiveInputs(
       title,
       authority,
-      points,
+      Number(points),
     );
     if (errorMessage) {
       setInputError({ isError: true, message: errorMessage });
@@ -65,6 +63,13 @@ export default function CreateObjectiveEditor({
   };
 
   const addNewObjective = (): void => {
+    if (objectives.length >= MAX_OBJECTIVES_LENGTH) {
+      setInputError({
+        isError: true,
+        message: `Cannot add more than ${MAX_OBJECTIVES_LENGTH} objectives`,
+      });
+      return;
+    }
     if (isValidated()) {
       const newObjective: Objective = {
         id: objectives.length,
@@ -123,7 +128,6 @@ export default function CreateObjectiveEditor({
             </label>
             <select
               onChange={(e) => setAuthority(e.target.value as Authority)}
-              // defaultValue={authority}
               value={authority}
               className="relative h-10 w-full min-w-0 rounded-md border-2 border-solid border-transparent bg-dashboard-input pl-2 text-base outline-none ring-0 focus:ring-2 focus:ring-primary-1"
             >

@@ -31,38 +31,6 @@ const validateDescription = (desc: string): string => {
   return "";
 };
 
-const validateObjectiveInputs = (
-  title: string,
-  authority: Authority,
-  points: number,
-): string => {
-  if (title.length >= MAX_OBJECTIVE_TITLE_LENGTH) {
-    return "Objective title cannot exceed 120 characters";
-  }
-
-  if (title.length < MIN_OBJECTIVE_TITLE_LENGTH) {
-    return "Objective title must exceed 3 characters";
-  }
-
-  if (authority !== "CREATOR" && authority !== "USER") {
-    return "Invalid authority type";
-  }
-
-  if (points > MAX_OBJECTIVE_POINTS_VALUE) {
-    return "Can not award more than 10,000 points for a single objective";
-  }
-
-  if (points < MIN_OBJECTIVE_POINTS_VALUE) {
-    return "Must award a points value of at least 1";
-  }
-  if (LEADING_ZERO_REGEX.test(String(points))) {
-    return "Amount of points cannot start with a 0";
-  }
-
-  return "";
-};
-
-//TODO - finish
 const validateObjectives = (objectives: Objective[]): string => {
   if (objectives.length > MAX_OBJECTIVES_LENGTH) {
     return "Max objectives length exceeded";
@@ -97,13 +65,7 @@ export const validationFuncs = new Map<
     ],
   ],
 
-  [
-    1,
-    [
-      { validation: validateObjectiveInputs, stateKey: ["objectives_input"] },
-      { validation: validateObjectives, stateKey: ["objectives"] },
-    ],
-  ],
+  [1, [{ validation: validateObjectives, stateKey: ["objectives"] }]],
 ]);
 
 export const validateStep = (step: number, state: any): string | null => {
@@ -116,6 +78,40 @@ export const validateStep = (step: number, state: any): string | null => {
     const errorMessage = validation(...stateValues);
 
     if (errorMessage) return errorMessage;
+  }
+
+  return "";
+};
+
+export const validateObjectiveInputs = (
+  title: string,
+  authority: Authority,
+  points: number,
+): string => {
+  if (!title.trim().length) {
+    return "Objective title cannot contain empty space";
+  }
+  if (title.length >= MAX_OBJECTIVE_TITLE_LENGTH) {
+    return "Objective title cannot exceed 120 characters";
+  }
+
+  if (title.length < MIN_OBJECTIVE_TITLE_LENGTH) {
+    return "Objective title must exceed 3 characters";
+  }
+
+  if (authority !== "CREATOR" && authority !== "USER") {
+    return "Invalid authority type";
+  }
+
+  if (points > MAX_OBJECTIVE_POINTS_VALUE) {
+    return "Can not award more than 10,000 points for a single objective";
+  }
+
+  if (points < MIN_OBJECTIVE_POINTS_VALUE) {
+    return "Must award a points value of at least 1";
+  }
+  if (LEADING_ZERO_REGEX.test(String(points))) {
+    return "Amount of points cannot start with a 0";
   }
 
   return "";

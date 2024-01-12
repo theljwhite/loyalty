@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useDeployLoyaltyStore } from "~/customHooks/useDeployLoyalty/store";
 import { useNextLoyaltyStep } from "~/customHooks/useNextLoyaltyStep/useNextLoyaltyStep";
-import { usePreviousLoyaltyStep } from "~/customHooks/useLoyaltyPrevStep/useLoyaltyPrevStep";
 import { validationFuncs } from "~/utils/loyaltyValidation";
 import {
   AddIcon,
@@ -20,6 +19,9 @@ import {
   Droppable,
   type DropResult,
 } from "@hello-pangea/dnd";
+import { MAX_OBJECTIVES_LENGTH } from "~/constants/loyaltyConstants";
+
+//TODO - small styling issue with the <tr>'s when dragging/dropping
 
 export default function CreateObjectives() {
   const [isEditorOpen, setIsEditorOpen] = useState<boolean>(false);
@@ -113,9 +115,10 @@ export default function CreateObjectives() {
         </div>
         {!isEditorOpen && (
           <button
+            disabled={objectives.length >= MAX_OBJECTIVES_LENGTH}
             type="button"
             onClick={addNewObjective}
-            className="inline-flex h-8 w-auto appearance-none items-center justify-center whitespace-nowrap rounded-md border border-primary-1 bg-transparent pe-3 ps-3 align-middle text-sm font-medium leading-[1.2] text-primary-1 outline-none outline-offset-2 hover:bg-violet-200"
+            className="inline-flex h-8 w-auto appearance-none items-center justify-center whitespace-nowrap rounded-md border border-primary-1 bg-transparent pe-3 ps-3 align-middle text-sm font-medium leading-[1.2] text-primary-1 outline-none outline-offset-2 hover:bg-violet-200 disabled:cursor-not-allowed disabled:border-gray-400 disabled:bg-dashboard-input disabled:text-gray-400"
           >
             <span className="me-2 inline-flex shrink-0 self-center leading-[1.2]">
               <AddIcon size={16} color="currentColor" />
@@ -133,7 +136,7 @@ export default function CreateObjectives() {
         <div className="border-box block border-spacing-[2px] overflow-hidden rounded-lg border border-solid border-dashboard-input bg-white">
           <table
             role="table"
-            className="indent-initial  m-0 table w-full [transition:opacity_0.2s_ease-in-out_0s]"
+            className="indent-initial m-0 table w-full [transition:opacity_0.2s_ease-in-out_0s]"
           >
             <thead className="table-header-group border-collapse border-spacing-[2px] overflow-hidden break-words border-none align-middle">
               <tr
@@ -166,7 +169,7 @@ export default function CreateObjectives() {
                         >
                           {(provided) => (
                             <tr
-                              className="table-row border-collapse border-spacing-[2px] overflow-hidden break-words border border-dashboard-divider bg-white align-middle"
+                              className="table-row border-collapse border-spacing-[2px] overflow-hidden break-words border border-dashboard-divider bg-white align-middle hover:bg-dashboard-input"
                               role="row"
                               key={obj.id}
                               ref={provided.innerRef}
@@ -185,7 +188,9 @@ export default function CreateObjectives() {
                                       <ThumbDots size={16} />
                                     </span>
                                     <span className="ms-4 flex min-h-9 flex-col justify-center">
-                                      {obj.title}
+                                      {obj.title.length > 75
+                                        ? `${obj.title.slice(0, 75)}...`
+                                        : obj.title}
                                     </span>
                                   </div>
                                 </div>
