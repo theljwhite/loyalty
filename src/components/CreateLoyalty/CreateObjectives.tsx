@@ -47,7 +47,9 @@ export default function CreateObjectives() {
   };
 
   const removeObjective = (id: number): void => {
-    const removed = objectives.filter((obj) => obj.id !== id);
+    const removed = objectives
+      .filter((obj) => obj.id !== id)
+      .map((obj, index) => ({ ...obj, id: index }));
     setObjectives(removed);
   };
 
@@ -160,83 +162,86 @@ export default function CreateObjectives() {
               <Droppable droppableId="objectives">
                 {(provided) => (
                   <tbody {...provided.droppableProps} ref={provided.innerRef}>
-                    {objectives.map((obj) => {
-                      return (
-                        <Draggable
-                          index={obj.id}
-                          key={obj.id}
-                          draggableId={`${obj.id}`}
-                        >
-                          {(provided) => (
-                            <tr
-                              className="table-row border-collapse border-spacing-[2px] overflow-hidden break-words border border-dashboard-divider bg-white align-middle hover:bg-dashboard-input"
-                              role="row"
-                              key={obj.id}
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                            >
-                              <td
-                                className="cursor-pointer py-0 pe-4 ps-4 text-start text-sm leading-4 "
-                                role="gridcell"
+                    {objectives &&
+                      objectives.map((obj) => {
+                        return (
+                          <Draggable
+                            index={obj.id}
+                            key={obj.id}
+                            draggableId={`${obj.id}`}
+                          >
+                            {(provided) => (
+                              <tr
+                                className="table-row border-collapse border-spacing-[2px] overflow-hidden break-words border border-dashboard-divider bg-white align-middle hover:bg-dashboard-input"
+                                role="row"
+                                key={obj.id}
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
                               >
-                                <div className="block py-4">
-                                  <div className="flex flex-row items-center">
+                                <td
+                                  className="cursor-pointer py-0 pe-4 ps-4 text-start text-sm leading-4 "
+                                  role="gridcell"
+                                >
+                                  <div className="block py-4">
+                                    <div className="flex flex-row items-center">
+                                      <span
+                                        {...provided.dragHandleProps}
+                                        className="cursor-grab"
+                                      >
+                                        <ThumbDots size={16} />
+                                      </span>
+                                      <span className="ms-4 flex min-h-9 flex-col justify-center">
+                                        {obj.title.length > 75
+                                          ? `${obj.title.slice(0, 75)}...`
+                                          : obj.title}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td
+                                  className="cursor-pointer py-0 pe-4 ps-4 text-start text-sm leading-4 "
+                                  role="gridcell"
+                                >
+                                  <div className="block py-4">
+                                    {obj.authority}
+                                  </div>
+                                </td>
+                                <td
+                                  className="cursor-pointer py-0 pe-4 ps-4 text-start text-sm leading-4 "
+                                  role="gridcell"
+                                >
+                                  <div className="block py-4">{obj.reward}</div>
+                                </td>
+                                <td
+                                  className="cursor-pointer py-0 pe-4 ps-4 text-center text-sm leading-4 "
+                                  role="gridcell"
+                                >
+                                  <div className="flex flex-row gap-2 py-4 text-gray-400">
                                     <span
-                                      {...provided.dragHandleProps}
-                                      className="cursor-grab"
+                                      onClick={() =>
+                                        editExistingObjective(obj.id)
+                                      }
                                     >
-                                      <ThumbDots size={16} />
+                                      <EditPencil
+                                        size={16}
+                                        color="currentColor"
+                                      />
                                     </span>
-                                    <span className="ms-4 flex min-h-9 flex-col justify-center">
-                                      {obj.title.length > 75
-                                        ? `${obj.title.slice(0, 75)}...`
-                                        : obj.title}
+                                    <span
+                                      onClick={() => removeObjective(obj.id)}
+                                    >
+                                      <TrashcanDelete
+                                        size={16}
+                                        color="currentColor"
+                                      />
                                     </span>
                                   </div>
-                                </div>
-                              </td>
-                              <td
-                                className="cursor-pointer py-0 pe-4 ps-4 text-start text-sm leading-4 "
-                                role="gridcell"
-                              >
-                                <div className="block py-4">
-                                  {obj.authority}
-                                </div>
-                              </td>
-                              <td
-                                className="cursor-pointer py-0 pe-4 ps-4 text-start text-sm leading-4 "
-                                role="gridcell"
-                              >
-                                <div className="block py-4">{obj.reward}</div>
-                              </td>
-                              <td
-                                className="cursor-pointer py-0 pe-4 ps-4 text-center text-sm leading-4 "
-                                role="gridcell"
-                              >
-                                <div className="flex flex-row gap-2 py-4 text-gray-400">
-                                  <span
-                                    onClick={() =>
-                                      editExistingObjective(obj.id)
-                                    }
-                                  >
-                                    <EditPencil
-                                      size={16}
-                                      color="currentColor"
-                                    />
-                                  </span>
-                                  <span onClick={() => removeObjective(obj.id)}>
-                                    <TrashcanDelete
-                                      size={16}
-                                      color="currentColor"
-                                    />
-                                  </span>
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </Draggable>
-                      );
-                    })}
+                                </td>
+                              </tr>
+                            )}
+                          </Draggable>
+                        );
+                      })}
                     {provided.placeholder}
                   </tbody>
                 )}

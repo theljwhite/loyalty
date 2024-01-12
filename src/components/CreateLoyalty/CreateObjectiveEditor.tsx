@@ -77,7 +77,10 @@ export default function CreateObjectiveEditor({
         authority,
         reward: Number(points),
       };
-      const newObjectives = [...objectives, newObjective];
+      const newObjectives = [...objectives, newObjective].map((obj, index) => ({
+        ...obj,
+        id: index,
+      }));
       setObjectives(newObjectives);
       setIsEditorOpen(false);
     }

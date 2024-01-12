@@ -1,5 +1,8 @@
 import React from "react";
+import { useDeployLoyaltyStore } from "~/customHooks/useDeployLoyalty/store";
 
 export default function CreateTiers() {
-  return <div>CreateTiers</div>;
+  const { tiers, setTiers, step, errors } = useDeployLoyaltyStore();
+
+  return <></>;
 }
