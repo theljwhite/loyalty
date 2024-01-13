@@ -97,11 +97,11 @@ export const validateObjectiveInputs = (
     return "Objective title cannot contain empty space";
   }
   if (title.length >= MAX_OBJECTIVE_TITLE_LENGTH) {
-    return "Objective title cannot exceed 120 characters";
+    return `Objective title cannot exceed ${MAX_OBJECTIVE_TITLE_LENGTH} characters`;
   }
 
   if (title.length < MIN_OBJECTIVE_TITLE_LENGTH) {
-    return "Objective title must exceed 3 characters";
+    return `Objective title must exceed ${MIN_OBJECTIVE_TITLE_LENGTH} characters`;
   }
 
   if (authority !== "CREATOR" && authority !== "USER") {
@@ -109,7 +109,7 @@ export const validateObjectiveInputs = (
   }
 
   if (points > MAX_OBJECTIVE_POINTS_VALUE) {
-    return "Can not award more than 10,000 points for a single objective";
+    return `Can not award more than ${MAX_OBJECTIVE_POINTS_VALUE} points for a single objective`;
   }
 
   if (points < MIN_OBJECTIVE_POINTS_VALUE) {
