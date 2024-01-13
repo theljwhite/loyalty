@@ -22,6 +22,7 @@ import {
 import { MAX_OBJECTIVES_LENGTH } from "~/constants/loyaltyConstants";
 
 //TODO - small styling issue with the <tr>'s when dragging/dropping
+//TODO - may need loading UI, other small styling fixes
 
 export default function CreateObjectives() {
   const [isEditorOpen, setIsEditorOpen] = useState<boolean>(false);
@@ -41,7 +42,7 @@ export default function CreateObjectives() {
     setIsEditorOpen(true);
   };
 
-  const addNewObjective = (): void => {
+  const openEditorNewObjective = (): void => {
     setActiveObjective(objectives.length);
     setIsEditorOpen(true);
   };
@@ -119,7 +120,7 @@ export default function CreateObjectives() {
           <button
             disabled={objectives.length >= MAX_OBJECTIVES_LENGTH}
             type="button"
-            onClick={addNewObjective}
+            onClick={openEditorNewObjective}
             className="inline-flex h-8 w-auto appearance-none items-center justify-center whitespace-nowrap rounded-md border border-primary-1 bg-transparent pe-3 ps-3 align-middle text-sm font-medium leading-[1.2] text-primary-1 outline-none outline-offset-2 hover:bg-violet-200 disabled:cursor-not-allowed disabled:border-gray-400 disabled:bg-dashboard-input disabled:text-gray-400"
           >
             <span className="me-2 inline-flex shrink-0 self-center leading-[1.2]">

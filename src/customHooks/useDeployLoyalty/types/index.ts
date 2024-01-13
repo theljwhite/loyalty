@@ -13,7 +13,8 @@ export type Objective = {
   authority: Authority;
 };
 export type Tier = {
-  index: number;
+  id: number;
+  name: string;
   rewardsRequired: number;
 };
 

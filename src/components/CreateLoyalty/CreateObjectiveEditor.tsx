@@ -102,7 +102,7 @@ export default function CreateObjectiveEditor({
   };
 
   return (
-    <form className="border-box break-words">
+    <div className="border-box break-words">
       <div className="max-w-[50em]">
         <div className="flex flex-col">
           <div className="relative w-full">
@@ -151,7 +151,7 @@ export default function CreateObjectiveEditor({
                 <InfoIcon size={20} color="currentColor" />
               </span>
             </div>
-            <hr className="mt-4 w-full border-solid border-[0px_0px_1px] border-dashboard-divider opacity-60" />
+            <hr className="mt-4 w-full border-t border-solid border-dashboard-divider opacity-60" />
           </div>
           <div className="relative mt-5 w-full">
             <label className="mb-2 me-3 block text-start text-base font-medium text-dashboard-menuText opacity-100 duration-200 [transition-property:background-color,border-color,color,fill,stroke,opacity,box-shadow,transform]">
@@ -209,6 +209,6 @@ export default function CreateObjectiveEditor({
           )}
         </div>
       </div>
-    </form>
+    </div>
   );
 }

@@ -24,7 +24,7 @@ export interface DeployLoyaltyState {
   description: string | null;
   objectives: Objective[];
   authorities: Authority[];
-  tiers: Tier[] | null;
+  tiers: Tier[];
   rewardType: RewardType;
   programStart: Date;
   programEndsAt: Date;
@@ -81,7 +81,7 @@ export const useDeployLoyaltyStore = create<DeployLoyaltyState>((set, get) => {
       },
     ],
     authorities: [],
-    tiers: [],
+    tiers: [{ id: 0, name: "Bronze", rewardsRequired: 200 }],
     rewardType: RewardType.Points,
     programStart: programStart,
     programEndsAt: programEnd,

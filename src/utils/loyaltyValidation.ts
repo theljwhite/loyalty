@@ -6,6 +6,10 @@ import {
   MAX_TIERS_LENGTH,
   MIN_OBJECTIVE_POINTS_VALUE,
   MIN_OBJECTIVE_TITLE_LENGTH,
+  MIN_TIER_POINTS_REQ_VALUE,
+  MAX_TIER_POINTS_REQ_VALUE,
+  MIN_TIER_NAME_LENGTH,
+  MAX_TIER_NAME_LENGTH,
 } from "~/constants/loyaltyConstants";
 import { LEADING_ZERO_REGEX } from "~/constants/regularExpressions";
 import { Authority, Objective } from "~/customHooks/useDeployLoyalty/types";
@@ -66,6 +70,7 @@ export const validationFuncs = new Map<
   ],
 
   [1, [{ validation: validateObjectives, stateKey: ["objectives"] }]],
+  [2, [{ validation: validateTiers, stateKey: ["tiers"] }]],
 ]);
 
 export const validateStep = (step: number, state: any): string | null => {
@@ -112,6 +117,32 @@ export const validateObjectiveInputs = (
   }
   if (LEADING_ZERO_REGEX.test(String(points))) {
     return "Amount of points cannot start with a 0";
+  }
+
+  return "";
+};
+
+export const validateTierInputs = (
+  maxReachablePoints: number,
+  tierName: string,
+  pointsRequired: number,
+): string => {
+  if (tierName.length < MIN_TIER_NAME_LENGTH) {
+    return "Tier name must must be greater than 1 character";
+  }
+
+  if (tierName.length > MAX_TIER_NAME_LENGTH) {
+    return `Tier name cannot exceed ${MAX_TIER_NAME_LENGTH} characters`;
+  }
+
+  if (pointsRequired < MIN_TIER_POINTS_REQ_VALUE) {
+    return `Must set points required to at least ${MIN_TIER_POINTS_REQ_VALUE} point`;
+  }
+  if (pointsRequired > MAX_TIER_POINTS_REQ_VALUE) {
+    return "Max points required value exceeded";
+  }
+  if (pointsRequired >= maxReachablePoints) {
+    return `Tier points required cannot exceed max reachable points of ${maxReachablePoints}`;
   }
 
   return "";
