@@ -16,6 +16,7 @@ export type Tier = {
   id: number;
   name: string;
   rewardsRequired: number;
+  minObjsToReach: number;
 };
 
 export type ContractSubmissionReqs = {

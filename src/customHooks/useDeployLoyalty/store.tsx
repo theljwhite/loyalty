@@ -81,7 +81,7 @@ export const useDeployLoyaltyStore = create<DeployLoyaltyState>((set, get) => {
       },
     ],
     authorities: [],
-    tiers: [{ id: 0, name: "Bronze", rewardsRequired: 200 }],
+    tiers: [],
     rewardType: RewardType.Points,
     programStart: programStart,
     programEndsAt: programEnd,

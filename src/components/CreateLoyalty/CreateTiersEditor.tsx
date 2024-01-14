@@ -5,14 +5,18 @@ import {
   MIN_TIER_POINTS_REQ_VALUE,
   MAX_TIERS_LENGTH,
 } from "~/constants/loyaltyConstants";
-import { InfoIcon, FormErrorIcon, RightChevron } from "../UI/Dashboard/Icons";
+import {
+  InfoIcon,
+  FormErrorIcon,
+  RightChevron,
+  ObjectivesIconOne,
+} from "../UI/Dashboard/Icons";
 import { useDeployLoyaltyStore } from "~/customHooks/useDeployLoyalty/store";
 import { validateTierInputs } from "~/utils/loyaltyValidation";
 import { Tier } from "~/customHooks/useDeployLoyalty/types";
 
 //TODO - this can prob be refactored to eliminate the need for additional state variables,
 //and to eliminate the useEffect that is used here.
-
 //TODO - needs styling fixes
 
 interface TiersEditorProps {
@@ -28,7 +32,7 @@ export default function CreateTiersEditor({
     useState<boolean>(false);
   const [tierName, setTierName] = useState<string>("");
   const [pointsRequired, setPointsRequired] = useState<string>("");
-  const { tiers, setTiers, objectives } = useDeployLoyaltyStore();
+  const [minObjsToReachTier, setMinObjsToReachTier] = useState<string>("0");
   const [inputError, setInputError] = useState<{
     isError: boolean;
     message: string;
@@ -36,6 +40,9 @@ export default function CreateTiersEditor({
     isError: false,
     message: "",
   });
+
+  const { tiers, setTiers, objectives } = useDeployLoyaltyStore();
+
   const isNewTier = activeTier == tiers.length;
   const maxReachablePoints = objectives.reduce(
     (prev, { reward }) => prev + reward,
@@ -48,18 +55,38 @@ export default function CreateTiersEditor({
       if (existingTier) {
         setTierName(existingTier.name);
         setPointsRequired(String(existingTier.rewardsRequired));
+        setMinObjsToReachTier(String(existingTier.minObjsToReach));
       }
     }
   }, []);
 
   const isValidated = (): boolean => {
-    const errorMessage = validateTierInputs(
+    const inputsError = validateTierInputs(
       maxReachablePoints,
       tierName,
       Number(pointsRequired),
     );
-    if (errorMessage) {
-      setInputError({ isError: true, message: errorMessage });
+    if (inputsError) {
+      setInputError({ isError: true, message: inputsError });
+      return false;
+    }
+
+    if (tiers.length >= MAX_TIERS_LENGTH) {
+      setInputError({
+        isError: true,
+        message: `Exceeded max tiers length: ${MAX_TIERS_LENGTH} `,
+      });
+      return false;
+    }
+
+    const lastTierPoints = tiers[tiers.length - 1]?.rewardsRequired;
+
+    if (lastTierPoints && lastTierPoints >= Number(pointsRequired)) {
+      setInputError({
+        isError: true,
+        message:
+          "Tier points required value must be greater than the tier before it",
+      });
       return false;
     }
 
@@ -67,11 +94,12 @@ export default function CreateTiersEditor({
   };
 
   const addNewTier = (): void => {
-    if (tiers.length < MAX_TIERS_LENGTH && isValidated()) {
+    if (isValidated()) {
       const newTier: Tier = {
         id: tiers.length,
         name: tierName,
         rewardsRequired: Number(pointsRequired),
+        minObjsToReach: Number(minObjsToReachTier),
       };
       const newTiers = [...tiers, newTier].map((tier, index) => ({
         ...tier,
@@ -87,12 +115,37 @@ export default function CreateTiersEditor({
       const updatedValues: Partial<Tier> = {
         name: tierName,
         rewardsRequired: Number(pointsRequired),
+        minObjsToReach: Number(minObjsToReachTier),
       };
       const editedTiers = tiers.map((tier) =>
         tier.id == activeTier ? { ...tier, ...updatedValues } : tier,
       );
       setTiers(editedTiers);
       setIsEditorOpen(false);
+    }
+  };
+
+  const handlePointsChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setPointsRequired(e.target.value);
+    calculateMinObjectivesToReachTier(Number(e.target.value));
+  };
+
+  const calculateMinObjectivesToReachTier = (
+    tierPointsRequired: number,
+  ): void => {
+    const objectivesCopy = [...objectives];
+    let objectivesCount: number = 0;
+    let totalPoints: number = 0;
+
+    if (tierPointsRequired > maxReachablePoints) {
+      setMinObjsToReachTier("Unreachable");
+    } else {
+      for (const objective of objectivesCopy) {
+        totalPoints += objective.reward;
+        objectivesCount++;
+        if (totalPoints >= tierPointsRequired) break;
+      }
+      setMinObjsToReachTier(String(objectivesCount));
     }
   };
 
@@ -130,7 +183,7 @@ export default function CreateTiersEditor({
               spellCheck="false"
               type="number"
               value={pointsRequired}
-              onChange={(e) => setPointsRequired(e.target.value)}
+              onChange={(e) => handlePointsChange(e)}
               min={MIN_TIER_POINTS_REQ_VALUE}
               max={maxReachablePoints}
               placeholder="e.g 2000"
@@ -141,11 +194,16 @@ export default function CreateTiersEditor({
               } relative h-10 w-full min-w-0 appearance-none rounded-md border-2 border-solid border-transparent bg-dashboard-input p-4 text-base outline-none`}
             />
 
-            <div className="mt-2 leading-normal text-dashboard-tooltip">
+            <div className="mt-2 flex flex-col gap-4 leading-normal text-dashboard-tooltip">
               <span className="flex flex-row gap-1 break-words">
                 *Reaching this points amount will move a user into this tier.{" "}
                 <span className="text-primary-1">Learn more</span>
                 <InfoIcon size={20} color="currentColor" />
+              </span>
+              <span className="flex flex-row gap-1 break-words">
+                <ObjectivesIconOne size={16} color="currentColor" />
+                Min. number of objectives completed to reach this tier:{" "}
+                {minObjsToReachTier}
               </span>
             </div>
             {/* <hr className="mt-4 w-full border-t border-solid border-dashboard-divider opacity-60" /> */}

@@ -18,6 +18,8 @@ import {
   ThumbDots,
   FormErrorIcon,
 } from "../UI/Dashboard/Icons";
+import Link from "next/link";
+import { ROUTE_DOCS_MAIN } from "~/configs/routes";
 
 //TODO - this can be made into a single reusable component probably...
 //...so that it can be used for CreateTiers and CreateObjectives (same component) for both flows
@@ -48,10 +50,6 @@ export default function CreateTiers() {
       .filter((tier) => tier.id !== id)
       .map((tier, index) => ({ ...tier, id: index }));
     setTiers(removed);
-  };
-
-  const handleTiersReorder = (result: DropResult): void => {
-    //TODO
   };
 
   return (
@@ -117,93 +115,81 @@ export default function CreateTiers() {
                 className="table-row border-collapse overflow-hidden break-words border border-dashboard-divider bg-dashboard-input align-middle"
                 role="row"
               >
-                <th className="h-10 w-[60%] py-1  pe-4 ps-4 text-start text-xs font-semibold uppercase leading-4 text-dashboard-table1">
+                <th className="h-10 w-[40%] py-1  pe-4 ps-4 text-start text-xs font-semibold uppercase leading-4 text-dashboard-table1">
                   Tier Name
                 </th>
-                <th className="h-10 w-[60%] py-1 pe-4 ps-4 text-start text-xs font-semibold uppercase leading-4 text-dashboard-table1">
+                <th className="h-10 w-[40%] py-1 pe-4 ps-4 text-start text-xs font-semibold uppercase leading-4 text-dashboard-table1">
                   Points Required
                 </th>
+
                 <th className="h-10 min-w-[50px] py-1 pe-4 ps-4 text-center text-xs font-semibold uppercase leading-4 text-dashboard-table1"></th>
                 {/* border border-solid border-dashboard-menuInner  */}
               </tr>
             </thead>
-            <DragDropContext onDragEnd={handleTiersReorder}>
-              <Droppable droppableId="tiers">
-                {(provided) => (
-                  <tbody {...provided.droppableProps} ref={provided.innerRef}>
-                    {tiers.map((tier) => {
-                      return (
-                        <Draggable
-                          index={tier.id}
-                          key={tier.id}
-                          draggableId={`${tier.id}`}
-                        >
-                          {(provided) => (
-                            <tr
-                              className="table-row border-collapse border-spacing-[2px] overflow-hidden break-words border border-dashboard-divider bg-white align-middle hover:bg-dashboard-input"
-                              role="row"
-                              key={tier.id}
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                            >
-                              <td
-                                className="cursor-pointer py-0 pe-4 ps-4 text-start text-sm leading-4 "
-                                role="gridcell"
-                              >
-                                <div className="block py-4">
-                                  <div className="flex flex-row items-center">
-                                    <span
-                                      {...provided.dragHandleProps}
-                                      className="cursor-grab"
-                                    >
-                                      <ThumbDots size={16} />
-                                    </span>
-                                    <span className="ms-4 flex min-h-9 flex-col justify-center">
-                                      {tier.name}
-                                    </span>
-                                  </div>
-                                </div>
-                              </td>
 
-                              <td
-                                className="cursor-pointer py-0 pe-4 ps-4 text-start text-sm leading-4 "
-                                role="gridcell"
-                              >
-                                <div className="block py-4">
-                                  {tier.rewardsRequired}
-                                </div>
-                              </td>
-                              <td
-                                className="cursor-pointer py-0 pe-4 ps-4 text-center text-sm leading-4 "
-                                role="gridcell"
-                              >
-                                <div className="flex flex-row gap-2 py-4 text-gray-400">
-                                  <span
-                                    onClick={() => editExistingTier(tier.id)}
-                                  >
-                                    <EditPencil
-                                      size={16}
-                                      color="currentColor"
-                                    />
-                                  </span>
-                                  <span onClick={() => removeTier(tier.id)}>
-                                    <TrashcanDelete
-                                      size={16}
-                                      color="currentColor"
-                                    />
-                                  </span>
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </Draggable>
-                      );
-                    })}
-                    {provided.placeholder}
-                  </tbody>
-                )}
-              </Droppable>
-            </DragDropContext>
+            <tbody>
+              {tiers.map((tier) => {
+                return (
+                  <tr
+                    className="table-row border-collapse border-spacing-[2px] overflow-hidden break-words border border-dashboard-divider bg-white align-middle hover:bg-dashboard-input"
+                    role="row"
+                    key={tier.id}
+                  >
+                    <td
+                      className="cursor-pointer py-0 pe-4 ps-4 text-start text-sm leading-4 "
+                      role="gridcell"
+                    >
+                      <div className="block py-4">
+                        <div className="flex flex-row items-center">
+                          <span className="ms-4 flex min-h-9 flex-col justify-center">
+                            {tier.name}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td
+                      className="cursor-pointer py-0 pe-4 ps-4 text-start text-sm leading-4 "
+                      role="gridcell"
+                    >
+                      <div className="block py-4">
+                        {tier.rewardsRequired} (min {tier.minObjsToReach} objs)
+                      </div>
+                    </td>
+
+                    <td
+                      className="cursor-pointer py-0 pe-4 ps-4 text-center text-sm leading-4 "
+                      role="gridcell"
+                    >
+                      <div className="flex flex-row gap-2 py-4 text-gray-400">
+                        <span onClick={() => editExistingTier(tier.id)}>
+                          <EditPencil size={16} color="currentColor" />
+                        </span>
+                        <span onClick={() => removeTier(tier.id)}>
+                          <TrashcanDelete size={16} color="currentColor" />
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            {tiers.length == 0 && (
+              <caption className="text-dashboard-table-1 text-md my-3 caption-bottom py-2 pe-4 ps-4 text-center font-medium">
+                <div className="my-12 ">
+                  <h1 className="text-md mb-2  font-semibold leading-[1.2] text-dashboard-heading">
+                    Add a tier to get started
+                  </h1>
+                  <p className="text-sm">
+                    Tier points required values must be added in ascending
+                    order.{" "}
+                    <Link href={ROUTE_DOCS_MAIN} className="text-primary-1">
+                      Learn more
+                    </Link>
+                  </p>
+                </div>
+              </caption>
+            )}
           </table>
         </div>
       )}

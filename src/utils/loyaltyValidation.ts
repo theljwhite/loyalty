@@ -1,5 +1,6 @@
 import {
   MAX_LOYALTY_NAME_LENGTH,
+  MAX_LOYALTY_DESC_LENGTH,
   MAX_OBJECTIVES_LENGTH,
   MAX_OBJECTIVE_POINTS_VALUE,
   MAX_OBJECTIVE_TITLE_LENGTH,
@@ -25,13 +26,13 @@ export type StateKey =
 const validateName = (name: string): string => {
   if (name.length < 3) return "Name must have at least 3 characters";
   if (name.length >= MAX_LOYALTY_NAME_LENGTH) {
-    return "Name cannot be larger than 32 characters";
+    return `Name must be less than ${MAX_LOYALTY_NAME_LENGTH} characters`;
   }
   return "";
 };
 
 const validateDescription = (desc: string): string => {
-  if (desc.length > 80) return "Description is too long";
+  if (desc.length > MAX_LOYALTY_DESC_LENGTH) return "Description is too long";
   return "";
 };
 
@@ -113,7 +114,7 @@ export const validateObjectiveInputs = (
   }
 
   if (points < MIN_OBJECTIVE_POINTS_VALUE) {
-    return "Must award a points value of at least 1";
+    return `Must award a points value of at least ${MIN_OBJECTIVE_POINTS_VALUE}`;
   }
   if (LEADING_ZERO_REGEX.test(String(points))) {
     return "Amount of points cannot start with a 0";
@@ -128,7 +129,7 @@ export const validateTierInputs = (
   pointsRequired: number,
 ): string => {
   if (tierName.length < MIN_TIER_NAME_LENGTH) {
-    return "Tier name must must be greater than 1 character";
+    return `Tier name must must be greater than ${MIN_TIER_NAME_LENGTH} characters`;
   }
 
   if (tierName.length > MAX_TIER_NAME_LENGTH) {
@@ -141,7 +142,7 @@ export const validateTierInputs = (
   if (pointsRequired > MAX_TIER_POINTS_REQ_VALUE) {
     return "Max points required value exceeded";
   }
-  if (pointsRequired >= maxReachablePoints) {
+  if (pointsRequired > maxReachablePoints) {
     return `Tier points required cannot exceed max reachable points of ${maxReachablePoints}`;
   }
 
