@@ -11,9 +11,15 @@ import {
   MAX_TIER_POINTS_REQ_VALUE,
   MIN_TIER_NAME_LENGTH,
   MAX_TIER_NAME_LENGTH,
+  MIN_TIERS_LENGTH,
 } from "~/constants/loyaltyConstants";
 import { LEADING_ZERO_REGEX } from "~/constants/regularExpressions";
-import { Authority, Objective } from "~/customHooks/useDeployLoyalty/types";
+import {
+  Authority,
+  Objective,
+  RewardType,
+  Tier,
+} from "~/customHooks/useDeployLoyalty/types";
 
 export type StateKey =
   | "name"
@@ -49,13 +55,30 @@ const validateObjectives = (objectives: Objective[]): string => {
 
   return "";
 };
-const validateTiers = (): string => {
-  //TODO
+const validateTiers = (tiers: Tier[]): string => {
+  if (tiers.length < MIN_TIERS_LENGTH) {
+    return `Add more tiers. Must have at least ${MIN_TIERS_LENGTH} tiers`;
+  }
+
+  if (tiers.length > MAX_TIERS_LENGTH) {
+    return `Max tiers exceeded. You can only add ${MAX_TIERS_LENGTH} tiers`;
+  }
+
+  const areTierPointsAscending = tiers
+    .slice(1)
+    .every(
+      (tier, index) => tier.rewardsRequired > tiers[index]!.rewardsRequired,
+    );
+
+  if (!areTierPointsAscending) {
+    return "Tier points required values must be in ascending order.";
+  }
+
   return "";
 };
-const validateRewardType = (): string => {
-  //TODO
-  return "";
+const validateRewardType = (rewardType: RewardType): string => {
+  if (rewardType in RewardType) return "";
+  else return "Not a valid reward type";
 };
 
 export const validationFuncs = new Map<
@@ -72,6 +95,7 @@ export const validationFuncs = new Map<
 
   [1, [{ validation: validateObjectives, stateKey: ["objectives"] }]],
   [2, [{ validation: validateTiers, stateKey: ["tiers"] }]],
+  [3, [{ validation: validateRewardType, stateKey: ["rewardType"] }]],
 ]);
 
 export const validateStep = (step: number, state: any): string | null => {

@@ -7,15 +7,8 @@ import CreateTiersEditor from "./CreateTiersEditor";
 import CreateNextButton from "./CreateNextButton";
 import { validationFuncs } from "~/utils/loyaltyValidation";
 import {
-  DragDropContext,
-  Draggable,
-  Droppable,
-  type DropResult,
-} from "@hello-pangea/dnd";
-import {
   TrashcanDelete,
   EditPencil,
-  ThumbDots,
   FormErrorIcon,
 } from "../UI/Dashboard/Icons";
 import Link from "next/link";
@@ -118,11 +111,14 @@ export default function CreateTiers() {
                 <th className="h-10 w-[40%] py-1  pe-4 ps-4 text-start text-xs font-semibold uppercase leading-4 text-dashboard-table1">
                   Tier Name
                 </th>
-                <th className="h-10 w-[40%] py-1 pe-4 ps-4 text-start text-xs font-semibold uppercase leading-4 text-dashboard-table1">
+                <th className="h-10 w-[30%] py-1 pe-4 ps-4 text-start text-xs font-semibold uppercase leading-4 text-dashboard-table1">
                   Points Required
                 </th>
+                <th className="h-10 w-[40%] py-1 pe-4 ps-4 text-start text-xs font-semibold uppercase leading-4 text-dashboard-table1">
+                  Min Obj To Reach.
+                </th>
 
-                <th className="h-10 min-w-[50px] py-1 pe-4 ps-4 text-center text-xs font-semibold uppercase leading-4 text-dashboard-table1"></th>
+                <th className="h-10 min-w-[30px] py-1 pe-4 ps-4 text-center text-xs font-semibold uppercase leading-4 text-dashboard-table1"></th>
                 {/* border border-solid border-dashboard-menuInner  */}
               </tr>
             </thead>
@@ -152,8 +148,14 @@ export default function CreateTiers() {
                       className="cursor-pointer py-0 pe-4 ps-4 text-start text-sm leading-4 "
                       role="gridcell"
                     >
+                      <div className="block py-4">{tier.rewardsRequired}</div>
+                    </td>
+                    <td
+                      className="cursor-pointer py-0 pe-4 ps-4 text-start text-sm leading-4 "
+                      role="gridcell"
+                    >
                       <div className="block py-4">
-                        {tier.rewardsRequired} (min {tier.minObjsToReach} objs)
+                        {tier.minObjsToReach} objectives
                       </div>
                     </td>
 

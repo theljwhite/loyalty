@@ -9,7 +9,7 @@ import {
   InfoIcon,
   FormErrorIcon,
   RightChevron,
-  ObjectivesIconOne,
+  ChecklistIcon,
 } from "../UI/Dashboard/Icons";
 import { useDeployLoyaltyStore } from "~/customHooks/useDeployLoyalty/store";
 import { validateTierInputs } from "~/utils/loyaltyValidation";
@@ -200,8 +200,10 @@ export default function CreateTiersEditor({
                 <span className="text-primary-1">Learn more</span>
                 <InfoIcon size={20} color="currentColor" />
               </span>
-              <span className="flex flex-row gap-1 break-words">
-                <ObjectivesIconOne size={16} color="currentColor" />
+              <span className="mt-2 flex flex-row gap-2 break-words">
+                <span className="text-primary-1">
+                  <ChecklistIcon size={20} color="currentColor" />{" "}
+                </span>
                 Min. number of objectives completed to reach this tier:{" "}
                 {minObjsToReachTier}
               </span>
