@@ -208,7 +208,7 @@ export default function CreateTiersEditor({
                 {minObjsToReachTier}
               </span>
             </div>
-            {/* <hr className="mt-4 w-full border-t border-solid border-dashboard-divider opacity-60" /> */}
+         
           </div>
         </div>
 

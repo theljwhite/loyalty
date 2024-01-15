@@ -27,7 +27,8 @@ export type StateKey =
   | "objectives_input"
   | "objectives"
   | "tiers"
-  | "rewardType";
+  | "rewardType"
+  | "programEndsAt";
 
 const validateName = (name: string): string => {
   if (name.length < 3) return "Name must have at least 3 characters";
@@ -76,9 +77,22 @@ const validateTiers = (tiers: Tier[]): string => {
 
   return "";
 };
+
 const validateRewardType = (rewardType: RewardType): string => {
   if (rewardType in RewardType) return "";
   else return "Not a valid reward type";
+};
+
+const validateProgramEndDate = (programEndsAt: Date): string => {
+  const currentDate = new Date();
+  const oneDayInMs = 86_400_000;
+  const minAllowedEndDate = new Date(currentDate.getTime() + oneDayInMs);
+
+  if (programEndsAt < minAllowedEndDate) {
+    return "Program end date must be at least 1 day in the future";
+  }
+
+  return "";
 };
 
 export const validationFuncs = new Map<
@@ -96,6 +110,7 @@ export const validationFuncs = new Map<
   [1, [{ validation: validateObjectives, stateKey: ["objectives"] }]],
   [2, [{ validation: validateTiers, stateKey: ["tiers"] }]],
   [3, [{ validation: validateRewardType, stateKey: ["rewardType"] }]],
+  [4, [{ validation: validateProgramEndDate, stateKey: ["programEndsAt"] }]],
 ]);
 
 export const validateStep = (step: number, state: any): string | null => {

@@ -67,6 +67,8 @@ export default {
           input: "#EDF2F7",
           tooltip: "#718096",
           table1: "#4A5568",
+          codeBg: "#E4E9F2",
+          codeBorder: "#D8DDE8",
         },
       },
     },

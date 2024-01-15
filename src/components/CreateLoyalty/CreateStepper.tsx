@@ -54,7 +54,7 @@ const Stepper: React.FC<StepperProps> = ({ steps }) => {
       ) : (
         <div className="relative m-0 mt-8 min-h-full">
           <div className="flex min-h-full flex-col">
-            <div className="sticky left-0 right-0 top-0 flex rounded-md bg-dashboard-menu">
+            <div className="relative left-0 right-0 top-0 flex rounded-md bg-dashboard-menu">
               <ul className="m-0 flex list-none flex-row p-0">
                 <div className="flex items-center">
                   <button
