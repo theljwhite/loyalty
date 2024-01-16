@@ -8,6 +8,7 @@ import CreateObjectives from "~/components/CreateLoyalty/CreateObjectives";
 import CreateTiers from "~/components/CreateLoyalty/CreateTiers";
 import CreateRewardType from "~/components/CreateLoyalty/CreateRewardType";
 import CreateProgramEnd from "~/components/CreateLoyalty/CreateProgramEnd";
+import CreateDeploy from "~/components/CreateLoyalty/CreateDeploy";
 import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
 import { ReadIcon } from "~/components/UI/Dashboard/Icons";
 import { ROUTE_DOCS_MAIN } from "~/configs/routes";
@@ -26,7 +27,7 @@ const Create: NextPage = (props) => {
     { id: 2, title: "Tiers", content: <CreateTiers /> },
     { id: 3, title: "Reward Type", content: <CreateRewardType /> },
     { id: 4, title: "End Date", content: <CreateProgramEnd /> },
-    { id: 5, title: "Deploy", content: <div>TODO</div> },
+    { id: 5, title: "Deploy", content: <CreateDeploy /> },
   ];
 
   return (

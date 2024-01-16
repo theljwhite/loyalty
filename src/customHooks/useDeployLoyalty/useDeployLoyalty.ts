@@ -1,4 +1,5 @@
 import Loyalty from "~/contractsAndAbis/Loyalty/Loyalty.json";
+import { useSession } from "next-auth/react";
 import { useAccount, useNetwork } from "wagmi";
 import { ContractFactory, encodeBytes32String } from "ethers";
 import { waitForTransaction } from "wagmi/actions";
@@ -10,6 +11,7 @@ import { api } from "~/utils/api";
 import { Authority, RewardType } from "./types";
 
 export function useDeployLoyalty() {
+  const { data: session } = useSession();
   const loyaltyDeployState = useContractFactoryStore((state) => state);
   const {
     name,
@@ -31,6 +33,7 @@ export function useDeployLoyalty() {
     api.loyaltyPrograms.createLoyaltyProgramWithObjectives.useMutation();
 
   const deployLoyaltyProgram = async (): Promise<void> => {
+    loyaltyDeployState.setStatus("LOADING");
     try {
       const loyaltyFactory = new ContractFactory(
         Loyalty.abi,
@@ -40,7 +43,9 @@ export function useDeployLoyalty() {
       const targetObjectivesBytes32 = objectives.map((obj) =>
         encodeBytes32String(obj.title),
       );
-      const authoritiesBytes32 = authorities.map((a) => encodeBytes32String(a));
+      const authoritiesBytes32 = objectives.map((obj) =>
+        encodeBytes32String(obj.authority),
+      );
       const objectivesRewards: number[] = objectives.map((obj) => obj.reward);
       const tierSortingEnabled = tiers && tiers.length > 0;
       const loyaltyContract = await loyaltyFactory.deploy(
@@ -80,7 +85,7 @@ export function useDeployLoyalty() {
           name,
           state: "Idle",
           address: loyaltyContractAddress,
-          creatorId: "userIdHere",
+          creatorId: session?.user.id ?? "",
           objectives: objectivesDbRecord,
           chainId: chain?.id ?? 0,
           chain: chain?.name ?? "",
@@ -91,6 +96,8 @@ export function useDeployLoyalty() {
 
         console.log("loyalty contract address -->", loyaltyContractAddress);
         console.log("tx -->", transaction);
+
+        loyaltyDeployState.setStatus("SUCCESS");
       }
     } catch (error) {
       console.log("error", error);

@@ -3,12 +3,7 @@ import { useDeployLoyaltyStore } from "~/customHooks/useDeployLoyalty/store";
 import { useNextLoyaltyStep } from "~/customHooks/useNextLoyaltyStep/useNextLoyaltyStep";
 import { validationFuncs } from "~/utils/loyaltyValidation";
 import CreateNextButton from "./CreateNextButton";
-import {
-  RightChevron,
-  FormErrorIcon,
-  DateIcon,
-  InfoIcon,
-} from "../UI/Dashboard/Icons";
+import { RightChevron, FormErrorIcon, DateIcon } from "../UI/Dashboard/Icons";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
