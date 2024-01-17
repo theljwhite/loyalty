@@ -1,43 +1,24 @@
 import React, { useState } from "react";
 import { useDeployLoyaltyStore } from "~/customHooks/useDeployLoyalty/store";
-import { useNextLoyaltyStep } from "~/customHooks/useNextLoyaltyStep/useNextLoyaltyStep";
 import { usePreviousLoyaltyStep } from "~/customHooks/useLoyaltyPrevStep/useLoyaltyPrevStep";
 import { useDeployLoyalty } from "~/customHooks/useDeployLoyalty/useDeployLoyalty";
 import { useNetwork, useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
-import { validationFuncs } from "~/utils/loyaltyValidation";
 import CreateDeploySummary from "./CreateDeploySummary";
 import { RightChevron, FormErrorIcon } from "../UI/Dashboard/Icons";
-import shortenEthereumAddress from "~/helpers/shortenEthAddress";
 
-//TODO - finish
+//TODO - add some more validation here before the deploy?
 
 export default function CreateDeploy() {
-  const [isSummaryOpen, setIsSummaryOpen] = useState<boolean>(true);
-  const {
-    isLoading,
-    isSuccess,
-    contractRequirements,
-    deployLoyaltyData,
-    errors,
-    step,
-  } = useDeployLoyaltyStore();
+  const [isSummaryOpen, setIsSummaryOpen] = useState<boolean>(false);
+  const { errors, step } = useDeployLoyaltyStore();
   const currentStepError = errors.find((error) => error.step === step);
-  const deployValidation = validationFuncs.get(step);
-  const validateDeployment = useNextLoyaltyStep([
-    () => deployValidation?.[0]?.validation(contractRequirements),
-  ]);
   const goPreviousStep = usePreviousLoyaltyStep();
   const { deployLoyaltyProgram } = useDeployLoyalty();
 
   const { isConnected, address } = useAccount();
   const { chain } = useNetwork();
   const { openConnectModal } = useConnectModal();
-
-  const verifyAndDeployContract = (): void => {
-    validateDeployment();
-    //TODO - finish
-  };
 
   return (
     <>
@@ -73,10 +54,7 @@ export default function CreateDeploy() {
         review your loyalty program details below.
       </p>
 
-      <div className="mb-12 ml-4 border-l border-dashboard-codeBorder pl-6">
-        <h2 className="text-2xl text-dashboard-heading"></h2>
-      </div>
-      <div className="border-box break-words">
+      <div className="border-box mt-12 break-words">
         <div className="max-w-[50em]">
           <div className="mt-5 flex">
             <div className="my-3 w-full">
@@ -95,10 +73,7 @@ export default function CreateDeploy() {
       <div className="mt-4 flex flex-col">
         {isConnected && address && chain && (
           <div className="relative">
-            <div>
-              Connected: {shortenEthereumAddress(address as string, 8, 8)}
-            </div>
-            <div>Network: {chain?.name}</div>
+            Your contract is now ready to be deployed on {chain?.name}
           </div>
         )}
         <hr className="mt-4 w-full border-solid border-[0px_0px_1px] border-dashboard-divider opacity-60" />
@@ -112,7 +87,7 @@ export default function CreateDeploy() {
           </button>
           <button
             type="button"
-            onClick={isConnected ? openConnectModal : verifyAndDeployContract}
+            onClick={isConnected ? deployLoyaltyProgram : openConnectModal}
             className="relative ms-4 inline-flex h-10 w-auto min-w-10 select-none appearance-none items-center justify-center whitespace-nowrap rounded-md bg-primary-1 pe-4 ps-4 align-middle align-middle font-semibold leading-[1.2] text-white"
           >
             {isConnected ? "Deploy" : "Connect"}

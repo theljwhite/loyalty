@@ -8,32 +8,37 @@ import { useContractFactoryStore } from "../useContractFactory";
 import { useEthersSigner } from "~/helpers/ethers";
 import { useError } from "../useError";
 import { api } from "~/utils/api";
-import { Authority, RewardType } from "./types";
+import { toastSuccess, toastLoading } from "~/components/UI/Toast/Toast";
 
 export function useDeployLoyalty() {
   const { data: session } = useSession();
   const loyaltyDeployState = useContractFactoryStore((state) => state);
   const {
     name,
+    description,
     objectives,
-    authorities,
     tiers,
     rewardType,
     programStart,
     programEndsAt,
-    contractRequirements,
     setDeployLoyaltyData,
+    setIsLoading,
+    setIsSuccess,
   } = useDeployLoyaltyStore((state) => state);
 
   const { chain } = useNetwork();
   const { address } = useAccount();
   const signer = useEthersSigner();
-  const { error, handleErrorFlow } = useError();
+
+  const { handleErrorFlow } = useError();
   const { mutate: createDbLoyaltyProgramRecord } =
     api.loyaltyPrograms.createLoyaltyProgramWithObjectives.useMutation();
+  const { mutate: giveCreatorRole } = api.users.giveCreatorRole.useMutation();
 
   const deployLoyaltyProgram = async (): Promise<void> => {
     loyaltyDeployState.setStatus("LOADING");
+    setIsLoading(true);
+    toastLoading("Deploy request sent.", true);
     try {
       const loyaltyFactory = new ContractFactory(
         Loyalty.abi,
@@ -41,7 +46,7 @@ export function useDeployLoyalty() {
         await signer,
       );
       const targetObjectivesBytes32 = objectives.map((obj) =>
-        encodeBytes32String(obj.title),
+        encodeBytes32String(obj.title.trim().slice(0, 30)),
       );
       const authoritiesBytes32 = objectives.map((obj) =>
         encodeBytes32String(obj.authority),
@@ -74,19 +79,14 @@ export function useDeployLoyalty() {
           address as string,
         );
 
-        const objectivesDbRecord = objectives.map((obj, index) => ({
-          title: obj.title,
-          reward: obj.reward,
-          authority: authorities[index] as Authority,
-          indexInContract: index,
-        }));
-
         createDbLoyaltyProgramRecord({
           name,
+          description,
           state: "Idle",
           address: loyaltyContractAddress,
           creatorId: session?.user.id ?? "",
-          objectives: objectivesDbRecord,
+          objectives: objectives,
+          tiers: tierSortingEnabled ? tiers : undefined,
           chainId: chain?.id ?? 0,
           chain: chain?.name ?? "",
           programStart,
@@ -94,10 +94,11 @@ export function useDeployLoyalty() {
           rewardType,
         });
 
-        console.log("loyalty contract address -->", loyaltyContractAddress);
-        console.log("tx -->", transaction);
+        giveCreatorRole({ userId: session?.user.id ?? "" });
 
         loyaltyDeployState.setStatus("SUCCESS");
+        setIsSuccess(true);
+        toastSuccess("Loyalty program has successfully been deployed");
       }
     } catch (error) {
       console.log("error", error);

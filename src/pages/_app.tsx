@@ -8,8 +8,10 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { chains, configForWagmi } from "~/configs/wagmi";
 import { api } from "~/utils/api";
 import { customRainbowTheme } from "~/configs/rainbowkit";
+import { ToastContainer } from "react-toastify";
 import "node_modules/@rainbow-me/rainbowkit/dist/index.css";
 import "~/styles/globals.css";
+import "react-toastify/dist/ReactToastify.min.css";
 
 //TEMP
 import Base from "~/layouts/Base";
@@ -44,6 +46,20 @@ const MyApp: AppType<{ session: Session | null }> = ({
             modalSize="wide"
           >
             {getLayout(<Component {...pageProps} />)}
+            <ToastContainer
+              autoClose={4000}
+              position="bottom-center"
+              hideProgressBar
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              pauseOnHover
+              draggable
+              theme="light"
+              bodyClassName={() =>
+                "flex items-center text-base text-dashboard-heading"
+              }
+            />
           </RainbowKitProvider>
         </WagmiConfig>
       </SessionProvider>

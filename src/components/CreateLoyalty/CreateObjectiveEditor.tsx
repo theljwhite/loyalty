@@ -73,7 +73,7 @@ export default function CreateObjectiveEditor({
     if (isValidated()) {
       const newObjective: Objective = {
         id: objectives.length,
-        title,
+        title: title.trim(),
         authority,
         reward: Number(points),
       };
@@ -89,7 +89,7 @@ export default function CreateObjectiveEditor({
   const editExistingObjective = (): void => {
     if (!isNewObjective && isValidated()) {
       const updatedValues: Partial<Objective> = {
-        title,
+        title: title.trim(),
         authority,
         reward: Number(points),
       };

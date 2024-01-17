@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { didUserReject, handleError } from "~/utils/error";
+import { dismissToast, toastError } from "~/components/UI/Toast/Toast";
 
 export function useError(): {
   error: string;
@@ -9,20 +10,17 @@ export function useError(): {
 
   const handleErrorFlow = (e: any, message: string) => {
     if (didUserReject(e)) {
-      //TODO handle UI
-      console.log("e rejection error", e);
+      dismissToast();
       return;
     }
     const handledError = handleError(e);
     setError(handledError.message);
 
     if (handledError.codeFound) {
-      //TODO UI
+      toastError(handledError.message);
       console.log("error code found", handledError.message);
     } else {
-      //TODO UI
-      console.log("error code not found", handledError.message);
-      console.log("default message", message);
+      toastError(message);
     }
   };
   return { error, handleErrorFlow };

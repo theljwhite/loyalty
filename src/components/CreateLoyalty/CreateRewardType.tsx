@@ -221,20 +221,23 @@ export default function CreateRewardType() {
                         <tbody>
                           {rewardConditionLearnItems.map((item) => {
                             return (
-                              <td
-                                key={item.id}
-                                className="max-w-[300px] border border-dashboard-codeBorder py-2 pe-4 ps-4 text-start align-top leading-5"
-                              >
-                                {item.rewardConditions?.map(
-                                  (condition, index) => {
-                                    return (
-                                      <p key={index} className="py-1">
-                                        {condition}
-                                      </p>
-                                    );
-                                  },
-                                )}
-                              </td>
+                              <>
+                                <td
+                                  key={item.id}
+                                  className="max-w-[300px] border border-dashboard-codeBorder py-2 pe-4 ps-4 text-start align-top leading-5"
+                                >
+                                  {item.rewardConditions?.map(
+                                    (condition, index) => {
+                                      return (
+                                        <p key={index} className="py-1">
+                                          {condition}
+                                        </p>
+                                      );
+                                    },
+                                  )}
+                                </td>
+                                <tr className="hidden" />
+                              </>
                             );
                           })}
                         </tbody>

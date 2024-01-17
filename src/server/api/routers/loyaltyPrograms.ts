@@ -9,10 +9,16 @@ import { rewardTypeNumToPrismaEnum } from "~/utils/rewardTypeNumToPrismaEnum";
 
 const objectivesInputSchema = z.array(
   z.object({
-    indexInContract: z.number(),
     title: z.string(),
     reward: z.number(),
     authority: z.enum(["USER", "CREATOR"]),
+  }),
+);
+
+const tiersInputSchema = z.array(
+  z.object({
+    name: z.string(),
+    rewardsRequired: z.number(),
   }),
 );
 
@@ -26,10 +32,12 @@ const programState = z.enum([
 
 const createLoyaltyInputSchema = z.object({
   name: z.string(),
+  description: z.string().nullable(),
   state: programState,
   address: z.string(),
   creatorId: z.string(),
   objectives: objectivesInputSchema,
+  tiers: tiersInputSchema.optional(),
   chain: z.string(),
   chainId: z.number(),
   programStart: z.date(),
@@ -41,49 +49,50 @@ export const loyaltyProgramsRouter = createTRPCRouter({
   createLoyaltyProgramWithObjectives: protectedProcedure
     .input(createLoyaltyInputSchema)
     .mutation(async ({ ctx, input }) => {
-      const {
-        name,
-        state,
-        address,
-        creatorId,
-        objectives,
-        chain,
-        chainId,
-        programStart,
-        programEnd,
-        rewardType,
-      } = input;
+      const user = await ctx.db.user.findUnique({
+        where: { id: input.creatorId },
+      });
 
-      const user = await ctx.db.user.findUnique({ where: { id: creatorId } });
-      if (!user || user.role != "Creator") {
-        throw new TRPCError({ code: "NOT_FOUND" });
-      }
-      const formattedRewardType = rewardTypeNumToPrismaEnum(rewardType);
+      if (!user) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const formattedRewardType = rewardTypeNumToPrismaEnum(input.rewardType);
 
       const loyaltyProgram = await ctx.db.loyaltyProgram.create({
         data: {
-          name,
-          state,
-          address,
-          creatorId,
-          chain,
-          chainId,
-          programStart,
-          programEnd,
+          name: input.name,
+          description: input.description ?? undefined,
+          state: input.state,
+          address: input.address,
+          creatorId: input.creatorId,
+          chain: input.chain,
+          chainId: input.chainId,
+          programStart: input.programStart,
+          programEnd: input.programEnd,
           rewardType: formattedRewardType,
+          tiersActive: input.tiers && input.tiers.length > 0 ? true : false,
         },
       });
 
-      const objectivesWithLoyaltyId = objectives.map((obj) => ({
+      const objectivesWithLoyaltyId = input.objectives.map((obj, index) => ({
         ...obj,
         loyaltyProgramId: loyaltyProgram.id,
+        indexInContract: index,
       }));
 
-      const createdObjectives = await ctx.db.objective.createMany({
+      await ctx.db.objective.createMany({
         data: objectivesWithLoyaltyId,
       });
 
-      return { loyaltyProgram, createdObjectives };
+      if (input.tiers && input.tiers.length > 0) {
+        const tiersWithLoyaltyId = input.tiers.map((tier, index) => ({
+          ...tier,
+          loyaltyProgramId: loyaltyProgram.id,
+          indexInContract: index,
+        }));
+        await ctx.db.tier.createMany({ data: tiersWithLoyaltyId });
+      }
+
+      return { loyaltyProgram };
     }),
   getBasicInfoByCreatorId: protectedProcedure
     .input(z.object({ creatorId: z.string() }))

@@ -79,7 +79,7 @@ export default function CreateTiersEditor({
       return false;
     }
 
-    const lastTierPoints = tiers[tiers.length - 1]?.rewardsRequired;
+    const lastTierPoints = tiers[activeTier - 1]?.rewardsRequired;
 
     if (lastTierPoints && lastTierPoints >= Number(pointsRequired)) {
       setInputError({
@@ -97,7 +97,7 @@ export default function CreateTiersEditor({
     if (isValidated()) {
       const newTier: Tier = {
         id: tiers.length,
-        name: tierName,
+        name: tierName.trim(),
         rewardsRequired: Number(pointsRequired),
         minObjsToReach: Number(minObjsToReachTier),
       };
@@ -113,7 +113,7 @@ export default function CreateTiersEditor({
   const editExistingTier = (): void => {
     if (!isNewTier && isValidated()) {
       const updatedValues: Partial<Tier> = {
-        name: tierName,
+        name: tierName.trim(),
         rewardsRequired: Number(pointsRequired),
         minObjsToReach: Number(minObjsToReachTier),
       };
@@ -208,7 +208,6 @@ export default function CreateTiersEditor({
                 {minObjsToReachTier}
               </span>
             </div>
-         
           </div>
         </div>
 
