@@ -4,18 +4,21 @@ import { getDashboardLayout } from "~/layouts/LayoutDashboard";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import { type RewardType } from "@prisma/client";
-import DashboardBreadcrumb from "~/components/UI/Dashboard/DashboardBreadcrumb";
 import {
   ChecklistIcon,
   ERC1155Icon,
   ERC721Icon,
   EthIcon,
   OutLink,
+  WarningIcon,
 } from "~/components/UI/Dashboard/Icons";
 import { type Url } from "next/dist/shared/lib/router/router";
 import { ROUTE_DOCS_QUICKSTART } from "~/configs/routes";
 import DashboardStateStatus from "~/components/UI/Dashboard/DashboardStateStatus";
 import DashboardAnalyticsStatus from "~/components/UI/Dashboard/DashboardAnalyticsStatus";
+import DashboardPageLoading from "~/components/UI/Dashboard/DashboardPageLoading";
+import DashboardBreadcrumb from "~/components/UI/Dashboard/DashboardBreadcrumb";
+import DashboardInfoBox from "~/components/UI/Dashboard/DashboardInfoBox";
 
 //TODO - the JSX can be cleaned up a bit here, lol. all of this component can tbh.
 //TODO - styling fixes (clean it up and responsiveness)
@@ -23,7 +26,6 @@ import DashboardAnalyticsStatus from "~/components/UI/Dashboard/DashboardAnalyti
 type QuickStartOptions = {
   id: number;
   title: string;
-  href: string;
   image: JSX.Element;
   color: string;
   rewardType: RewardType;
@@ -34,7 +36,6 @@ const quickStartOptionsData: QuickStartOptions[] = [
   {
     id: 0,
     title: "Only Points",
-    href: "",
     image: <ChecklistIcon size={24} color="currentColor" />,
     color: "bg-cyan-200",
     rewardType: "Points",
@@ -43,7 +44,6 @@ const quickStartOptionsData: QuickStartOptions[] = [
   {
     id: 1,
     title: "ERC20 Rewards",
-    href: "",
     image: <EthIcon size={24} color="#48cbd9" />,
     color: "bg-[#37367b]",
     rewardType: "ERC20",
@@ -52,7 +52,6 @@ const quickStartOptionsData: QuickStartOptions[] = [
   {
     id: 2,
     title: "ERC721 Rewards",
-    href: "",
     image: <ERC721Icon color="#3b0764" />,
     color: "bg-violet-200",
     rewardType: "ERC721",
@@ -61,7 +60,6 @@ const quickStartOptionsData: QuickStartOptions[] = [
   {
     id: 3,
     title: "ERC1155 Rewards",
-    href: "",
     image: <ERC1155Icon color="currentColor" />,
     color: "bg-pink-200",
     rewardType: "ERC1155",
@@ -104,9 +102,7 @@ export default function DashboardHome() {
     return ROUTE_DOCS_QUICKSTART;
   };
 
-  if (isLoading) {
-    return <div>TODO: Loading state</div>;
-  }
+  if (isLoading) return <DashboardPageLoading />;
 
   if (!loyaltyProgram) {
     return (
@@ -150,8 +146,8 @@ export default function DashboardHome() {
                   Quickstarts
                 </h3>
                 <p className="text-xs text-dashboard-neutral">
-                  Choose your loyalty program type below and get it up and
-                  running quickly
+                  Choose your loyalty program type below to get it up and
+                  running in no time
                 </p>
               </div>
               <ul className="isolate grid grid-cols-4 gap-1">
@@ -204,7 +200,7 @@ export default function DashboardHome() {
                             {option.rewardType === "Points"
                               ? "Review your objectives and/or tiers in the"
                               : "You should first deploy and set up your escrow contract in the"}{" "}
-                            <code className="rounded-lg border border-dashboard-codeBorder bg-dashboard-codeBg p-1 pe-[0.2em] ps-[0.2em] text-[13px]">
+                            <code className="rounded-lg border border-dashboard-codeBorder bg-dashboard-codeBg p-1 pe-[0.3em] ps-[0.3em] text-xs">
                               {option.rewardType === "Points"
                                 ? "Overview"
                                 : "Escrow Overview"}
@@ -212,25 +208,14 @@ export default function DashboardHome() {
                             tab
                           </p>
                         </div>
-                        <ol className="mt-6 max-w-md list-inside list-decimal space-y-1 text-gray-500">
-                          {option.rewardType === "Points" ? (
-                            <>
-                              <li>Review your objectives and/or tiers</li>
-                              <li>Set your loyalty program to active</li>
-                              <li>Start using your loyalty program</li>
-                            </>
-                          ) : (
-                            <>
-                              {" "}
-                              <li>
-                                Deploy your {option.rewardType} escrow contract
-                              </li>
-                              <li>Approve your reward token for deposit</li>
-                              <li>Deposit reward tokens to contract</li>
-                              <li>Customize your escrow settings</li>
-                            </>
-                          )}
-                        </ol>
+                        <DashboardInfoBox
+                          infoType="warn"
+                          info={
+                            option.rewardType === "Points"
+                              ? "Next steps are to review your objectives and/or tiers and set your loyalty program to active."
+                              : `Next steps are to deploy your ${option.rewardType} contract, approve and deposit reward tokens, and customize your escrow settings.`
+                          }
+                        />
                       </div>
                     )}
                   </div>

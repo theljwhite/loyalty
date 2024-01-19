@@ -50,6 +50,9 @@ export default {
         error: {
           1: "#be123c",
         },
+        warn: {
+          1: "#FBD486",
+        },
         dashboard: {
           primary: "#eeeef0",
           secondary: "#b7b8c2",
