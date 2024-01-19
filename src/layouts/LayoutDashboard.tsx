@@ -95,7 +95,7 @@ const NavLink: React.FC<NavLinkProps> = ({ link, pathname }): JSX.Element => {
 const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
   const { children } = props;
   const { data: session } = useSession();
-  const { pathname } = useRouter();
+  const { pathname, query } = useRouter();
   const { isConnected, address } = useAccount();
   const { chain } = useNetwork();
   const { openAccountModal } = useAccountModal();

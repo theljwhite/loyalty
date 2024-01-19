@@ -8,6 +8,7 @@ import { useContractFactoryStore } from "../useContractFactory";
 import { useEthersSigner } from "~/helpers/ethers";
 import { useError } from "../useError";
 import { api } from "~/utils/api";
+import { RewardType } from "./types";
 import { toastSuccess, toastLoading } from "~/components/UI/Toast/Toast";
 
 export function useDeployLoyalty() {
@@ -82,7 +83,8 @@ export function useDeployLoyalty() {
         createDbLoyaltyProgramRecord({
           name,
           description,
-          state: "Idle",
+          state:
+            rewardType === RewardType.Points ? "Idle" : "AwaitingEscrowSetup",
           address: loyaltyContractAddress,
           creatorId: session?.user.id ?? "",
           objectives: objectives,

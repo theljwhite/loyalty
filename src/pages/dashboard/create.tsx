@@ -20,7 +20,7 @@ export type CreationStep = {
   content: JSX.Element;
 };
 
-const Create: NextPage = (props) => {
+const Create: NextPage = () => {
   const creationSteps: CreationStep[] = [
     { id: 0, title: "Name", content: <CreateProgramName /> },
     { id: 1, title: "Objectives", content: <CreateObjectives /> },

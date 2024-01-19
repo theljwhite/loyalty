@@ -94,7 +94,7 @@ export const loyaltyProgramsRouter = createTRPCRouter({
 
       return { loyaltyProgram };
     }),
-  getBasicInfoByCreatorId: protectedProcedure
+  getAllProgramsBasicInfo: protectedProcedure
     .input(z.object({ creatorId: z.string() }))
     .query(async ({ ctx, input }) => {
       const programs = await ctx.db.loyaltyProgram.findMany({
@@ -113,5 +113,34 @@ export const loyaltyProgramsRouter = createTRPCRouter({
 
       if (programs.length > 0) return programs;
       else return null;
+    }),
+  getAllLoyaltyProgramData: protectedProcedure
+    .input(z.object({ contractAddress: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const { contractAddress } = input;
+
+      const loyaltyProgram = await ctx.db.loyaltyProgram.findUnique({
+        where: { address: contractAddress },
+      });
+      const objectives = await ctx.db.objective.findMany({
+        where: { loyaltyProgramId: loyaltyProgram?.id },
+      });
+      const tiers = await ctx.db.tier.findMany({
+        where: { loyaltyProgramId: loyaltyProgram?.id },
+      });
+
+      return { loyaltyProgram, objectives, tiers };
+    }),
+  getBasicLoyaltyDataByAddress: protectedProcedure
+    .input(z.object({ contractAddress: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const { contractAddress } = input;
+
+      const loyaltyProgram = await ctx.db.loyaltyProgram.findUnique({
+        where: { address: contractAddress },
+        select: { name: true, rewardType: true, state: true },
+      });
+
+      return loyaltyProgram;
     }),
 });

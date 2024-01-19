@@ -1,0 +1,264 @@
+import React, { useState } from "react";
+import Link from "next/link";
+import { getDashboardLayout } from "~/layouts/LayoutDashboard";
+import { useRouter } from "next/router";
+import { api } from "~/utils/api";
+import { type RewardType } from "@prisma/client";
+import DashboardBreadcrumb from "~/components/UI/Dashboard/DashboardBreadcrumb";
+import {
+  ChecklistIcon,
+  ERC1155Icon,
+  ERC721Icon,
+  EthIcon,
+  OutLink,
+} from "~/components/UI/Dashboard/Icons";
+import { type Url } from "next/dist/shared/lib/router/router";
+import { ROUTE_DOCS_QUICKSTART } from "~/configs/routes";
+import DashboardStateStatus from "~/components/UI/Dashboard/DashboardStateStatus";
+import DashboardAnalyticsStatus from "~/components/UI/Dashboard/DashboardAnalyticsStatus";
+
+//TODO - the JSX can be cleaned up a bit here, lol. all of this component can tbh.
+//TODO - styling fixes (clean it up and responsiveness)
+
+type QuickStartOptions = {
+  id: number;
+  title: string;
+  href: string;
+  image: JSX.Element;
+  color: string;
+  rewardType: RewardType;
+  selected: boolean;
+};
+
+const quickStartOptionsData: QuickStartOptions[] = [
+  {
+    id: 0,
+    title: "Only Points",
+    href: "",
+    image: <ChecklistIcon size={24} color="currentColor" />,
+    color: "bg-cyan-200",
+    rewardType: "Points",
+    selected: false,
+  },
+  {
+    id: 1,
+    title: "ERC20 Rewards",
+    href: "",
+    image: <EthIcon size={24} color="#48cbd9" />,
+    color: "bg-[#37367b]",
+    rewardType: "ERC20",
+    selected: false,
+  },
+  {
+    id: 2,
+    title: "ERC721 Rewards",
+    href: "",
+    image: <ERC721Icon color="#3b0764" />,
+    color: "bg-violet-200",
+    rewardType: "ERC721",
+    selected: false,
+  },
+  {
+    id: 3,
+    title: "ERC1155 Rewards",
+    href: "",
+    image: <ERC1155Icon color="currentColor" />,
+    color: "bg-pink-200",
+    rewardType: "ERC1155",
+    selected: false,
+  },
+];
+
+export default function DashboardHome() {
+  const [quickStartOptions, setQuickStartOptions] = useState<
+    QuickStartOptions[]
+  >(quickStartOptionsData);
+  const [didSelect, setDidSelect] = useState<boolean>(false);
+  const router = useRouter();
+  const { address } = router.query;
+
+  const { data: loyaltyProgram, isLoading } =
+    api.loyaltyPrograms.getBasicLoyaltyDataByAddress.useQuery(
+      {
+        contractAddress: String(address),
+      },
+      { refetchOnWindowFocus: false },
+    );
+
+  const selectQuickStartOption = (id: number): void => {
+    const selected = quickStartOptions.map((option) => ({
+      ...option,
+      selected: option.id === id,
+    }));
+    setQuickStartOptions(selected);
+    setDidSelect(true);
+  };
+
+  const getDocRouteForRewardType = (): Url => {
+    const selectedOption = quickStartOptions.find((option) => option.selected);
+    if (selectedOption || loyaltyProgram?.rewardType) {
+      return `${ROUTE_DOCS_QUICKSTART}/${
+        selectedOption?.rewardType ?? loyaltyProgram?.rewardType
+      }`;
+    }
+    return ROUTE_DOCS_QUICKSTART;
+  };
+
+  if (isLoading) {
+    return <div>TODO: Loading state</div>;
+  }
+
+  if (!loyaltyProgram) {
+    return (
+      <div>TODO: This loyalty program does not exist in our records. </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <div className="relative flex items-center justify-between gap-4">
+        <DashboardBreadcrumb
+          firstTitle="Home"
+          secondTitle={loyaltyProgram.name}
+        />
+      </div>
+      <div className="relative flex items-center justify-between gap-4">
+        <div className="relative flex items-start justify-between gap-4">
+          <div className="flex w-full max-w-[80ch] flex-col gap-3">
+            <div className="w-full space-y-2">
+              <h1 className="truncate text-2xl font-medium tracking-tight text-dashboard-body">
+                Home
+              </h1>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div className="flex flex-col">
+          <div className="space-y-8">
+            <header className="space-y-1">
+              <h2 className="text-lg font-medium text-dashboard-body">
+                Your Loyalty Program is deployed!
+              </h2>
+              <p className="text-[13px] text-dashboard-lighterText">
+                Learn more below and get started setting up your program.
+              </p>
+            </header>
+            <div className="space-y-6 rounded-2xl border border-dashboard-border1 p-6">
+              <div className="space-y-1">
+                <h3 className="text-[13px] font-semibold text-dashboard-body">
+                  Quickstarts
+                </h3>
+                <p className="text-xs text-dashboard-neutral">
+                  Choose your loyalty program type below and get it up and
+                  running quickly
+                </p>
+              </div>
+              <ul className="isolate grid grid-cols-4 gap-1">
+                {quickStartOptions.map((option) => {
+                  return (
+                    <li key={option.id}>
+                      <button
+                        onClick={() => selectQuickStartOption(option.id)}
+                        className="group relative flex aspect-square w-full items-center justify-center rounded-lg transition"
+                      >
+                        <div
+                          className={`absolute inset-0 rounded-xl ${
+                            option.selected ||
+                            (option.rewardType === loyaltyProgram.rewardType &&
+                              !didSelect)
+                              ? "bg-neutral-100"
+                              : "bg-transparent"
+                          }`}
+                        />
+                        <div className="relative z-10 flex flex-col items-center space-y-4">
+                          <div className="transition duration-[450ms]">
+                            <div
+                              className={`${option.color} flex h-12 w-12 items-center justify-center rounded-full p-2`}
+                            >
+                              {option.image}
+                            </div>
+                          </div>
+                          <span className="font-book text-[13px] leading-none">
+                            {option.title}
+                          </span>
+                        </div>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {quickStartOptions.map((option) => {
+                return (
+                  <div key={option.id}>
+                    {(option.selected ||
+                      (option.rewardType === loyaltyProgram.rewardType &&
+                        !didSelect)) && (
+                      <div key={option.id}>
+                        <div>
+                          <p className="text-sm font-medium leading-5">
+                            {option.title}
+                          </p>
+                          <p className="mb-2 text-[13px] font-normal text-dashboard-lightGray">
+                            {option.rewardType === "Points"
+                              ? "Review your objectives and/or tiers in the"
+                              : "You should first deploy and set up your escrow contract in the"}{" "}
+                            <code className="rounded-lg border border-dashboard-codeBorder bg-dashboard-codeBg p-1 pe-[0.2em] ps-[0.2em] text-[13px]">
+                              {option.rewardType === "Points"
+                                ? "Overview"
+                                : "Escrow Overview"}
+                            </code>{" "}
+                            tab
+                          </p>
+                        </div>
+                        <ol className="mt-6 max-w-md list-inside list-decimal space-y-1 text-gray-500">
+                          {option.rewardType === "Points" ? (
+                            <>
+                              <li>Review your objectives and/or tiers</li>
+                              <li>Set your loyalty program to active</li>
+                              <li>Start using your loyalty program</li>
+                            </>
+                          ) : (
+                            <>
+                              {" "}
+                              <li>
+                                Deploy your {option.rewardType} escrow contract
+                              </li>
+                              <li>Approve your reward token for deposit</li>
+                              <li>Deposit reward tokens to contract</li>
+                              <li>Customize your escrow settings</li>
+                            </>
+                          )}
+                        </ol>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              <Link href={getDocRouteForRewardType()}>
+                <div className="relative my-6 inline-flex h-8 min-w-10 cursor-pointer items-center justify-center whitespace-nowrap rounded-md bg-primary-1 pe-3 ps-3 align-middle text-sm  text-white outline-none">
+                  Continue in docs
+                  <div className="ms-2 inline-flex shrink-0 self-center">
+                    <span className="mt-1 inline-block h-4 w-4 shrink-0">
+                      <OutLink size={12} color="currentColor" />{" "}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+      <DashboardStateStatus
+        programState={loyaltyProgram.state}
+        containerBg="bg-transparent"
+      />
+      <DashboardAnalyticsStatus containerBg="bg-transparent" />
+    </div>
+  );
+}
+
+// @ts-ignore
+DashboardHome.getLayout = getDashboardLayout;
