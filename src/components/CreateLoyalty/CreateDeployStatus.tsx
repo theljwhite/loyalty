@@ -1,26 +1,52 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useDeployLoyaltyStore } from "~/customHooks/useDeployLoyalty/store";
 import { dismissToast } from "../UI/Toast/Toast";
 import { RightChevron } from "../UI/Dashboard/Icons";
+import DashboardInfoBox from "../UI/Dashboard/DashboardInfoBox";
+import { allChains } from "~/configs/wagmi";
 
 //TODO - this useEffect may not be needed, can prob router push direct from...
 //...useDeployLoyalty hook
 
 export default function CreateDeployStatus() {
-  const { name, isSuccess, deployLoyaltyData, reset } = useDeployLoyaltyStore();
+  const [blockExplorerUrl, setBlockExplorerUrl] = useState<string>("");
   const router = useRouter();
+  const {
+    name,
+    isSuccess,
+    deployLoyaltyData,
+    reset: clearLoyaltyDeployData,
+  } = useDeployLoyaltyStore();
+  const { chain: deployedProgramChain, hash, address } = deployLoyaltyData;
 
   useEffect(() => {
     if (isSuccess && deployLoyaltyData) {
-      dismissToast();
-      reset();
+      getBlockExplorerUrl();
       setTimeout(() => {
-        router.push("/dashboard");
+        dismissToast();
+        clearLoyaltyDeployData();
+        router.push(`/dashboard/programs/${address}`);
       }, 3000);
     }
   }, [deployLoyaltyData, isSuccess]);
+
+  const getBlockExplorerUrl = (): void => {
+    const correctChain = allChains.find(
+      (chain) => chain.name === deployedProgramChain,
+    );
+    if (
+      correctChain?.blockExplorers?.default ||
+      correctChain?.blockExplorers?.etherscan
+    ) {
+      setBlockExplorerUrl(
+        correctChain?.blockExplorers.etherscan?.url ??
+          correctChain?.blockExplorers.default.url ??
+          "",
+      );
+    }
+  };
 
   return (
     <>
@@ -63,6 +89,16 @@ export default function CreateDeployStatus() {
           src="/utilityImages/blockchain.gif"
         />
       </div>
+      {isSuccess && deployLoyaltyData && (
+        <div className="flex h-full w-full justify-start">
+          <DashboardInfoBox
+            infoType="success"
+            info={`Your contract deployed to '${deployedProgramChain}' with address: '${address}'. Redirecting you to your loyalty program.`}
+            outlink={`${blockExplorerUrl}tx/${hash}`}
+            outlinkText="View your transaction"
+          />
+        </div>
+      )}
     </>
   );
 }

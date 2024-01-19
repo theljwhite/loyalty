@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Link from "next/link";
 import { useDeployLoyaltyStore } from "~/customHooks/useDeployLoyalty/store";
 import { useNextLoyaltyStep } from "~/customHooks/useNextLoyaltyStep/useNextLoyaltyStep";
 import { validationFuncs } from "~/utils/loyaltyValidation";
@@ -20,6 +21,7 @@ import {
   type DropResult,
 } from "@hello-pangea/dnd";
 import { MAX_OBJECTIVES_LENGTH } from "~/constants/loyaltyConstants";
+import { ROUTE_DOCS_MAIN } from "~/configs/routes";
 
 //TODO - small styling issue with the <tr>'s when dragging/dropping
 //TODO - may need loading UI, other small styling fixes
@@ -62,7 +64,7 @@ export default function CreateObjectives() {
 
     if (objectiveId === listIndex) return;
 
-    const reordered = objectives
+    const reordered = [...objectives]
       .reduce(
         (
           prev: Objective[],
@@ -248,6 +250,22 @@ export default function CreateObjectives() {
                 )}
               </Droppable>
             </DragDropContext>
+            {objectives.length == 0 && (
+              <caption className="text-dashboard-table-1 text-md my-3 caption-bottom py-2 pe-4 ps-4 text-center font-medium">
+                <div className="my-12 ">
+                  <h1 className="text-md mb-2  font-semibold leading-[1.2] text-dashboard-heading">
+                    Add an objective to get started
+                  </h1>
+                  <p className="text-sm">
+                    Specify the title, points earned for completion, and the
+                    authority for completion
+                    <Link href={ROUTE_DOCS_MAIN} className="text-primary-1">
+                      Learn more
+                    </Link>
+                  </p>
+                </div>
+              </caption>
+            )}
           </table>
         </div>
       )}

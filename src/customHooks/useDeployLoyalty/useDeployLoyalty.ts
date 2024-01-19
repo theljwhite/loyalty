@@ -9,7 +9,11 @@ import { useEthersSigner } from "~/helpers/ethers";
 import { useError } from "../useError";
 import { api } from "~/utils/api";
 import { RewardType } from "./types";
-import { toastSuccess, toastLoading } from "~/components/UI/Toast/Toast";
+import {
+  toastSuccess,
+  toastLoading,
+  dismissToast,
+} from "~/components/UI/Toast/Toast";
 
 export function useDeployLoyalty() {
   const { data: session } = useSession();
@@ -67,6 +71,8 @@ export function useDeployLoyalty() {
       const transaction = loyaltyContract.deploymentTransaction();
 
       if (transaction) {
+        dismissToast();
+
         const deployReceipt = await waitForTransaction({
           chainId: chain?.id,
           hash: transaction.hash as `0x${string}`,

@@ -44,7 +44,7 @@ export default function CreateTiersEditor({
   const { tiers, setTiers, objectives } = useDeployLoyaltyStore();
 
   const isNewTier = activeTier == tiers.length;
-  const maxReachablePoints = objectives.reduce(
+  const maxReachablePoints = [...objectives].reduce(
     (prev, { reward }) => prev + reward,
     0,
   );
@@ -133,7 +133,7 @@ export default function CreateTiersEditor({
   const calculateMinObjectivesToReachTier = (
     tierPointsRequired: number,
   ): void => {
-    const objectivesCopy = [...objectives];
+    const objectivesCopy = [...objectives].sort((a, b) => b.reward - a.reward);
     let objectivesCount: number = 0;
     let totalPoints: number = 0;
 
@@ -249,7 +249,7 @@ export default function CreateTiersEditor({
                       >
                         <div className="flex flex-col break-words">
                           <div className="relative w-full">
-                            {objectives
+                            {[...objectives]
                               .sort((a, b) => b.reward - a.reward)
                               .map((obj) => {
                                 return (

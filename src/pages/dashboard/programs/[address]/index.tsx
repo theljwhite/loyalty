@@ -10,7 +10,6 @@ import {
   ERC721Icon,
   EthIcon,
   OutLink,
-  WarningIcon,
 } from "~/components/UI/Dashboard/Icons";
 import { type Url } from "next/dist/shared/lib/router/router";
 import { ROUTE_DOCS_QUICKSTART } from "~/configs/routes";

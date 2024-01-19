@@ -1,4 +1,4 @@
-# Notice
+# FYI
 
 This is still an unnamed project and work in progress. Create an on-chain loyalty program with points, objectives, tiers, and more. Optionally, also reward loyalty program users with ERC20, ERC721, or ERC1155 rewards.
 
@@ -9,9 +9,9 @@ Escrow contracts are also fully customizable and can be set to reward tokens in 
 This project serves as a frontend for my smart contracts here:
 https://github.com/theljwhite/loyaltysmartcontractst1/
 
-They are in a separate repo for now as I have yet to combine them into a single repo because frankly I don't need to yet (this is still primarily a prototype).
+They are in a separate repo for now as I have yet to combine them into a single repo because frankly I don't need to yet (this is still primarily a prototype). The contracts are interacted with through this app via the contracts' ABIs which are stored as JSON in this project.
 
-# Notice
+# FYI
 
 I usually dont make these repos public, but for now it will remain public.
 The totality of this project will include this NextJS app, the smart contracts themselves (a series of contract factory smart contracts that allow other contracts to be created and deployed), and a package/hooks for developers to use their loyalty program contracts on their own websites, apps, etc.
