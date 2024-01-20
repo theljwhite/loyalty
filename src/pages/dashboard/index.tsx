@@ -1,8 +1,8 @@
 import React from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import { type GetServerSideProps } from "next";
-import { getServerAuthSession } from "~/server/auth";
+import { type GetServerSidePropsContext, type GetServerSideProps } from "next";
+import { handleServerAuth } from "~/utils/handleServerAuth";
 import { getDashboardLayout } from "~/layouts/LayoutDashboard";
 import { type NextPage } from "next";
 import { api } from "~/utils/api";
@@ -14,21 +14,10 @@ import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
 
 //TODO 1/9 - make tailwind or reusable components for dashboard input fields, text areas, etc.
 
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await getServerAuthSession(ctx);
-
-  if (!session) {
-    return {
-      redirect: {
-        destination: "/signin",
-      },
-      props: { session },
-    };
-  }
-
-  return {
-    props: { session },
-  };
+export const getServerSideProps: GetServerSideProps = async (
+  ctx: GetServerSidePropsContext,
+) => {
+  return handleServerAuth(ctx);
 };
 
 const Dashboard: NextPage = (props) => {

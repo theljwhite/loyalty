@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
+import { type GetServerSidePropsContext, type GetServerSideProps } from "next";
+import { handleServerAuth } from "~/utils/handleServerAuth";
 import { getDashboardLayout } from "~/layouts/LayoutDashboard";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
@@ -18,6 +20,7 @@ import DashboardAnalyticsStatus from "~/components/UI/Dashboard/DashboardAnalyti
 import DashboardPageLoading from "~/components/UI/Dashboard/DashboardPageLoading";
 import DashboardBreadcrumb from "~/components/UI/Dashboard/DashboardBreadcrumb";
 import DashboardInfoBox from "~/components/UI/Dashboard/DashboardInfoBox";
+import DashboardPageError from "~/components/UI/Dashboard/DashboardPageError";
 
 //TODO - the JSX can be cleaned up a bit here, lol. all of this component can tbh.
 //TODO - styling fixes (clean it up and responsiveness)
@@ -66,6 +69,12 @@ const quickStartOptionsData: QuickStartOptions[] = [
   },
 ];
 
+export const getServerSideProps: GetServerSideProps = async (
+  ctx: GetServerSidePropsContext,
+) => {
+  return handleServerAuth(ctx);
+};
+
 export default function DashboardHome() {
   const [quickStartOptions, setQuickStartOptions] = useState<
     QuickStartOptions[]
@@ -74,13 +83,16 @@ export default function DashboardHome() {
   const router = useRouter();
   const { address } = router.query;
 
-  const { data: loyaltyProgram, isLoading } =
-    api.loyaltyPrograms.getBasicLoyaltyDataByAddress.useQuery(
-      {
-        contractAddress: String(address),
-      },
-      { refetchOnWindowFocus: false },
-    );
+  const {
+    data: loyaltyProgram,
+    isLoading,
+    isError,
+  } = api.loyaltyPrograms.getBasicLoyaltyDataByAddress.useQuery(
+    {
+      contractAddress: String(address),
+    },
+    { refetchOnWindowFocus: false },
+  );
 
   const selectQuickStartOption = (id: number): void => {
     const selected = quickStartOptions.map((option) => ({
@@ -103,9 +115,11 @@ export default function DashboardHome() {
 
   if (isLoading) return <DashboardPageLoading />;
 
-  if (!loyaltyProgram) {
+  if (!loyaltyProgram || isError) {
     return (
-      <div>TODO: This loyalty program does not exist in our records. </div>
+      <DashboardPageError
+        message={"Error. This loyalty program does not exist"}
+      />
     );
   }
 

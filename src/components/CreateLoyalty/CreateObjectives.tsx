@@ -24,7 +24,6 @@ import { MAX_OBJECTIVES_LENGTH } from "~/constants/loyaltyConstants";
 import { ROUTE_DOCS_MAIN } from "~/configs/routes";
 
 //TODO - small styling issue with the <tr>'s when dragging/dropping
-//TODO - may need loading UI, other small styling fixes
 
 export default function CreateObjectives() {
   const [isEditorOpen, setIsEditorOpen] = useState<boolean>(false);
