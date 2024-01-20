@@ -52,6 +52,8 @@ export default {
         },
         warn: {
           1: "#FBD486",
+          2: "#FFFAEB",
+          3: "#FEC84B",
         },
         dashboard: {
           primary: "#eeeef0",

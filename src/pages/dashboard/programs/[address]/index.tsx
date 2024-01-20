@@ -117,9 +117,7 @@ export default function DashboardHome() {
 
   if (!loyaltyProgram || isError) {
     return (
-      <DashboardPageError
-        message={"Error. This loyalty program does not exist"}
-      />
+      <DashboardPageError message="Error. This loyalty program does not exist" />
     );
   }
 
@@ -150,7 +148,7 @@ export default function DashboardHome() {
                 Your Loyalty Program is deployed!
               </h2>
               <p className="text-[13px] text-dashboard-lighterText">
-                Learn more below and get started setting up your program.
+                Learn more below and get started setting up your program
               </p>
             </header>
             <div className="space-y-6 rounded-2xl border border-dashboard-border1 p-6">

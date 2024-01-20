@@ -7,7 +7,7 @@ interface DashboardStateStatusProps {
   containerBg: string;
 }
 
-const loyaltyStateDisplay = new Map<
+export const loyaltyStateDisplay = new Map<
   ProgramState,
   { message: string; color: string }
 >([
@@ -51,7 +51,7 @@ const loyaltyStateDisplay = new Map<
   ],
 ]);
 
-const escrowStateDisplay = new Map<
+export const escrowStateDisplay = new Map<
   EscrowState,
   { message: string; color: string }
 >([

@@ -1,7 +1,8 @@
 import React from "react";
 import { type NextPage } from "next";
-import Link from "next/link";
 import { getDashboardLayout } from "~/layouts/LayoutDashboard";
+import { type GetServerSideProps, GetServerSidePropsContext } from "next";
+import { handleServerAuth } from "~/utils/handleServerAuth";
 import CreateStepper from "~/components/CreateLoyalty/CreateStepper";
 import CreateProgramName from "~/components/CreateLoyalty/CreateProgramName";
 import CreateObjectives from "~/components/CreateLoyalty/CreateObjectives";
@@ -10,14 +11,19 @@ import CreateRewardType from "~/components/CreateLoyalty/CreateRewardType";
 import CreateProgramEnd from "~/components/CreateLoyalty/CreateProgramEnd";
 import CreateDeploy from "~/components/CreateLoyalty/CreateDeploy";
 import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
-import { ReadIcon } from "~/components/UI/Dashboard/Icons";
-import { ROUTE_DOCS_MAIN } from "~/configs/routes";
+import DashboardInfoBanner from "~/components/UI/Dashboard/DashboardInfoBanner";
 import { ContractFactoryWrapper } from "~/customHooks/useContractFactory";
 
 export type CreationStep = {
   id: number;
   title: string;
   content: JSX.Element;
+};
+
+export const getServerSideProps: GetServerSideProps = async (
+  ctx: GetServerSidePropsContext,
+) => {
+  return handleServerAuth(ctx);
 };
 
 const Create: NextPage = () => {
@@ -33,26 +39,18 @@ const Create: NextPage = () => {
   return (
     <>
       <ContractFactoryWrapper>
-        <DashboardHeader
-          title="Create Loyalty Program"
-          info="Create and deploy your custom loyalty program smart contract"
-        />
-        <div className="mb-8 flex items-start gap-[0.5rem] rounded-md bg-neutral-2 p-3 text-sm font-[0.8125rem] leading-[1.125rem] text-dashboard-lightGray">
-          <span className="text-neutral-3">
-            <ReadIcon size={14} color="currentColor" />
-          </span>
-          <div className="break-word inline-block">
-            Learn about how your smart contract will work or read our
-            documentation for help.{" "}
-            <Link
-              href={ROUTE_DOCS_MAIN}
-              className="cursor-pointer text-primary-1"
-            >
-              View docs
-            </Link>
-          </div>
+        <div className="space-y-8">
+          <DashboardHeader
+            title="Create Loyalty Program"
+            info="Create and deploy your custom loyalty program smart contract"
+          />
+          <DashboardInfoBanner
+            infoType="read"
+            info="Learn about how your smart contract will work or read our
+            documentation for help."
+          />
+          <CreateStepper steps={creationSteps} />
         </div>
-        <CreateStepper steps={creationSteps} />
       </ContractFactoryWrapper>
     </>
   );

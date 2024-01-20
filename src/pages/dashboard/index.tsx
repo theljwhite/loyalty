@@ -7,10 +7,12 @@ import { getDashboardLayout } from "~/layouts/LayoutDashboard";
 import { type NextPage } from "next";
 import { api } from "~/utils/api";
 import { AddIcon, CoinsOne } from "~/components/UI/Dashboard/Icons";
+import { loyaltyStateDisplay } from "~/components/UI/Dashboard/DashboardStateStatus";
 import Head from "next/head";
 import Link from "next/link";
 import DashboardPageLoading from "~/components/UI/Dashboard/DashboardPageLoading";
 import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
+import DashboardPageError from "~/components/UI/Dashboard/DashboardPageError";
 
 //TODO 1/9 - make tailwind or reusable components for dashboard input fields, text areas, etc.
 
@@ -22,14 +24,22 @@ export const getServerSideProps: GetServerSideProps = async (
 
 const Dashboard: NextPage = (props) => {
   const { data: session } = useSession();
-  const { data: loyaltyPrograms, isLoading } =
-    api.loyaltyPrograms.getAllProgramsBasicInfo.useQuery(
-      {
-        creatorId: session?.user.id ?? "",
-      },
-      { refetchOnWindowFocus: false },
-    );
+  const {
+    data: loyaltyPrograms,
+    isLoading,
+    isError,
+  } = api.loyaltyPrograms.getAllProgramsBasicInfo.useQuery(
+    {
+      creatorId: session?.user.id ?? "",
+    },
+    { refetchOnWindowFocus: false },
+  );
   const router = useRouter();
+
+  if (isError)
+    return (
+      <DashboardPageError message="Loyalty Programs could not be fetched" />
+    );
 
   return (
     <>
@@ -79,9 +89,12 @@ const Dashboard: NextPage = (props) => {
                       </div>
                       <div className="mt-6 flex flex-[1_0_auto] flex-col">
                         <div className="flex items-center">
-                          <div className="mr-1.5 h-2 w-2 rounded-full bg-success-1"></div>
+                          <div
+                            className={`${loyaltyStateDisplay.get(program.state)
+                              ?.color} mr-1.5 h-2 w-2 rounded-full`}
+                          />
                           <p className="text-xs font-normal leading-5 text-dashboard-lightGray">
-                            Idle
+                            {program.state}
                           </p>
                         </div>
                       </div>
