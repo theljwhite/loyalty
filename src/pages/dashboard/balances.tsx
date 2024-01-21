@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { type NextPage } from "next";
 import { type GetServerSideProps, GetServerSidePropsContext } from "next";
 import { handleServerAuth } from "~/utils/handleServerAuth";
@@ -5,6 +6,7 @@ import { getDashboardLayout } from "~/layouts/LayoutDashboard";
 import { ROUTE_DOCS_QUICKSTART } from "~/configs/routes";
 import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
 import DashboardInfoBanner from "~/components/UI/Dashboard/DashboardInfoBanner";
+import { useGetTokenBalances } from "~/customHooks/useGetTokenBalances/useGetTokenBalances";
 
 export const getServerSideProps: GetServerSideProps = async (
   ctx: GetServerSidePropsContext,
@@ -13,6 +15,17 @@ export const getServerSideProps: GetServerSideProps = async (
 };
 
 const Balances: NextPage = () => {
+  const { getCommonChainWalletTokens } = useGetTokenBalances();
+
+  useEffect(() => {
+    fetchCommonChainTokens();
+  }, []);
+
+  const fetchCommonChainTokens = async (): Promise<void> => {
+    const response = await getCommonChainWalletTokens(10);
+    console.log("response -->", response);
+  };
+
   return (
     <>
       <div className="space-y-8">
