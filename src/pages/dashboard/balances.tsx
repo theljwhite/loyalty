@@ -6,7 +6,10 @@ import { getDashboardLayout } from "~/layouts/LayoutDashboard";
 import { ROUTE_DOCS_QUICKSTART } from "~/configs/routes";
 import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
 import DashboardInfoBanner from "~/components/UI/Dashboard/DashboardInfoBanner";
-import { useGetTokenBalances } from "~/customHooks/useGetTokenBalances/useGetTokenBalances";
+import { useTokenBalances } from "~/customHooks/useTokenBalances/useTokenBalances";
+import { EvmChain } from "moralis/common-evm-utils";
+
+//TODO 1/21 - finish this
 
 export const getServerSideProps: GetServerSideProps = async (
   ctx: GetServerSidePropsContext,
@@ -15,15 +18,32 @@ export const getServerSideProps: GetServerSideProps = async (
 };
 
 const Balances: NextPage = () => {
-  const { getCommonChainWalletTokens } = useGetTokenBalances();
+  const {
+    getCommonChainERC20Balance,
+    getCommonChainNFTs,
+    getNFTsByChain,
+    balanceError,
+  } = useTokenBalances();
 
   useEffect(() => {
-    fetchCommonChainTokens();
+    // fetchCommonChainTokens();
+    // fetchTokenBalanceByChain();
+    // fetchCommonChainERC20Tokens();
   }, []);
 
   const fetchCommonChainTokens = async (): Promise<void> => {
-    const response = await getCommonChainWalletTokens(10);
+    const response = await getCommonChainNFTs(10);
     console.log("response -->", response);
+  };
+
+  const fetchTokenBalanceByChain = async (): Promise<void> => {
+    const response = await getNFTsByChain(EvmChain.POLYGON);
+    console.log("response by chain -->", response);
+  };
+
+  const fetchCommonChainERC20Tokens = async (): Promise<void> => {
+    const response = await getCommonChainERC20Balance();
+    console.log("erc20 response -->", response);
   };
 
   return (
@@ -39,6 +59,7 @@ const Balances: NextPage = () => {
           path={ROUTE_DOCS_QUICKSTART}
           pathName="Read about quick approval process"
         />
+        {balanceError.isError && <div>{balanceError.message}</div>}
       </div>
     </>
   );
