@@ -12,14 +12,18 @@ interface DashboardDataSelectProps {
   onSelectChange: (e: React.ChangeEvent<HTMLSelectElement>) => any;
   selectDefaultValue?: string;
   selectOptions?: SelectOptions[];
-  selectImage: string[] | JSX.Element[];
+  selectImages?: Record<string | number, JSX.Element>;
+  imageBackgrounds?: Record<string | number, string>;
+  activeTab: number | string;
 }
 
 export default function DashboardDataSelect({
   onSelectChange,
   selectDefaultValue,
   selectOptions,
-  selectImage,
+  selectImages,
+  imageBackgrounds,
+  activeTab,
 }: DashboardDataSelectProps) {
   return (
     <div className="flex">
@@ -31,7 +35,20 @@ export default function DashboardDataSelect({
             </div>
             <div className="relative isolate flex w-full">
               <div className="me-[-1px] flex h-8 w-auto flex-[0_0_auto] items-center rounded-l-md border border-dashboard-border1 bg-neutral-4 pe-3 ps-3 text-[13px] font-normal">
-                <div className="mx-2.5 h-5 w-5">{selectImage[0]}</div>
+                {selectImages && imageBackgrounds && (
+                  <div
+                    className={`${imageBackgrounds[activeTab]} flex h-6 w-6 items-center justify-center rounded-full p-2`}
+                  >
+                    <div className="mx-2.5 h-5 w-5 whitespace-nowrap">
+                      {selectImages[activeTab]}
+                    </div>
+                  </div>
+                )}
+                {selectImages && !imageBackgrounds && (
+                  <div className="mx-2.5 h-5 w-5 whitespace-nowrap">
+                    {selectImages[activeTab]}
+                  </div>
+                )}
               </div>
               <div className="relative h-fit w-[220px] text-dashboard-lightGray ">
                 <select

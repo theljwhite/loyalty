@@ -7,6 +7,7 @@ import {
 import { useTokenBalancesStore } from "~/customHooks/useTokenBalances/store";
 import { DataTableSpinner } from "../../Misc/Spinners";
 import { FormErrorIcon } from "../Icons";
+import { formatTokenSymbol } from "~/helpers/balancesFormatting";
 
 export default function CommonERC20Balances() {
   const { commonChainERC20Balances } = useTokenBalancesStore();
@@ -70,15 +71,10 @@ export default function CommonERC20Balances() {
                             </span>
                           </div>
                           <span className="min-w-[120px] text-blue-100">
-                            {Array.from(item.symbol)[0] === "$"
-                              ? item.symbol.slice(0, 6)
-                              : `$${item.symbol.slice(0, 6)}`}
+                            {formatTokenSymbol(item.symbol)}
                           </span>
                           <span className="text-start text-orange-400">
-                            {item.amount}{" "}
-                            {item.symbol.length > 6
-                              ? `${item.symbol.slice(0, 5)}...`
-                              : item.symbol}
+                            {item.amount} {formatTokenSymbol(item.symbol)}
                           </span>
                         </div>
                       );

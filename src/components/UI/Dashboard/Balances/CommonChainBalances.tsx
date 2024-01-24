@@ -13,15 +13,15 @@ import {
 } from "~/customHooks/useTokenBalances/types";
 import CommonERC20Balances from "./CommonERC20Balances";
 import CommonNFTBalances from "./CommonNFTBalances";
-import { EthIcon } from "../Icons";
+import { ERC1155Icon, ERC721Icon, EthIcon } from "../Icons";
 
 //TODO - the separateByContractTypeAndGroupTokens function seems a little sloppy
 //will probably end up refactoring useTokenBalances calls and reformatting the...
-//...common chain returns and return the items sorted by chain and then contract type from there
+//...common chain returns and return the items sorted by chain and then contract type from there.
 //The reason it isnt is because the calls may be needed in other use cases than just this
 
 //TODO - add rate limiting/caching to Moralis calls (here or useTokenBalances)
-//TODO - also this useEffect may not be needed, can possibly fetch onSelectChange
+//TODO - also the useEffect in this component may not be needed, can possibly fetch onSelectChange
 //TODO - some styling fixes for this component and its children
 
 const commonChainSelectOptions = [
@@ -29,16 +29,19 @@ const commonChainSelectOptions = [
     id: 0,
     title: "ERC20 Balance",
     value: "ERC20" as CommonChainBalanceType,
+    selected: true,
   },
   {
     id: 1,
     title: "ERC721 Balance",
     value: "ERC721" as CommonChainBalanceType,
+    selected: false,
   },
   {
     id: 2,
     title: "ERC1155 Balance",
     value: "ERC1155" as CommonChainBalanceType,
+    selected: false,
   },
 ];
 
@@ -181,12 +184,21 @@ export default function CommonChainBalances() {
                   </div>
                 </div>
               </div>
-
               <DashboardDataSelect
+                activeTab={activeTab}
                 onSelectChange={onSelectChange}
                 selectOptions={commonChainSelectOptions}
                 selectDefaultValue={commonChainSelectOptions[0]?.value}
-                selectImage={[<EthIcon size={20} color="currentColor" />]}
+                selectImages={{
+                  ERC20: <EthIcon size={18} color="#37367b" />,
+                  ERC721: <ERC721Icon size={22} color="#3b0764" />,
+                  ERC1155: <ERC1155Icon size={22} color="currentColor" />,
+                }}
+                imageBackgrounds={{
+                  ERC20: "bg-eth-teal",
+                  ERC721: "bg-orange-300",
+                  ERC1155: "bg-pink-200",
+                }}
               />
             </div>
           </div>
@@ -197,7 +209,7 @@ export default function CommonChainBalances() {
                 <div className="flex flex-col p-4">
                   <div className="mb-4 flex w-full flex-row items-center justify-between">
                     <p className="font-semibold text-white">
-                      {activeTab} Balance
+                      Your {activeTab} Balances
                     </p>
                   </div>
                   {activeTab === "ERC20" ? (

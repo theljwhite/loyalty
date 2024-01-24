@@ -48,7 +48,7 @@ export default function CommonNFTBalances({
       {balances.map((item: ChainNFTGroupedByCollection, index: number) => (
         <div key={index} className="mt-4 whitespace-nowrap leading-[1.8]">
           <div>
-            <span className="text-md uppercase text-blue-400">
+            <span className="text-lg uppercase text-blue-400">
               {item.chainName}
             </span>
             <section className="relative flex w-full flex-col">
@@ -58,42 +58,46 @@ export default function CommonNFTBalances({
                   <span>No owned collections found for {item.chainName}</span>
                 </div>
               ) : (
-                item.balance.map((item: CollectionBalance, index: number) => {
-                  const tokens = item.tokenIds
-                    .sort((a, b) => Number(a) - Number(b))
-                    .map((token: string, tknIndex: number) => (
-                      <span key={token} className="text-orange-400">
-                        #{token}
-                        {tknIndex !== item.tokenIds.length - 1 ? `,${" "}` : ""}
-                      </span>
-                    ));
+                item.balance
+                  .filter((item: CollectionBalance) => item.collectionName)
+                  .map((item: CollectionBalance, index: number) => {
+                    const tokens = item.tokenIds
+                      .sort((a, b) => Number(a) - Number(b))
+                      .map((token: string, tknIndex: number) => (
+                        <span key={token} className="text-orange-400">
+                          #{token}
+                          {tknIndex !== item.tokenIds.length - 1
+                            ? `,${" "}`
+                            : ""}
+                        </span>
+                      ));
 
-                  const groupsOfTenTokens = Array.from(
-                    { length: Math.ceil(tokens.length / 10) },
-                    (_, i) => tokens.slice(i * 10, (i + 1) * 10),
-                  );
+                    const groupsOfTenTokens = Array.from(
+                      { length: Math.ceil(tokens.length / 10) },
+                      (_, i) => tokens.slice(i * 10, (i + 1) * 10),
+                    );
 
-                  const tokensWithLineBreaks = groupsOfTenTokens.map(
-                    (group, groupIndex) => (
-                      <span key={groupIndex}>
-                        {group}
-                        {groupIndex < groupsOfTenTokens.length - 1 && <br />}
-                      </span>
-                    ),
-                  );
-                  return (
-                    <div
-                      key={index}
-                      className="flex-rows flex w-full text-start"
-                    >
-                      <span className="pr-3" />
-                      <span className="text-md text-dashboard-codeLightBlue max-w-[170px]">
-                        Collection &quot;{item.collectionName}&quot;:{" "}
-                        {tokensWithLineBreaks}
-                      </span>
-                    </div>
-                  );
-                })
+                    const tokensWithLineBreaks = groupsOfTenTokens.map(
+                      (group, groupIndex) => (
+                        <span key={groupIndex}>
+                          {group}
+                          {groupIndex < groupsOfTenTokens.length - 1 && <br />}
+                        </span>
+                      ),
+                    );
+                    return (
+                      <div
+                        key={index}
+                        className="flex-rows flex w-full text-start"
+                      >
+                        <span className="pr-3" />
+                        <span className="text-md max-w-[170px] text-dashboard-codeLightBlue">
+                          Collection &quot;{item.collectionName}&quot;:{" "}
+                          {tokensWithLineBreaks}
+                        </span>
+                      </div>
+                    );
+                  })
               )}
             </section>
           </div>

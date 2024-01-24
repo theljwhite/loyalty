@@ -82,6 +82,10 @@ export default {
           codeDarkBlue: "#53B1FD",
           codeYellow: "#ffd700",
         },
+        eth: {
+          teal: "#48cbd9",
+          purple: "#37367b",
+        },
       },
     },
   },

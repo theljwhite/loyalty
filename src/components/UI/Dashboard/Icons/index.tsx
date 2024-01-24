@@ -571,8 +571,8 @@ export const EthIcon = ({ color, size }: IconProps): JSX.Element => (
 export const ERC721Icon = ({ color, size }: IconProps): JSX.Element => (
   <svg
     className={size ? "" : "mt-2"}
-    width="50px"
-    height="50px"
+    width={size}
+    height={size}
     xmlns="http://www.w3.org/2000/svg"
     xmlnsXlink="http://www.w3.org/1999/xlink"
     version="1.1"
