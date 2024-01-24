@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useAccount } from "wagmi";
 import Moralis from "moralis";
 import { moralisEvmChains } from "~/configs/moralis";
@@ -6,68 +5,59 @@ import {
   EvmChain,
   type Erc20Value,
   type EvmNft,
+  type EvmNftCollection,
 } from "moralis/common-evm-utils";
-import { type MoralisDataObjectValue, BigNumber } from "moralis/common-core";
+import { BigNumber } from "moralis/common-core";
+import {
+  type WalletERC20,
+  type WalletNFT,
+  type WalletNFTMetadata,
+  type NFTCollection,
+} from "./types";
+import { useTokenBalancesStore } from "./store";
 
-type WalletERC20 = {
-  id: number;
-  chain: string;
-  name: string;
-  symbol: string;
-  decimals: number;
-  logo?: string;
-  thumbnail?: string;
-  amount: string;
-};
+//TODO - add rate limiting to calls
+//TODO - error handle for individual chain balance queries
 
-type WalletNFTMetadata = {
-  description: string;
-  image: string;
-  name: string;
-};
-
-export type WalletNFT = {
-  id: number;
-  chain: string;
-  contractType: string;
-  collectionName: string;
-  tokenId: string | number;
-  metadata?: MoralisDataObjectValue;
-};
-
-type CommonNFTBalanceReturn = Record<string, WalletNFT[]>;
-type CommonERC20BalanceReturn = Record<string, WalletERC20[]>;
+export type CommonChainNFTReturn = Record<string, WalletNFT[]>;
+export type CommonChainERC20Return = Record<string, WalletERC20[]>;
+type ERC20ChainBalance = { chainName: string; balance: Erc20Value[] };
+type NFTChainBalance = { chainName: string; balance: EvmNft[] };
 
 export function useTokenBalances() {
-  const [balanceError, setBalanceError] = useState<{
-    isError: boolean;
-    message?: string;
-  }>({ isError: false, message: "" });
+  const { setCommonChainBalanceError, setBalanceQueryError } =
+    useTokenBalancesStore();
   const { isConnected, address } = useAccount();
 
   const getCommonChainERC20Balance =
-    async (): Promise<CommonERC20BalanceReturn | null> => {
+    async (): Promise<CommonChainERC20Return | null> => {
       try {
         runFetchBalanceChecks();
 
-        const allBalances: Array<Erc20Value[]> = [];
+        const allBalances: ERC20ChainBalance[] = [];
 
         for (const chain of moralisEvmChains.Common) {
           const response = await Moralis.EvmApi.token.getWalletTokenBalances({
             address: address as string,
             chain,
           });
-          allBalances.push(response.result);
+          allBalances.push({
+            chainName: chain.name ?? "",
+            balance: response.result,
+          });
         }
-
         const [chainOne, chainTwo, chainThree] = allBalances;
-        const chainOneBalance = formatERC20Return(chainOne ?? []);
-        const chainTwoBalance = formatERC20Return(chainTwo ?? []);
-        const chainThreeBalance = formatERC20Return(chainThree ?? []);
+        const chainOneBalance = formatERC20Return(chainOne?.balance ?? []);
+        const chainTwoBalance = formatERC20Return(chainTwo?.balance ?? []);
+        const chainThreeBalance = formatERC20Return(chainThree?.balance ?? []);
 
-        return { chainOneBalance, chainTwoBalance, chainThreeBalance };
+        return {
+          [chainOne?.chainName ?? "1"]: chainOneBalance,
+          [chainTwo?.chainName ?? "2"]: chainTwoBalance,
+          [chainThree?.chainName ?? "3"]: chainThreeBalance,
+        };
       } catch (error) {
-        setError(true);
+        setError(true, error);
         return null;
       }
     };
@@ -85,7 +75,7 @@ export function useTokenBalances() {
 
       return balance;
     } catch (error) {
-      setError(true);
+      setError(true, error);
       return null;
     }
   };
@@ -105,18 +95,18 @@ export function useTokenBalances() {
       const balance = formatERC20Return(response.result);
       return balance;
     } catch (error) {
-      setError(true);
+      setError(true, error);
       return null;
     }
   };
 
   const getCommonChainNFTs = async (
     limit?: number,
-  ): Promise<CommonNFTBalanceReturn | null> => {
+  ): Promise<CommonChainNFTReturn | null> => {
     try {
       runFetchBalanceChecks();
 
-      const allBalances: Array<EvmNft[]> = [];
+      const allBalances: NFTChainBalance[] = [];
 
       for (const chain of moralisEvmChains.Common) {
         const response = await Moralis.EvmApi.nft.getWalletNFTs({
@@ -124,17 +114,26 @@ export function useTokenBalances() {
           chain,
           limit,
         });
-        allBalances.push(response.result);
+        allBalances.push({
+          chainName: chain.name ?? "",
+          balance: response.result,
+        });
       }
 
       const [chainOne, chainTwo, chainThree] = allBalances;
-      const chainOneBalance = formatWalletNFTReturn(chainOne ?? []);
-      const chainTwoBalance = formatWalletNFTReturn(chainTwo ?? []);
-      const chainThreeBalance = formatWalletNFTReturn(chainThree ?? []);
+      const chainOneBalance = formatWalletNFTReturn(chainOne?.balance ?? []);
+      const chainTwoBalance = formatWalletNFTReturn(chainTwo?.balance ?? []);
+      const chainThreeBalance = formatWalletNFTReturn(
+        chainThree?.balance ?? [],
+      );
 
-      return { chainOneBalance, chainTwoBalance, chainThreeBalance };
+      return {
+        [chainOne?.chainName ?? "1"]: chainOneBalance,
+        [chainTwo?.chainName ?? "2"]: chainTwoBalance,
+        [chainThree?.chainName ?? "3"]: chainThreeBalance,
+      };
     } catch (error) {
-      setError(true);
+      setError(true, error);
       return null;
     }
   };
@@ -153,7 +152,35 @@ export function useTokenBalances() {
       const balance = formatWalletNFTReturn(response.result);
       return balance;
     } catch (error) {
-      setError(true);
+      setError(true, error);
+      return null;
+    }
+  };
+
+  const getNFTCollections = async (
+    evmChain: EvmChain,
+    limit?: number,
+  ): Promise<NFTCollection[] | null> => {
+    try {
+      runFetchBalanceChecks();
+      const response = await Moralis.EvmApi.nft.getWalletNFTCollections({
+        address: address as string,
+        chain: evmChain,
+        limit,
+      });
+      const balance = response.result;
+      const formattedBalance = balance.map(
+        (item: EvmNftCollection, index: number) => ({
+          id: index,
+          contractType: item.contractType ?? "",
+          name: item.name ?? "",
+          symbol: item.symbol ?? "",
+          tokenAddress: item.tokenAddress.toJSON(),
+        }),
+      );
+      return formattedBalance;
+    } catch (error) {
+      setError(true, error);
       return null;
     }
   };
@@ -217,11 +244,16 @@ export function useTokenBalances() {
     return true;
   };
 
-  const setError = (isError: boolean, message?: string): void => {
-    setBalanceError({
+  const setError = (isError: boolean, error: any): void => {
+    //TODO - can error handle this better prob
+    const isAddressError = JSON.stringify(error).includes(
+      "Moralis SDK Core Error",
+    );
+    setCommonChainBalanceError({
       isError,
-      message:
-        message ?? "External services error - balances could not be fetched",
+      message: isAddressError
+        ? "Could not fetch balances. Your wallet is not connected."
+        : "External services error - balances could not be fetched",
     });
   };
 
@@ -231,6 +263,6 @@ export function useTokenBalances() {
     getERC20BalanceByContractAddress,
     getCommonChainNFTs,
     getNFTsByChain,
-    balanceError,
+    getNFTCollections,
   };
 }

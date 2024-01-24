@@ -342,6 +342,23 @@ export const UpDownChevron = ({ color, size }: IconProps): JSX.Element => (
   </svg>
 );
 
+export const DownChevron = ({ color, size }: IconProps): JSX.Element => (
+  <svg
+    width={size}
+    height={size}
+    fill={color}
+    viewBox="0 0 24 24"
+    role="presentation"
+    focusable="false"
+    aria-hidden="true"
+  >
+    <path
+      fill="currentColor"
+      d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"
+    ></path>
+  </svg>
+);
+
 export const AddIcon = ({ color, size }: IconProps): JSX.Element => (
   <svg
     width={size}
