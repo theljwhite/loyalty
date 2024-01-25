@@ -13,6 +13,7 @@ interface DashboardDataSelectProps {
   selectDefaultValue?: string;
   selectOptions?: SelectOptions[];
   selectImages?: Record<string | number, JSX.Element>;
+  selectName?: string;
   imageBackgrounds?: Record<string | number, string>;
   activeTab: number | string;
 }
@@ -22,6 +23,7 @@ export default function DashboardDataSelect({
   selectDefaultValue,
   selectOptions,
   selectImages,
+  selectName,
   imageBackgrounds,
   activeTab,
 }: DashboardDataSelectProps) {
@@ -45,8 +47,10 @@ export default function DashboardDataSelect({
                   </div>
                 )}
                 {selectImages && !imageBackgrounds && (
-                  <div className="mx-2.5 h-5 w-5 whitespace-nowrap">
-                    {selectImages[activeTab]}
+                  <div className="p-2` flex h-6 w-6 items-center justify-center rounded-full">
+                    <div className="h-5 w-5 whitespace-nowrap">
+                      {selectImages[activeTab]}
+                    </div>
                   </div>
                 )}
               </div>
@@ -54,10 +58,19 @@ export default function DashboardDataSelect({
                 <select
                   {...(onSelectChange && {
                     onChange: (e) => onSelectChange(e),
-                    defaultValue: selectDefaultValue,
+                    name: selectName ?? `${activeTab} select`,
                   })}
                   className="relative h-8 w-full min-w-0 appearance-none rounded-r-md border border-dashboard-border1 ps-3 text-[13px] font-normal leading-normal text-dashboard-lightGray outline-none"
                 >
+                  {selectDefaultValue && (
+                    <option
+                      hidden
+                      defaultValue={selectDefaultValue}
+                      className="block min-w-[1.2em] whitespace-nowrap bg-white px-0.5 font-normal"
+                    >
+                      {selectDefaultValue}
+                    </option>
+                  )}
                   {selectOptions &&
                     selectOptions.map((option) => {
                       return (

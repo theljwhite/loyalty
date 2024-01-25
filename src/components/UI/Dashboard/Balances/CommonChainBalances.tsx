@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTokenBalancesStore } from "~/customHooks/useTokenBalances/store";
 import DashboardDataSelect from "../DashboardDataSelect";
 import {
@@ -29,19 +29,16 @@ const commonChainSelectOptions = [
     id: 0,
     title: "ERC20 Balance",
     value: "ERC20" as CommonChainBalanceType,
-    selected: true,
   },
   {
     id: 1,
     title: "ERC721 Balance",
     value: "ERC721" as CommonChainBalanceType,
-    selected: false,
   },
   {
     id: 2,
     title: "ERC1155 Balance",
     value: "ERC1155" as CommonChainBalanceType,
-    selected: false,
   },
 ];
 
@@ -188,7 +185,6 @@ export default function CommonChainBalances() {
                 activeTab={activeTab}
                 onSelectChange={onSelectChange}
                 selectOptions={commonChainSelectOptions}
-                selectDefaultValue={commonChainSelectOptions[0]?.value}
                 selectImages={{
                   ERC20: <EthIcon size={18} color="#37367b" />,
                   ERC721: <ERC721Icon size={22} color="#3b0764" />,

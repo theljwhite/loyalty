@@ -6,8 +6,9 @@ import { ROUTE_DOCS_QUICKSTART } from "~/configs/routes";
 import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
 import DashboardInfoBanner from "~/components/UI/Dashboard/DashboardInfoBanner";
 import CommonBalances from "~/components/UI/Dashboard/Balances/CommonChainBalances";
+import BalanceLookup from "~/components/UI/Dashboard/Balances/BalanceLookup";
 
-//TODO 1/23 - finish this
+//TODO - responsiveness styling fixes for all children components
 
 export const getServerSideProps: GetServerSideProps = async (
   ctx: GetServerSidePropsContext,
@@ -30,6 +31,7 @@ const Balances: NextPage = () => {
           pathName="Read about quick approval process"
         />
         <CommonBalances />
+        <BalanceLookup />
       </div>
     </>
   );

@@ -14,7 +14,7 @@ export type CommonChainNFTBalance = {
 export type CollectionBalance = {
   collectionName: string;
   tokenIds: string[];
-  contractType: string;
+  contractType?: string;
 };
 
 export type ChainNFTGroupedByCollection = {

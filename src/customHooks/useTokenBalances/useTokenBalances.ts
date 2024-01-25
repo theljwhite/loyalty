@@ -13,11 +13,11 @@ import {
   type WalletNFT,
   type WalletNFTMetadata,
   type NFTCollection,
+  BalanceError,
 } from "./types";
 import { useTokenBalancesStore } from "./store";
 
 //TODO - add rate limiting to calls
-//TODO - error handle for individual chain balance queries
 
 export type CommonChainNFTReturn = Record<string, WalletNFT[]>;
 export type CommonChainERC20Return = Record<string, WalletERC20[]>;
@@ -57,7 +57,7 @@ export function useTokenBalances() {
           [chainThree?.chainName ?? "3"]: chainThreeBalance,
         };
       } catch (error) {
-        setError(true, error);
+        setCommonChainBalanceError(handleError(error));
         return null;
       }
     };
@@ -75,7 +75,7 @@ export function useTokenBalances() {
 
       return balance;
     } catch (error) {
-      setError(true, error);
+      setBalanceQueryError(handleError(error));
       return null;
     }
   };
@@ -95,7 +95,7 @@ export function useTokenBalances() {
       const balance = formatERC20Return(response.result);
       return balance;
     } catch (error) {
-      setError(true, error);
+      setBalanceQueryError(handleError(error));
       return null;
     }
   };
@@ -133,7 +133,7 @@ export function useTokenBalances() {
         [chainThree?.chainName ?? "3"]: chainThreeBalance,
       };
     } catch (error) {
-      setError(true, error);
+      setCommonChainBalanceError(handleError(error));
       return null;
     }
   };
@@ -152,7 +152,7 @@ export function useTokenBalances() {
       const balance = formatWalletNFTReturn(response.result);
       return balance;
     } catch (error) {
-      setError(true, error);
+      setBalanceQueryError(handleError(error));
       return null;
     }
   };
@@ -180,7 +180,7 @@ export function useTokenBalances() {
       );
       return formattedBalance;
     } catch (error) {
-      setError(true, error);
+      setBalanceQueryError(handleError(error));
       return null;
     }
   };
@@ -244,17 +244,16 @@ export function useTokenBalances() {
     return true;
   };
 
-  const setError = (isError: boolean, error: any): void => {
-    //TODO - can error handle this better prob
+  const handleError = (error: any): BalanceError => {
     const isAddressError = JSON.stringify(error).includes(
       "Moralis SDK Core Error",
     );
-    setCommonChainBalanceError({
-      isError,
+    return {
+      isError: true,
       message: isAddressError
         ? "Could not fetch balances. Your wallet is not connected."
         : "External services error - balances could not be fetched",
-    });
+    };
   };
 
   return {

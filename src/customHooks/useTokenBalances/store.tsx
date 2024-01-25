@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import {
   WalletERC20,
-  WalletNFT,
+  CollectionBalance,
   CommonChainERC20Balance,
   ChainNFTGroupedByCollection,
   BalanceError,
@@ -14,7 +14,9 @@ export interface TokenBalancesState {
   commonChainBalanceLoading: boolean;
   commonChainBalanceError: BalanceError;
   balanceQueryContractAddress: string | `0x${string}`;
-  balanceQueryReturn: WalletERC20[] | WalletNFT[] | null;
+  erc20BalanceQueryReturn: WalletERC20[];
+  erc721BalanceQueryReturn: CollectionBalance[];
+  erc1155BalanceQueryReturn: CollectionBalance[];
   balanceQueryLoading: boolean;
   balanceQueryError: BalanceError;
   setCommonChainERC20Balances: (
@@ -29,8 +31,12 @@ export interface TokenBalancesState {
   setCommonChainBalanceLoading: (commonChainBalanceLoading: boolean) => void;
   setCommonChainBalanceError: (commonChainBalanceError: BalanceError) => void;
   setBalanceQueryContractAddress: (address: string | `0x${string}`) => void;
-  setBalanceQueryReturn: (
-    balanceQueryReturn: WalletERC20[] | WalletNFT[] | null,
+  setERC20BalanceQueryReturn: (erc20BalanceQueryReturn: WalletERC20[]) => void;
+  setERC721BalanceQueryReturn: (
+    erc721BalanceQueryReturn: CollectionBalance[],
+  ) => void;
+  setERC1155BalanceQueryReturn: (
+    erc1155BalanceQueryReturn: CollectionBalance[],
   ) => void;
   setBalanceQueryLoading: (balanceQueryLoading: boolean) => void;
   setBalanceQueryError: (balanceQueryError: BalanceError) => void;
@@ -49,7 +55,9 @@ export const useTokenBalancesStore = create<TokenBalancesState>((set) => {
     commonChainBalanceLoading: true,
     commonChainBalanceError: { isError: false, message: "" },
     balanceQueryContractAddress: "",
-    balanceQueryReturn: null,
+    erc20BalanceQueryReturn: [],
+    erc721BalanceQueryReturn: [],
+    erc1155BalanceQueryReturn: [],
     balanceQueryLoading: false,
     balanceQueryError: { isError: false, message: "" },
   };
@@ -71,9 +79,14 @@ export const useTokenBalancesStore = create<TokenBalancesState>((set) => {
       set({ commonChainBalanceError }),
     setBalanceQueryContractAddress: (address: string | `0x${string}`) =>
       set({ balanceQueryContractAddress: address }),
-    setBalanceQueryReturn: (
-      balanceQueryReturn: WalletERC20[] | WalletNFT[] | null,
-    ) => set({ balanceQueryReturn }),
+    setERC20BalanceQueryReturn: (erc20BalanceQueryReturn: WalletERC20[]) =>
+      set({ erc20BalanceQueryReturn }),
+    setERC721BalanceQueryReturn: (
+      erc721BalanceQueryReturn: CollectionBalance[],
+    ) => set({ erc721BalanceQueryReturn }),
+    setERC1155BalanceQueryReturn: (
+      erc1155BalanceQueryReturn: CollectionBalance[],
+    ) => set({ erc1155BalanceQueryReturn }),
     setBalanceQueryLoading: (balanceQueryLoading: boolean) =>
       set({ balanceQueryLoading }),
     setBalanceQueryError: (balanceQueryError: BalanceError) =>
