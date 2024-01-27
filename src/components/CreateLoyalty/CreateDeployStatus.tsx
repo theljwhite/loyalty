@@ -6,31 +6,40 @@ import { dismissToast } from "../UI/Toast/Toast";
 import { RightChevron } from "../UI/Dashboard/Icons";
 import DashboardInfoBox from "../UI/Dashboard/DashboardInfoBox";
 import { allChains } from "~/configs/wagmi";
+import { RewardType } from "~/customHooks/useDeployLoyalty/types";
+import CreateDeployEscrow from "./CreateDeployEscrow";
 
 //TODO - this useEffect may not be needed, can prob router push direct from...
 //...useDeployLoyalty hook
 
 export default function CreateDeployStatus() {
+  const [isDeployEscrowOpen, setIsDeployEscrowOpen] = useState<boolean>(false);
   const [blockExplorerUrl, setBlockExplorerUrl] = useState<string>("");
   const router = useRouter();
   const {
     name,
-    isSuccess,
+    isSuccess: loyaltyDeploySuccess,
     deployLoyaltyData,
+    rewardType,
     reset: clearLoyaltyDeployData,
-  } = useDeployLoyaltyStore();
+  } = useDeployLoyaltyStore((state) => state);
   const { chain: deployedProgramChain, hash, address } = deployLoyaltyData;
+  const needsEscrowDeploy = rewardType !== RewardType.Points;
 
   useEffect(() => {
-    if (isSuccess && deployLoyaltyData) {
+    if (loyaltyDeploySuccess && deployLoyaltyData) {
       getBlockExplorerUrl();
-      setTimeout(() => {
-        dismissToast();
-        clearLoyaltyDeployData();
-        router.push(`/dashboard/programs/${address}`);
-      }, 3000);
+
+      if (needsEscrowDeploy) setIsDeployEscrowOpen(true);
+      else {
+        setTimeout(() => {
+          dismissToast();
+          clearLoyaltyDeployData();
+          router.push(`/dashboard/programs/${address}`);
+        }, 3000);
+      }
     }
-  }, [deployLoyaltyData, isSuccess]);
+  }, [deployLoyaltyData, loyaltyDeploySuccess, setIsDeployEscrowOpen]);
 
   const getBlockExplorerUrl = (): void => {
     const correctChain = allChains.find(
@@ -56,7 +65,7 @@ export default function CreateDeployStatus() {
             <ol className="me-[1em]  list-decimal">
               <li className="inline-flex items-center">
                 <span className="cursor-pointer list-decimal items-center hover:underline">
-                  Deploy
+                  {isDeployEscrowOpen ? "Deploy Escrow" : "Deploy"}
                 </span>
 
                 <span className="me-1 ms-1 text-dashboard-tooltip">
@@ -73,30 +82,36 @@ export default function CreateDeployStatus() {
           </nav>
         </div>
       </div>
-      <h1 className="text-3xl font-semibold tracking-tight text-dashboard-heading">
-        Your loyalty program is deploying
-      </h1>
-      <p className="my-4 pe-4 text-dashboard-menuText">
-        Remain on this page while your smart contract deploys. You will be
-        redirected to your loyalty program when your contract has finished
-        deploying.
-      </p>
-      <div className="flex h-full w-full justify-start">
-        <Image
-          width={300}
-          height={300}
-          alt="gif of a smart contract"
-          src="/utilityImages/blockchain.gif"
-        />
-      </div>
-      {isSuccess && deployLoyaltyData && (
-        <div className="flex h-full w-full justify-start">
-          <DashboardInfoBox
-            infoType="success"
-            info={`Your contract deployed to '${deployedProgramChain}' with address: '${address}'. Redirecting you to your loyalty program.`}
-            outlink={`${blockExplorerUrl}tx/${hash}`}
-            outlinkText="View your transaction"
-          />
+      {isDeployEscrowOpen ? (
+        <CreateDeployEscrow />
+      ) : (
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight text-dashboard-heading">
+            Your loyalty program is deploying
+          </h1>
+          <p className="my-4 pe-4 text-dashboard-menuText">
+            Remain on this page while your smart contract deploys. You will be
+            redirected to your loyalty program when your contract has finished
+            deploying.
+          </p>
+          <div className="flex h-full w-full justify-start">
+            <Image
+              width={300}
+              height={300}
+              alt="gif of a smart contract"
+              src="/utilityImages/blockchain.gif"
+            />
+          </div>
+          {loyaltyDeploySuccess && deployLoyaltyData && (
+            <div className="flex h-full w-full justify-start">
+              <DashboardInfoBox
+                infoType="success"
+                info={`Your contract deployed to '${deployedProgramChain}' with address: '${address}'.`}
+                outlink={`${blockExplorerUrl}tx/${hash}`}
+                outlinkText="View your transaction"
+              />
+            </div>
+          )}
         </div>
       )}
     </>

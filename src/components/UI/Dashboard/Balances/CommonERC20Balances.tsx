@@ -10,9 +10,11 @@ import { FormErrorIcon } from "../Icons";
 import { formatTokenSymbol } from "~/helpers/balancesFormatting";
 
 export default function CommonERC20Balances() {
-  const { commonChainERC20Balances } = useTokenBalancesStore();
-  const { commonChainBalanceLoading, commonChainBalanceError } =
-    useTokenBalancesStore();
+  const {
+    commonChainERC20Balances,
+    commonChainBalanceLoading,
+    commonChainBalanceError,
+  } = useTokenBalancesStore((state) => state);
 
   if (commonChainBalanceLoading) {
     return (

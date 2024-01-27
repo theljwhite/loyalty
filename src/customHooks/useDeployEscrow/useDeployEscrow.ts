@@ -1,3 +1,4 @@
+import { useSession } from "next-auth/react";
 import { useDeployLoyaltyStore } from "../useDeployLoyalty/store";
 import { useContractFactoryParams } from "../useContractFactoryParams/useContractFactoryParams";
 import { EscrowContractState, useDeployEscrowStore } from "./store";
@@ -11,6 +12,11 @@ import {
 } from "wagmi/actions";
 import Loyalty from "~/contractsAndAbis/Loyalty/Loyalty.json";
 import { api } from "~/utils/api";
+import {
+  dismissToast,
+  toastLoading,
+  toastSuccess,
+} from "~/components/UI/Toast/Toast";
 
 export function useDeployEscrow() {
   const {
@@ -24,15 +30,17 @@ export function useDeployEscrow() {
   } = useDeployEscrowStore((state) => state);
 
   const { rewardType, programEndsAt, deployLoyaltyData } =
-    useDeployLoyaltyStore();
+    useDeployLoyaltyStore((state) => state);
   const { error, handleErrorFlow } = useError();
   const signer = useEthersSigner();
   const factoryParams = useContractFactoryParams();
+  const { data: session } = useSession();
   const { mutate: createEscrowDbRecord } =
     api.escrow.createEscrow.useMutation();
 
   const deployEscrowContract = async (): Promise<void> => {
     setIsLoading(true);
+    toastLoading("Escrow deploy request sent.", true);
     try {
       const escrowFactory = new ContractFactory(
         factoryParams.abi,
@@ -46,16 +54,19 @@ export function useDeployEscrow() {
       );
       const transaction = escrowContract.deploymentTransaction();
       if (transaction) {
+        dismissToast();
+
         const escrowContractAddress = await escrowContract.getAddress();
         setDeployEscrowData(transaction.hash, escrowContractAddress);
         await attachEscrowToLoyalty();
 
         setIsLoading(false);
         setIsSuccess(true);
+        toastSuccess("Escrow contract successfully deployed");
 
         createEscrowDbRecord({
           address: escrowContractAddress,
-          creatorId: "userId here",
+          creatorId: session?.user.id ?? "",
           escrowType,
           state: "AwaitingEscrowApprovals",
           loyaltyAddress: deployLoyaltyData.address,

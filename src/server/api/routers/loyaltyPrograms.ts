@@ -6,6 +6,7 @@ import {
 } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { rewardTypeNumToPrismaEnum } from "~/utils/rewardTypeNumToPrismaEnum";
+import { RewardType } from "@prisma/client";
 
 const objectivesInputSchema = z.array(
   z.object({
@@ -140,7 +141,17 @@ export const loyaltyProgramsRouter = createTRPCRouter({
         where: { address: contractAddress },
         select: { name: true, rewardType: true, state: true },
       });
-
       return loyaltyProgram;
+    }),
+  getRelatedEscrowContractByAddress: protectedProcedure
+    .input(z.object({ loyaltyProgramAddress: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const loyaltyProgram = await ctx.db.loyaltyProgram.findUnique({
+        where: { address: input.loyaltyProgramAddress },
+        select: { escrow: true, rewardType: true },
+      });
+      if (!loyaltyProgram) return null;
+      if (loyaltyProgram.rewardType === RewardType.Points) return null;
+      else return loyaltyProgram.escrow;
     }),
 });

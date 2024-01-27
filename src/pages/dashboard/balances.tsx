@@ -26,7 +26,7 @@ const Balances: NextPage = () => {
         />
         <DashboardInfoBanner
           infoType="warn"
-          info="Before depositing custom ERC20, ERC721, or ERC1155 tokens, first make sure that your rewards contract has been approved for your loyalty program/escrow contract."
+          info="To deposit tokens into your escrow contract, select your loyalty program and navigate to the Escrow Overview section. Also, first make sure that your desired rewards contract is approved for your program."
           path={ROUTE_DOCS_QUICKSTART}
           pathName="Read about quick approval process"
         />

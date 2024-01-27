@@ -45,7 +45,6 @@ export const escrowRouter = createTRPCRouter({
           loyaltyAddress,
         },
       });
-      console.log("escrow -->", escrow);
       return escrow;
     }),
   getEscrowDepositKey: protectedProcedure
@@ -63,7 +62,6 @@ export const escrowRouter = createTRPCRouter({
         select: { depositKey: true },
       });
 
-      console.log("deposit key -->", depositKey);
       return depositKey;
     }),
 });

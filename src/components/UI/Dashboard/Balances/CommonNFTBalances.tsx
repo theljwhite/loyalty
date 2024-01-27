@@ -17,7 +17,7 @@ export default function CommonNFTBalances({
     commonChainERC1155Balances,
     commonChainBalanceLoading,
     commonChainBalanceError,
-  } = useTokenBalancesStore();
+  } = useTokenBalancesStore((state) => state);
 
   const balances =
     contractType === "ERC721"

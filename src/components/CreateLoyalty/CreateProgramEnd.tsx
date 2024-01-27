@@ -8,8 +8,9 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 export default function CreateProgramEnd() {
-  const { programEndsAt, setProgramEnd, step, errors } =
-    useDeployLoyaltyStore();
+  const { programEndsAt, setProgramEnd, step, errors } = useDeployLoyaltyStore(
+    (state) => state,
+  );
   const [time, setTime] = useState<string>(programEndsAt.toLocaleTimeString());
   const currentStepError = errors.find((error) => error.step === step);
   const programEndValidation = validationFuncs.get(step);

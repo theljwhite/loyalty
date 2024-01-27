@@ -50,7 +50,9 @@ const rewardConditionLearnItems: RewardConditionLearnItem[] = [
 
 export default function CreateRewardType() {
   const [isLearnMoreOpen, setIsLearnMoreOpen] = useState<boolean>(false);
-  const { rewardType, setRewardType, step, errors } = useDeployLoyaltyStore();
+  const { rewardType, setRewardType, step, errors } = useDeployLoyaltyStore(
+    (state) => state,
+  );
   const currentStepError = errors.find((error) => error.step === step);
   const rewardTypeValidation = validationFuncs.get(step);
   const onNextStep = useNextLoyaltyStep([

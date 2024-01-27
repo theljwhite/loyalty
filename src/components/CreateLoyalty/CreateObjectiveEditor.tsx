@@ -33,7 +33,7 @@ export default function CreateObjectiveEditor({
     isError: false,
     message: "",
   });
-  const { objectives, setObjectives } = useDeployLoyaltyStore();
+  const { objectives, setObjectives } = useDeployLoyaltyStore((state) => state);
   const isNewObjective = activeObjective == objectives.length;
 
   useEffect(() => {

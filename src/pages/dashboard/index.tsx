@@ -14,7 +14,7 @@ import DashboardPageLoading from "~/components/UI/Dashboard/DashboardPageLoading
 import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
 import DashboardPageError from "~/components/UI/Dashboard/DashboardPageError";
 
-//TODO 1/9 - make tailwind or reusable components for dashboard input fields, text areas, etc.
+//TODO - make tailwind or reusable components for dashboard input fields, text areas, etc.
 
 export const getServerSideProps: GetServerSideProps = async (
   ctx: GetServerSidePropsContext,

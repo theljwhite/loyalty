@@ -19,7 +19,9 @@ import { ROUTE_DOCS_MAIN } from "~/configs/routes";
 
 export default function CreateTiers() {
   const [isEditorOpen, setIsEditorOpen] = useState<boolean>(false);
-  const { tiers, setTiers, step, errors } = useDeployLoyaltyStore();
+  const { tiers, setTiers, step, errors } = useDeployLoyaltyStore(
+    (state) => state,
+  );
   const [activeTier, setActiveTier] = useState<number>(tiers.length);
 
   const currentStepError = errors.find((error) => error.step === step);

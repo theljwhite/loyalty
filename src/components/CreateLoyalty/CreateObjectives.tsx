@@ -27,7 +27,9 @@ import { ROUTE_DOCS_MAIN } from "~/configs/routes";
 
 export default function CreateObjectives() {
   const [isEditorOpen, setIsEditorOpen] = useState<boolean>(false);
-  const { objectives, setObjectives, errors, step } = useDeployLoyaltyStore();
+  const { objectives, setObjectives, errors, step } = useDeployLoyaltyStore(
+    (state) => state,
+  );
   const [activeObjective, setActiveObjective] = useState<number>(
     objectives.length,
   );

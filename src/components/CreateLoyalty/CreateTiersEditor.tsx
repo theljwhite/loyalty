@@ -41,7 +41,9 @@ export default function CreateTiersEditor({
     message: "",
   });
 
-  const { tiers, setTiers, objectives } = useDeployLoyaltyStore();
+  const { tiers, setTiers, objectives } = useDeployLoyaltyStore(
+    (state) => state,
+  );
 
   const isNewTier = activeTier == tiers.length;
   const maxReachablePoints = [...objectives].reduce(

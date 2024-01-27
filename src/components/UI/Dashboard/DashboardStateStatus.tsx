@@ -23,7 +23,7 @@ export const loyaltyStateDisplay = new Map<
     "AwaitingEscrowSetup",
     {
       message:
-        "Loyalty contract is waiting for escrow contract to be deployed and set up",
+        "Loyalty contract is waiting for escrow contract to be deployed or set up",
       color: "bg-orange-100",
     },
   ],

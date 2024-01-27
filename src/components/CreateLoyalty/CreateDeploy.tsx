@@ -11,7 +11,7 @@ import { RightChevron, FormErrorIcon } from "../UI/Dashboard/Icons";
 
 export default function CreateDeploy() {
   const [isSummaryOpen, setIsSummaryOpen] = useState<boolean>(false);
-  const { errors, step } = useDeployLoyaltyStore();
+  const { errors, step } = useDeployLoyaltyStore((state) => state);
   const currentStepError = errors.find((error) => error.step === step);
   const goPreviousStep = usePreviousLoyaltyStep();
   const { deployLoyaltyProgram } = useDeployLoyalty();
