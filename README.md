@@ -1,4 +1,4 @@
-# FYI
+# Note
 
 This is still an unnamed project and work in progress. Create an on-chain loyalty program with points, objectives, tiers, and more. Optionally, also reward loyalty program users with ERC20, ERC721, or ERC1155 rewards.
 
@@ -15,6 +15,12 @@ They are in a separate repo for now as I have yet to combine them into a single 
 
 I usually dont make these repos public, but for now it will remain public.
 The totality of this project will include this NextJS app, the smart contracts themselves (a series of contract factory smart contracts that allow other contracts to be created and deployed), and a package/hooks for developers to use their loyalty program contracts on their own websites, apps, etc.
+
+# Previews
+
+Note that in the following screenshots, all visual elements and styling may not be final. Some elements are visual placeholders until the logic for each section is finished. I havent even decided on a primary font family yet. But to give you small idea of how it may look, some previews:
+
+![Connecting wallet](https://i.ibb.co/FbsJt9F/connect1.png)
 
 This app utilizes Prisma, TRPC, Tailwind, Ethers, Wagmi, RainbowKit, and more.
 This app was scaffolded using create T3 app. Read more about it here:
