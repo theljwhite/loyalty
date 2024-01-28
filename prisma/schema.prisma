@@ -38,7 +38,7 @@ model Escrow {
     address          String         @unique
     rewardAddress    String         @default("")
     senderAddress    String         @default("")
-    creatorId        String         @unique
+    creatorId        String
     creator          User           @relation(fields: [creatorId], references: [id])
     escrowType       EscrowType
     state            EscrowState

@@ -81,6 +81,8 @@ export default {
           codeLightBlue: "#9cdcfe",
           codeDarkBlue: "#53B1FD",
           codeYellow: "#ffd700",
+          badge: "#E9E4FF",
+          required: "#e53e3e",
         },
         eth: {
           teal: "#48cbd9",

@@ -20,7 +20,7 @@ export default function DashboardAnalyticsStatus({
               <p className="text-base font-semibold leading-6">Analytics</p>
             </div>
             <p className="mb-4 text-[13px] font-normal text-dashboard-lightGray">
-              One your loyalty program has users, this area will update with
+              Once your loyalty program has users, this area will update with
               analytics info.
             </p>
             <p className="text-dashboard-lightGray">No data</p>

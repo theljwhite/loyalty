@@ -5,8 +5,8 @@ import { useDeployLoyaltyStore } from "~/customHooks/useDeployLoyalty/store";
 import { dismissToast } from "../UI/Toast/Toast";
 import { RightChevron } from "../UI/Dashboard/Icons";
 import DashboardInfoBox from "../UI/Dashboard/DashboardInfoBox";
-import { allChains } from "~/configs/wagmi";
 import { RewardType } from "~/customHooks/useDeployLoyalty/types";
+import { getBlockExplorerUrl } from "~/helpers/getBlockExplorerUrl";
 import CreateDeployEscrow from "./CreateDeployEscrow";
 
 //TODO - this useEffect may not be needed, can prob router push direct from...
@@ -28,7 +28,7 @@ export default function CreateDeployStatus() {
 
   useEffect(() => {
     if (loyaltyDeploySuccess && deployLoyaltyData) {
-      getBlockExplorerUrl();
+      findBlockExplorerUrl();
 
       if (needsEscrowDeploy) setIsDeployEscrowOpen(true);
       else {
@@ -41,20 +41,8 @@ export default function CreateDeployStatus() {
     }
   }, [deployLoyaltyData, loyaltyDeploySuccess, setIsDeployEscrowOpen]);
 
-  const getBlockExplorerUrl = (): void => {
-    const correctChain = allChains.find(
-      (chain) => chain.name === deployedProgramChain,
-    );
-    if (
-      correctChain?.blockExplorers?.default ||
-      correctChain?.blockExplorers?.etherscan
-    ) {
-      setBlockExplorerUrl(
-        correctChain?.blockExplorers.etherscan?.url ??
-          correctChain?.blockExplorers.default.url ??
-          "",
-      );
-    }
+  const findBlockExplorerUrl = (): void => {
+    setBlockExplorerUrl(getBlockExplorerUrl(deployedProgramChain));
   };
 
   return (

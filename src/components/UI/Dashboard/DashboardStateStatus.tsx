@@ -130,7 +130,9 @@ export default function DashboardStateStatus({
         <div className="flex flex-row items-start">
           <div className="flex-1">
             <div className="mb-1 flex items-center justify-between">
-              <p className="text-base font-semibold leading-6">Status</p>
+              <p className="text-base font-semibold leading-6">
+                {programState ? "Loyalty Status" : "Escrow Status"}
+              </p>
               {programState ? (
                 <span
                   className={`${loyaltyStateDisplay.get(programState)

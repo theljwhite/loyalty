@@ -27,7 +27,7 @@ export default function CommonNFTBalances({
   if (commonChainBalanceLoading) {
     return (
       <div className="my-12 flex flex-col items-center justify-center gap-2 whitespace-nowrap text-center text-white">
-        <DataTableSpinner size={40} />
+        <DataTableSpinner size={8} />
       </div>
     );
   }

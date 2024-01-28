@@ -137,6 +137,33 @@ export const EyeballIcon = ({ color, size }: IconProps): JSX.Element => (
   </svg>
 );
 
+export const EyeTransform = ({
+  color,
+  size,
+  line,
+}: IconProps & { line: boolean }): JSX.Element => (
+  <svg
+    width={size}
+    height={size}
+    fill={color}
+    viewBox="0 0 16 16"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {!line && <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z" />}
+    {line && (
+      <line
+        x1="10%"
+        y1="10%"
+        x2="90%"
+        y2="90%"
+        stroke={color}
+        strokeWidth={2}
+      />
+    )}
+    <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" />
+  </svg>
+);
+
 export const ObjectivesIconOne = ({ color, size }: IconProps): JSX.Element => (
   <svg
     width={size}
@@ -536,6 +563,23 @@ export const OutLink = ({ color, size }: IconProps): JSX.Element => (
     xmlns="http://www.w3.org/2000/svg"
   >
     <path d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z" />
+  </svg>
+);
+
+export const ClipboardOne = ({ color, size }: IconProps): JSX.Element => (
+  <svg
+    width={size}
+    height={size}
+    fill={color}
+    stroke="#000"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    <rect height="4" rx="1" ry="1" width="8" x="8" y="2" />
   </svg>
 );
 

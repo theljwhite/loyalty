@@ -154,4 +154,13 @@ export const loyaltyProgramsRouter = createTRPCRouter({
       if (loyaltyProgram.rewardType === RewardType.Points) return null;
       else return loyaltyProgram.escrow;
     }),
+  getDeploymentInfoByAddress: protectedProcedure
+    .input(z.object({ loyaltyAddress: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const deployInfo = await ctx.db.loyaltyProgram.findUnique({
+        where: { address: input.loyaltyAddress },
+        select: { createdAt: true, chain: true, chainId: true },
+      });
+      return deployInfo;
+    }),
 });

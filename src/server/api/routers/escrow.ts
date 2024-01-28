@@ -48,20 +48,25 @@ export const escrowRouter = createTRPCRouter({
       return escrow;
     }),
   getEscrowDepositKey: protectedProcedure
-    .input(z.object({ creatorId: z.string() }))
+    .input(z.object({ loyaltyAddress: z.string() }))
     .query(async ({ ctx, input }) => {
-      const { creatorId } = input;
-      const user = await ctx.db.user.findUnique({
-        where: { id: creatorId },
-      });
-      if (!user || user.role != "Creator")
-        throw new TRPCError({ code: "NOT_FOUND" });
+      const { loyaltyAddress } = input;
 
-      const depositKey = await ctx.db.escrow.findUnique({
-        where: { creatorId },
+      const escrow = await ctx.db.escrow.findUnique({
+        where: { loyaltyAddress },
         select: { depositKey: true },
       });
-
-      return depositKey;
+      if (!escrow) throw new TRPCError({ code: "NOT_FOUND" });
+      return escrow.depositKey;
+    }),
+  updateEscrowState: protectedProcedure
+    .input(z.object({ escrowAddress: z.string(), newEscrowState: escrowState }))
+    .mutation(async ({ ctx, input }) => {
+      const { escrowAddress, newEscrowState } = input;
+      const updatedEscrowState = await ctx.db.escrow.update({
+        where: { address: escrowAddress },
+        data: { state: newEscrowState },
+      });
+      return updatedEscrowState.state;
     }),
 });
