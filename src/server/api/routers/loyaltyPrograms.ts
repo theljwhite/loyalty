@@ -163,4 +163,21 @@ export const loyaltyProgramsRouter = createTRPCRouter({
       });
       return deployInfo;
     }),
+  getEscrowApprovalsRelatedData: protectedProcedure
+    .input(z.object({ loyaltyAddress: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const details = await ctx.db.loyaltyProgram.findUnique({
+        where: { address: input.loyaltyAddress },
+        select: { escrow: true, creator: true },
+      });
+
+      if (!details || !details.escrow) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      } else
+        return {
+          escrowType: details.escrow.escrowType,
+          creatorAddress: details.creator.address,
+          depositKey: details.escrow.depositKey,
+        };
+    }),
 });

@@ -3,7 +3,9 @@ interface DashboardInputBoxProps {
   description: string;
   placeholder?: string;
   stateVar: string;
+  errorState?: string;
   isValid: boolean;
+  isRequiredField?: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => any;
 }
 
@@ -12,7 +14,9 @@ export default function DashboardSingleInputBox({
   description,
   placeholder,
   stateVar,
+  errorState,
   isValid,
+  isRequiredField,
   onChange,
 }: DashboardInputBoxProps) {
   return (
@@ -22,9 +26,11 @@ export default function DashboardSingleInputBox({
           <div className="mb-1 flex items-center justify-between">
             <p className="text-md font-semibold capitalize leading-6">
               {title}
-              <code className="bg-dashboard-badge text-dashboard-required ml-1 inline-flex items-center gap-1 whitespace-nowrap py-0.5 pe-1.5 ps-1.5 align-middle text-xs font-normal leading-[1.4]">
-                Required
-              </code>
+              {isRequiredField && (
+                <code className="ml-1 inline-flex items-center gap-1 whitespace-nowrap bg-dashboard-badge py-0.5 pe-1.5 ps-1.5 align-middle text-xs font-normal leading-[1.4] text-dashboard-required">
+                  Required
+                </code>
+              )}
             </p>
           </div>
           <p className="mb-6 text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
@@ -33,7 +39,10 @@ export default function DashboardSingleInputBox({
 
           <div className="border-box">
             <p className="text-[13px] font-semibold leading-5 text-dashboard-body">
-              Enter {title}
+              Enter {title}{" "}
+              {errorState && (
+                <span className="ml-8 text-error-1">*{errorState}</span>
+              )}
             </p>
             <div className="break-words">
               <div className="mt-2">
@@ -42,14 +51,18 @@ export default function DashboardSingleInputBox({
                     <div className="flex justify-between"></div>
                     <div className="relative isolate flex w-full">
                       <input
+                        id={`${stateVar}-input`}
                         value={stateVar}
                         onChange={onChange}
                         placeholder={placeholder ?? `Enter ${title}`}
                         className={`${
-                          isValid && stateVar.length > 0
+                          isValid
                             ? "focus:border-primary-1"
                             : "focus:border-error-1"
                         } relative h-8 w-full min-w-0 appearance-none rounded-md border border-dashboard-border1 pe-3 ps-3 text-[13px] font-normal outline-none`}
+                        spellCheck="false"
+                        autoCorrect="off"
+                        autoComplete="off"
                       />
                     </div>
                   </div>

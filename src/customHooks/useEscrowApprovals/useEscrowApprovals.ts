@@ -17,7 +17,7 @@ const TEST_ERC1155_CONTRACT = "0xDEdb5ed1278080BC750633346f2dAE54131D1a92";
 
 export function useEscrowApprovals() {
   const { chain } = useNetwork();
-  const { escrowType } = useDeployEscrowStore();
+  const { escrowType } = useDeployEscrowStore((state) => state);
   const {
     rewardAddress,
     senderAddress,
@@ -28,7 +28,7 @@ export function useEscrowApprovals() {
     setIsSuccess,
     setIsLoading,
     setError,
-  } = useEscrowApprovalsStore();
+  } = useEscrowApprovalsStore((state) => state);
   const { abi } = useContractFactoryParams();
   const { error, handleErrorFlow } = useError();
 
@@ -154,17 +154,22 @@ export function useEscrowApprovals() {
   };
 
   const isERC20Verified = async (): Promise<boolean> => {
-    const tokenData = await fetchToken({
-      address: rewardAddress as `0x${string}`,
-    });
-    if (tokenData == null) return false;
-    else {
-      setRewardInfo({
-        name: tokenData.name,
-        symbol: tokenData.symbol,
-        decimals: tokenData.decimals,
+    try {
+      const tokenData = await fetchToken({
+        address: rewardAddress as `0x${string}`,
       });
-      return true;
+      if (tokenData == null) return false;
+      else {
+        setRewardInfo({
+          name: tokenData.name,
+          symbol: tokenData.symbol,
+          decimals: tokenData.decimals,
+        });
+        return true;
+      }
+    } catch (e) {
+      handleErrorFlow(e, "Contract could not be verified as ERC20");
+      return false;
     }
   };
 
@@ -241,6 +246,7 @@ export function useEscrowApprovals() {
   return {
     approveSender,
     approveRewards,
+    isERC20Verified,
     isERC721Verified,
     isERC1155Verified,
     setDepositKey,
