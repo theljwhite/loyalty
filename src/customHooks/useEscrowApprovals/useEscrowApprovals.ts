@@ -93,6 +93,7 @@ export function useEscrowApprovals() {
   };
 
   const approveSender = async (): Promise<void> => {
+    console.log("rw", rewardAddress);
     try {
       const contractConfig = {
         address: rewardAddress as `0x${string}`,

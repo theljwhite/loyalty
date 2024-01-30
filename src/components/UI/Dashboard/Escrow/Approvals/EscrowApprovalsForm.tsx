@@ -10,7 +10,8 @@ import {
 } from "~/utils/escrowApprovalsValidation";
 import DashboardSingleInputBox from "../../DashboardSingleInputBox";
 import DashboardCopyDataBox from "../../DashboardCopyDataBox";
-import EscrowApprovalStatus from "./EscrowApprovalStatus";
+import DashboardInfoBanner from "../../DashboardInfoBanner";
+import EscrowApprovalConfirm from "./EscrowApprovalConfirm";
 import { FormErrorIcon } from "../../Icons";
 
 type EscrowInputError = {
@@ -103,13 +104,17 @@ export default function EscrowApprovalsForm() {
 
   if (submitStatus !== "Idle")
     return (
-      <EscrowApprovalStatus
+      <EscrowApprovalConfirm
         submitStatus={submitStatus}
         setSubmitStatus={setSubmitStatus}
       />
     );
   return (
     <>
+      <DashboardInfoBanner
+        infoType="info"
+        info="Some quick approvals are needed to ensure the safety of your loyalty program. Complete the checklist below to get your escrow contract quickly ready to issue rewards."
+      />
       <DashboardCopyDataBox
         title="Deposit Key"
         description="Your deposit key for depositing tokens into your escrow contract when deposit period is active. You can also view this key later in Escrow Settings."

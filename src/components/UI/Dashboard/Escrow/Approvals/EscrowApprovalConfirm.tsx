@@ -1,8 +1,11 @@
+import { useAccount } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useEscrowApprovals } from "~/customHooks/useEscrowApprovals/useEscrowApprovals";
 import { useEscrowApprovalsStore } from "~/customHooks/useEscrowApprovals/store";
 import { type ApprovalSubmitStatus } from "./EscrowApprovalsForm";
 import DashboardPageLoading from "../../DashboardPageLoading";
 import DashboardInfoBox from "../../DashboardInfoBox";
+import DashboardSummaryTable from "../../DashboardSummaryTable";
 
 //TODO 1/29 - finish
 
@@ -11,14 +14,21 @@ interface EscrowApprovalStatusProps {
   setSubmitStatus: React.Dispatch<React.SetStateAction<ApprovalSubmitStatus>>;
 }
 
-export default function EscrowApprovalStatus({
+export default function EscrowApprovalConfirm({
   submitStatus,
   setSubmitStatus,
 }: EscrowApprovalStatusProps) {
-  const { rewardAddress, rewardInfo } = useEscrowApprovalsStore(
+  const { isConnected, address: userConnectedAddress } = useAccount();
+  const { openConnectModal } = useConnectModal();
+  const { senderAddress, rewardAddress, rewardInfo } = useEscrowApprovalsStore(
     (state) => state,
   );
   const { approveSender, approveRewards } = useEscrowApprovals();
+
+  const handleWriteDetailsToContract = async (): Promise<void> => {
+    //TODO - finish
+    //await approveSender()
+  };
 
   if (submitStatus === "Loading") return <DashboardPageLoading />;
   if (submitStatus === "Confirmed" || submitStatus === "Failure") {
@@ -38,18 +48,23 @@ export default function EscrowApprovalStatus({
       <p className="my-4 pe-4 text-dashboard-menuText">
         Your sender address and rewards contract address have been approved for
         use in your loyalty program! Submit these details into your contract and
-        your deposit period will begin as you wish.
+        then you can begin your deposit period at your discretion.
       </p>
-      <div className="flex flex-col gap-1">
-        <p className="text-dashboard-menuText">
-          Contract Address: {rewardAddress}
-        </p>
-        <p className=" text-dashboard-menuText">
-          Collection Name: {rewardInfo.name}
-        </p>
-        <p className="text-dashboard-menuText">
-          Collection Symbol: {rewardInfo.symbol}
-        </p>
+      <div className="block h-auto">
+        <div className="pb-4 pe-4 ps-4 pt-2">
+          <DashboardSummaryTable
+            title="Approvals Details"
+            dataObj={{
+              senderAddress: senderAddress,
+              rewardAddress: rewardAddress,
+              collectionName: rewardInfo.name,
+              collectionSymbol: rewardInfo.symbol,
+              ...(rewardInfo.decimals && {
+                collectionDecimals: String(rewardInfo.decimals),
+              }),
+            }}
+          />
+        </div>
       </div>
 
       <div className="mt-6 flex flex-row items-center">
@@ -61,6 +76,11 @@ export default function EscrowApprovalStatus({
           Go back
         </button>
         <button
+          onClick={
+            isConnected && userConnectedAddress
+              ? handleWriteDetailsToContract
+              : openConnectModal
+          }
           className="relative ms-4 inline-flex h-10 w-auto min-w-10 select-none appearance-none items-center justify-center whitespace-nowrap rounded-md bg-primary-1 pe-4 ps-4 align-middle align-middle font-semibold leading-[1.2] text-white"
           type="button"
         >
