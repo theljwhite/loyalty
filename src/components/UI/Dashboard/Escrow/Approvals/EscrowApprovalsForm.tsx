@@ -3,6 +3,7 @@ import { api } from "~/utils/api";
 import { useRouter } from "next/router";
 import { useEscrowApprovalsStore } from "~/customHooks/useEscrowApprovals/store";
 import { useLoyaltyContractRead } from "~/customHooks/useLoyaltyContractRead/useLoyaltyContractRead";
+import { useEscrowContractRead } from "~/customHooks/useEscrowContractRead/useEscrowContractRead";
 import { useEscrowApprovals } from "~/customHooks/useEscrowApprovals/useEscrowApprovals";
 import {
   senderInputError,
@@ -35,6 +36,7 @@ export default function EscrowApprovalsForm() {
     useState<EscrowInputError>({ valid: false, message: "" });
   const [submitStatus, setSubmitStatus] =
     useState<ApprovalSubmitStatus>("Idle");
+
   const router = useRouter();
   const { address: loyaltyAddress } = router.query;
 
@@ -43,11 +45,10 @@ export default function EscrowApprovalsForm() {
     rewardAddress,
     setSenderAddress,
     setRewardAddress,
+    setEscrowType,
     error: approvalsError,
   } = useEscrowApprovalsStore((state) => state);
 
-  const { getContractState, getLoyaltyProgramSettings } =
-    useLoyaltyContractRead(String(loyaltyAddress));
   const { isERC20Verified, isERC721Verified, isERC1155Verified } =
     useEscrowApprovals();
 
@@ -57,32 +58,43 @@ export default function EscrowApprovalsForm() {
       { refetchOnWindowFocus: false },
     );
 
+  const { getContractState, getLoyaltyProgramSettings } =
+    useLoyaltyContractRead(String(loyaltyAddress));
+  const { getEscrowState } = useEscrowContractRead(
+    escrowDetails?.escrowAddress ?? "",
+    escrowDetails?.escrowType ?? "ERC20",
+  );
+
   const handleApprovalSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setSubmitStatus("Loading");
     const stateFromLoyaltyContract = await getContractState();
+    const stateFromEscrowContract = await getEscrowState();
     const contractSettings = await getLoyaltyProgramSettings();
     let isVerified: boolean = false;
 
     if (
-      stateFromLoyaltyContract !== "Idle" &&
-      stateFromLoyaltyContract !== "AwaitingEscrowSetup"
+      (stateFromLoyaltyContract !== "Idle" &&
+        stateFromLoyaltyContract !== "AwaitingEscrowSetup") ||
+      stateFromEscrowContract !== "AwaitingEscrowApprovals"
     ) {
       setSubmitStatus("Failure");
+      return;
     }
 
     if (contractSettings?.rewardType === "ERC20") {
       isVerified = await isERC20Verified();
+      setEscrowType("ERC20");
     } else if (contractSettings?.rewardType === "ERC721") {
       isVerified = await isERC721Verified();
+      setEscrowType("ERC721");
     } else if (contractSettings?.rewardType === "ERC1155") {
       isVerified = await isERC1155Verified();
+      setEscrowType("ERC1155");
     }
 
     if (isVerified) setSubmitStatus("Confirming");
     if (!isVerified) setSubmitStatus("Failure");
-
-    console.log("isVerified -->", isVerified);
   };
 
   const onSenderChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -107,6 +119,7 @@ export default function EscrowApprovalsForm() {
       <EscrowApprovalConfirm
         submitStatus={submitStatus}
         setSubmitStatus={setSubmitStatus}
+        escrowDetails={escrowDetails}
       />
     );
   return (

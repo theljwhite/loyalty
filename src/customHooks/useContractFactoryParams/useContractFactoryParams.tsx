@@ -1,10 +1,10 @@
-import { useDeployEscrowStore } from "../useDeployEscrow/store";
+import { EscrowType } from "@prisma/client";
 import LoyaltyERC20Escrow from "~/contractsAndAbis/ERC20Escrow/LoyaltyERC20Escrow.json";
 import LoyaltyERC721Escrow from "~/contractsAndAbis/ERC721Escrow/LoyaltyERC721Escrow.json";
 import LoyaltyERC1155Escrow from "~/contractsAndAbis/ERC1155Escrow/LoyaltyERC1155Escrow.json";
 
-export function useContractFactoryParams() {
-  const { escrowType } = useDeployEscrowStore();
+export function useContractFactoryParams(escrowType: EscrowType) {
+  // const { escrowType } = useDeployEscrowStore();
 
   let factoryParams: { abi: any; bytecode: any } = {
     abi: null,

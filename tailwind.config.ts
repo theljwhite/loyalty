@@ -84,6 +84,11 @@ export default {
           badge: "#E9E4FF",
           required: "#e53e3e",
         },
+        dashboardLight: {
+          body: "#f7f7f8",
+          primary: "#2f3037",
+          secondary: "#5e5f6e",
+        },
         eth: {
           teal: "#48cbd9",
           purple: "#37367b",

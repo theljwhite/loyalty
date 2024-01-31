@@ -2,35 +2,76 @@ import { useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useEscrowApprovals } from "~/customHooks/useEscrowApprovals/useEscrowApprovals";
 import { useEscrowApprovalsStore } from "~/customHooks/useEscrowApprovals/store";
+import { useEscrowContractRead } from "~/customHooks/useEscrowContractRead/useEscrowContractRead";
 import { type ApprovalSubmitStatus } from "./EscrowApprovalsForm";
 import DashboardPageLoading from "../../DashboardPageLoading";
 import DashboardInfoBox from "../../DashboardInfoBox";
 import DashboardSummaryTable from "../../DashboardSummaryTable";
+import { api } from "~/utils/api";
+import type { EscrowType } from "@prisma/client";
+import { toastLoading } from "~/components/UI/Toast/Toast";
 
-//TODO 1/29 - finish
+//TODO- this flow is temporary as it may change due to changes that I will...
+//potentially make in the smart contracts (these steps can maybe be avoided or grouped) in the...
+//next versions of the smart contracts.
+
+//TODO 1/30 - finish this
 
 interface EscrowApprovalStatusProps {
   submitStatus: ApprovalSubmitStatus;
   setSubmitStatus: React.Dispatch<React.SetStateAction<ApprovalSubmitStatus>>;
+  escrowDetails: EscrowDetails;
 }
+
+type EscrowDetails =
+  | {
+      escrowAddress: string;
+      escrowType: EscrowType;
+      creatorAddress: string | null;
+      depositKey: string;
+    }
+  | undefined;
 
 export default function EscrowApprovalConfirm({
   submitStatus,
   setSubmitStatus,
+  escrowDetails,
 }: EscrowApprovalStatusProps) {
   const { isConnected, address: userConnectedAddress } = useAccount();
   const { openConnectModal } = useConnectModal();
-  const { senderAddress, rewardAddress, rewardInfo } = useEscrowApprovalsStore(
-    (state) => state,
-  );
+  const { senderAddress, rewardAddress, rewardInfo, isLoading, isSuccess } =
+    useEscrowApprovalsStore((state) => state);
+
+  const { isSenderApproved, isERC20TokenApproved, isCollectionApproved } =
+    useEscrowContractRead(
+      escrowDetails?.escrowAddress ?? "",
+      escrowDetails?.escrowType ?? "ERC1155",
+    );
   const { approveSender, approveRewards } = useEscrowApprovals();
+  const { mutate: updateEscrowDb } = api.escrow.doApprovalsUpdate.useMutation();
 
   const handleWriteDetailsToContract = async (): Promise<void> => {
-    //TODO - finish
-    //await approveSender()
+    //TODO - this is unfinished (finishing 1/30 && 1/31)
+    toastLoading(
+      "Follow the 2 prompts in your wallet to approve sender and rewards contract",
+    );
+    if (escrowDetails) {
+      try {
+        const approvedSenderSuccess = await approveSender(
+          escrowDetails.escrowAddress,
+        );
+        if (approvedSenderSuccess) {
+          await approveRewards(escrowDetails.escrowAddress);
+        }
+      } catch (error) {
+        console.error("error from handle write", error);
+      }
+    }
   };
 
-  if (submitStatus === "Loading") return <DashboardPageLoading />;
+  if (submitStatus === "Loading") {
+    return <DashboardPageLoading />;
+  }
   if (submitStatus === "Confirmed" || submitStatus === "Failure") {
     return <div>TODO confirmed or failure</div>;
   }

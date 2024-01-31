@@ -154,6 +154,16 @@ export const loyaltyProgramsRouter = createTRPCRouter({
       if (loyaltyProgram.rewardType === RewardType.Points) return null;
       else return loyaltyProgram.escrow;
     }),
+  getOnlyEscrowAddressByLoyaltyAddress: protectedProcedure
+    .input(z.object({ loyaltyAddress: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const program = await ctx.db.loyaltyProgram.findUnique({
+        where: { address: input.loyaltyAddress },
+        select: { escrowAddress: true },
+      });
+      if (!program) throw new TRPCError({ code: "NOT_FOUND" });
+      return program.escrowAddress;
+    }),
   getDeploymentInfoByAddress: protectedProcedure
     .input(z.object({ loyaltyAddress: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -175,6 +185,7 @@ export const loyaltyProgramsRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND" });
       } else
         return {
+          escrowAddress: details.escrow.address,
           escrowType: details.escrow.escrowType,
           creatorAddress: details.creator.address,
           depositKey: details.escrow.depositKey,

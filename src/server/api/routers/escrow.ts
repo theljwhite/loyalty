@@ -45,6 +45,12 @@ export const escrowRouter = createTRPCRouter({
           loyaltyAddress,
         },
       });
+
+      await ctx.db.loyaltyProgram.update({
+        where: { address: loyaltyAddress },
+        data: { escrowAddress: escrow.address },
+      });
+
       return escrow;
     }),
   getEscrowDepositKey: protectedProcedure
@@ -68,5 +74,36 @@ export const escrowRouter = createTRPCRouter({
         data: { state: newEscrowState },
       });
       return updatedEscrowState.state;
+    }),
+  doApprovalsUpdate: protectedProcedure
+    .input(
+      z.object({
+        escrowAddress: z.string(),
+        rewardAddress: z.string().optional(),
+        senderAddress: z.string().optional(),
+        isSenderApproved: z.boolean().optional(),
+        isRewardApproved: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const {
+        escrowAddress,
+        rewardAddress,
+        senderAddress,
+        isSenderApproved,
+        isRewardApproved,
+      } = input;
+
+      const updatedEscrow = await ctx.db.escrow.update({
+        where: { address: escrowAddress },
+        data: {
+          rewardAddress,
+          senderAddress,
+          isSenderApproved,
+          isRewardApproved,
+        },
+      });
+
+      return updatedEscrow;
     }),
 });

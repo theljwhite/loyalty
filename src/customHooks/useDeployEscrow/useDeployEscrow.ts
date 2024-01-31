@@ -33,7 +33,7 @@ export function useDeployEscrow() {
     useDeployLoyaltyStore((state) => state);
   const { error, handleErrorFlow } = useError();
   const signer = useEthersSigner();
-  const factoryParams = useContractFactoryParams();
+  const factoryParams = useContractFactoryParams(escrowType);
   const { data: session } = useSession();
   const { mutate: createEscrowDbRecord } =
     api.escrow.createEscrow.useMutation();

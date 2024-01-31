@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { type EscrowType } from "@prisma/client";
 
 type RewardInfo = {
   name: string;
@@ -7,6 +8,7 @@ type RewardInfo = {
 };
 
 export interface EscrowApprovalsState {
+  escrowType: EscrowType;
   senderAddress: string;
   rewardAddress: string;
   rewardInfo: RewardInfo;
@@ -22,6 +24,7 @@ export interface EscrowApprovalsState {
   isModalOpen: boolean;
   step: number;
   furthestStep: number;
+  setEscrowType: (escrowType: EscrowType) => void;
   setSenderAddress: (senderAddress: string) => void;
   setRewardAddress: (rewardAddress: string) => void;
   setRewardInfo: (rewardInfo: RewardInfo) => void;
@@ -43,6 +46,7 @@ export const useEscrowApprovalsStore = create<EscrowApprovalsState>((set) => {
   const depositEnd: Date = new Date();
   depositEnd.setTime(depositEnd.getTime() + 1 * 60 * 60 * 1000);
   const initialState = {
+    escrowType: "ERC20" as EscrowType,
     senderAddress: "",
     rewardAddress: "",
     rewardInfo: {
@@ -66,6 +70,7 @@ export const useEscrowApprovalsStore = create<EscrowApprovalsState>((set) => {
 
   return {
     ...initialState,
+    setEscrowType: (escrowType: EscrowType) => set({ escrowType }),
     setSenderAddress: (senderAddress: string) => set({ senderAddress }),
     setRewardAddress: (rewardAddress: string) => set({ rewardAddress }),
     setRewardInfo: (rewardInfo: RewardInfo) => set({ rewardInfo }),

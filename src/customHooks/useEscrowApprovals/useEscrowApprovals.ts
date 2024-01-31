@@ -9,7 +9,6 @@ import { erc721ABI, useNetwork } from "wagmi";
 import { supportsInterfaceAbi } from "~/contractsAndAbis/ERC721Utilities/supportsInterfaceAbi";
 import { useEscrowApprovalsStore } from "./store";
 import { useContractFactoryParams } from "~/customHooks/useContractFactoryParams/useContractFactoryParams";
-import { useDeployEscrowStore } from "~/customHooks/useDeployEscrow/store";
 import { useError } from "~/customHooks/useError";
 import { encodeBytes32String, hexlify } from "ethers";
 
@@ -17,8 +16,8 @@ const TEST_ERC1155_CONTRACT = "0xDEdb5ed1278080BC750633346f2dAE54131D1a92";
 
 export function useEscrowApprovals() {
   const { chain } = useNetwork();
-  const { escrowType } = useDeployEscrowStore((state) => state);
   const {
+    escrowType,
     rewardAddress,
     senderAddress,
     depositPeriodEndsAt,
@@ -29,14 +28,14 @@ export function useEscrowApprovals() {
     setIsLoading,
     setError,
   } = useEscrowApprovalsStore((state) => state);
-  const { abi } = useContractFactoryParams();
+  const { abi } = useContractFactoryParams(escrowType);
   const { error, handleErrorFlow } = useError();
 
-  const approveRewards = async (): Promise<void> => {
+  const approveRewards = async (escrowAddress: string): Promise<void> => {
     setIsLoading(true);
     const isApproved = true;
     const contractConfig = {
-      address: rewardAddress as `0x${string}`,
+      address: escrowAddress as `0x${string}`,
       abi,
     };
     try {
@@ -58,7 +57,6 @@ export function useEscrowApprovals() {
           setIsLoading(false);
         }
       }
-
       if (escrowType === "ERC721" || escrowType === "ERC1155") {
         const isVerified: boolean =
           escrowType === "ERC721"
@@ -92,14 +90,13 @@ export function useEscrowApprovals() {
     }
   };
 
-  const approveSender = async (): Promise<void> => {
-    console.log("rw", rewardAddress);
+  const approveSender = async (escrowAddress: string): Promise<boolean> => {
+    const contractConfig = {
+      address: escrowAddress as `0x${string}`,
+      abi,
+    };
+    const isApproved = true;
     try {
-      const contractConfig = {
-        address: rewardAddress as `0x${string}`,
-        abi,
-      };
-      const isApproved = true;
       const approveSender = await writeContract({
         ...contractConfig,
         functionName: "approveSender",
@@ -114,12 +111,15 @@ export function useEscrowApprovals() {
         setIsLoading(false);
         setIsSuccess(true);
         setIsSenderApproved(true);
+        return true;
       }
     } catch (e) {
       handleErrorFlow(e, "Sender could not be approved");
       setIsLoading(false);
       setError(error);
+      return false;
     }
+    return false;
   };
 
   const setDepositKey = async (): Promise<void> => {
@@ -128,7 +128,6 @@ export function useEscrowApprovals() {
       const key = "testkey";
       const keyBytes32 = encodeBytes32String(key);
       const depositEndsAt: number = Date.parse(`${depositPeriodEndsAt}`) / 1000;
-      console.log("deposit ends at -->", depositEndsAt);
       const contractConfig = {
         address: rewardAddress as `0x${string}`,
         abi,
