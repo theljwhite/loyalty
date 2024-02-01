@@ -126,7 +126,7 @@ export default function EscrowApprovalsForm() {
     );
   return (
     <>
-      {/* {escrowDetails?.isRewardApproved && escrowDetails.isSenderApproved ? (
+      {escrowDetails?.isRewardApproved && escrowDetails.isSenderApproved ? (
         <DashboardInfoBanner
           infoType="warn"
           info="Your rewards contract and sender address have already been approved. No further action needed here."
@@ -136,11 +136,7 @@ export default function EscrowApprovalsForm() {
           infoType="info"
           info="Some quick approvals are needed to ensure the safety of your loyalty program. Complete the checklist below to get your escrow contract quickly ready to issue rewards."
         />
-      )} */}
-      <DashboardInfoBanner
-        infoType="info"
-        info="Some quick approvals are needed to ensure the safety of your loyalty program. Complete the checklist below to get your escrow contract quickly ready to issue rewards."
-      />
+      )}
       <DashboardCopyDataBox
         title="Deposit Key"
         description="Your deposit key for depositing tokens into your escrow contract when deposit period is active. You can also view this key later in Escrow Settings."
@@ -162,8 +158,7 @@ export default function EscrowApprovalsForm() {
           placeholder={
             escrowDetails?.creatorAddress ?? "Enter sender wallet address"
           }
-          // disableCondition={escrowDetails?.isSenderApproved ?? false}
-          disableCondition={false}
+          disableCondition={escrowDetails?.isSenderApproved ?? false}
           isValid={isSenderValid.valid}
           isRequiredField
         />
@@ -174,8 +169,7 @@ export default function EscrowApprovalsForm() {
           stateVar={rewardAddress}
           errorState={isRewardContractValid.message}
           placeholder="TODO user address here"
-          // disableCondition={escrowDetails?.isRewardApproved ?? false}
-          disableCondition={false}
+          disableCondition={escrowDetails?.isRewardApproved ?? false}
           isValid={isRewardContractValid.valid}
           isRequiredField
         />
