@@ -15,6 +15,8 @@ import DashboardInfoBanner from "../../DashboardInfoBanner";
 import EscrowApprovalConfirm from "./EscrowApprovalConfirm";
 import { FormErrorIcon } from "../../Icons";
 
+//TODO 1/31 - still needs UI for errors, submit error, etc
+
 type EscrowInputError = {
   valid: boolean;
   message: string;
@@ -124,6 +126,17 @@ export default function EscrowApprovalsForm() {
     );
   return (
     <>
+      {/* {escrowDetails?.isRewardApproved && escrowDetails.isSenderApproved ? (
+        <DashboardInfoBanner
+          infoType="warn"
+          info="Your rewards contract and sender address have already been approved. No further action needed here."
+        />
+      ) : (
+        <DashboardInfoBanner
+          infoType="info"
+          info="Some quick approvals are needed to ensure the safety of your loyalty program. Complete the checklist below to get your escrow contract quickly ready to issue rewards."
+        />
+      )} */}
       <DashboardInfoBanner
         infoType="info"
         info="Some quick approvals are needed to ensure the safety of your loyalty program. Complete the checklist below to get your escrow contract quickly ready to issue rewards."
@@ -149,6 +162,8 @@ export default function EscrowApprovalsForm() {
           placeholder={
             escrowDetails?.creatorAddress ?? "Enter sender wallet address"
           }
+          // disableCondition={escrowDetails?.isSenderApproved ?? false}
+          disableCondition={false}
           isValid={isSenderValid.valid}
           isRequiredField
         />
@@ -159,6 +174,8 @@ export default function EscrowApprovalsForm() {
           stateVar={rewardAddress}
           errorState={isRewardContractValid.message}
           placeholder="TODO user address here"
+          // disableCondition={escrowDetails?.isRewardApproved ?? false}
+          disableCondition={false}
           isValid={isRewardContractValid.valid}
           isRequiredField
         />

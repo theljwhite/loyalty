@@ -45,9 +45,10 @@ export function useEscrowContractRead(
     try {
       const isApproved = (await readContract({
         ...escrowContractConfig,
-        functionName: "isTokenApproved",
+        functionName: "isSenderApproved",
         args: [senderAddress],
       })) as boolean;
+
       return isApproved;
     } catch (error) {
       setReadContractError(JSON.stringify(error).slice(0, 50));
@@ -64,6 +65,7 @@ export function useEscrowContractRead(
         functionName: "isTokenApproved",
         args: [tokenAddress],
       })) as boolean;
+
       return isTokenApproved;
     } catch (error) {
       setReadContractError(JSON.stringify(error).slice(0, 50));

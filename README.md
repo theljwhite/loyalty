@@ -38,6 +38,9 @@ Dashboard 2:
 Dashboard Balances:
 ![Dashboard Balances](https://i.ibb.co/n7fSgJD/balance-By-Chain.png)
 
+Experimenting with lighter Dashboard colors:
+![Dashboard Light](https://i.ibb.co/GvdN79h/lightcropped.png)
+
 This app utilizes Prisma, TRPC, Tailwind, Ethers, Wagmi, RainbowKit, and more.
 This app was scaffolded using create T3 app. Read more about it here:
 

@@ -52,6 +52,7 @@ interface LayoutDashboardSidebarProps {
 interface NavLinkProps {
   link: NavLink;
   pathname: string;
+  lightMode?: boolean;
 }
 
 type NavLink = {
@@ -61,11 +62,24 @@ type NavLink = {
   icon: JSX.Element;
 };
 
-const NavLink: React.FC<NavLinkProps> = ({ link, pathname }): JSX.Element => {
+//1-31 - added a test light mode to this, so it's temporarily sloppy code now
+
+const NavLink: React.FC<NavLinkProps> = ({
+  link,
+  pathname,
+  lightMode,
+}): JSX.Element => {
   const activeTabClass =
     "text-dashboard-primary flex items-center justify-between rounded-md bg-dashboard-activeTab px-3 py-2 shadow-[inset_0_1px_0_theme(colors.white/4%),inset_0_0_0_1px_theme(colors.white/2%),0_0_0_1px_theme(colors.black/20%),0_2px_2px_-1px_theme(colors.black/20%),0_4px_4px_-2px_theme(colors.black/20%)]";
   const inactiveTabClass =
     "flex items-center justify-between rounded-md px-3 py-2 text-dashboard-secondary hover:bg-dashboard-body hover:text-dashboard-primary";
+  const lightModeActiveTab =
+    "text-primary-1 flex items-center justify-between rounded-md bg-white px-3 py-2 shadow-[0px_2px_3px_-1px_rgba(0,_0,_0,_0.04),_0px_1px_0px_0px_rgba(25,_28,_33,_0.01),_0px_0px_0px_1px_rgba(25,_28,_33,_0.04)]";
+  const lightModeInactiveTab =
+    "flex items-center justify-between rounded-md px-3 py-2 text-dashboardLight-secondary hover:bg-gray-100/75 hover:text-dashboardLight-primary";
+
+  const spanClassLight =
+    link.href === pathname ? lightModeActiveTab : lightModeInactiveTab;
 
   return (
     <div key={link.id}>
@@ -76,7 +90,11 @@ const NavLink: React.FC<NavLinkProps> = ({ link, pathname }): JSX.Element => {
         <button className="relative w-full">
           <span
             className={
-              link.href === pathname ? activeTabClass : inactiveTabClass
+              lightMode
+                ? spanClassLight
+                : link.href === pathname && !lightMode
+                  ? activeTabClass
+                  : inactiveTabClass
             }
           >
             <span className="flex items-center justify-between gap-3">
@@ -102,6 +120,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
   const { openConnectModal } = useConnectModal();
   const { openChainModal } = useChainModal();
   const [isClient, setIsClient] = useState<boolean>();
+  const [testLightMode, setTestLightMode] = useState<boolean>(true);
 
   const connected = isConnected && address && isClient;
 
@@ -190,12 +209,36 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
     },
   ];
 
+  const lightModeAsideClass =
+    "before:z-2 relative isolate flex h-full w-[17.5rem] shrink-0 flex-col text-dashboard-primary before:pointer-events-none before:absolute before:inset-x-0 before:bottom-0 before:h-[6.25rem] bg-dashboardLight-body";
+  const darkAsideClass =
+    "before:z-2 relative isolate flex h-full w-[17.5rem] shrink-0 flex-col text-dashboard-primary before:pointer-events-none before:absolute before:inset-x-0 before:bottom-0 before:h-[6.25rem] before:bg-gradient-to-t before:from-gray-900/90";
+  const lightMainClass =
+    "relative isolate h-[calc(100%-0.5rem)] flex-1 self-end rounded-tl-2xl bg-white shadow-[0px_0px_2px_0px_rgba(0,0,0,0.08),_0px_1px_2px_0px_rgba(25,28,33,0.06),_0px_0px_0px_1px_rgba(25,28,33,0.04)]";
+  const darkMainClass =
+    "relative isolate h-[calc(100%-0.5rem)] flex-1 self-end rounded-tl-2xl bg-white shadow-[0_0_0_1px,-2px_0_2px_-1px,-4px_0_4px_-2px] shadow-black/60";
+  const darkDividerClass =
+    "relative border-b border-gray-900 px-4 pb-6 pt-5 shadow-[0_1px_0] shadow-gray-800";
+  const lightDividerClass =
+    "relative border-b px-4 pb-6 pt-5 shadow-[0_1px_0] border-gray-150/80 shadow-white";
+  const sectionNameClass = `${
+    testLightMode ? "text-dashboard-lightGray2" : "text-gray-400"
+  } pl-3 text-xs font-medium`;
+
   return (
     <>
-      <div className="relative m-0 min-h-full bg-dashboard-body2 font-lunch text-base antialiased">
+      <div
+        className={`${
+          testLightMode ? "bg-dashboardLight-body" : "bg-dashboard-body2"
+        } relative m-0 min-h-full font-lunch text-base antialiased`}
+      >
         <div className="flex h-[100dvh]">
-          <aside className="before:z-2 relative isolate flex h-full w-[17.5rem] shrink-0 flex-col text-dashboard-primary before:pointer-events-none before:absolute before:inset-x-0 before:bottom-0 before:h-[6.25rem] before:bg-gradient-to-t before:from-gray-900/90">
-            <div className="relative border-b border-gray-900 px-4 pb-6 pt-5 shadow-[0_1px_0] shadow-gray-800">
+          <aside
+            className={testLightMode ? lightModeAsideClass : darkAsideClass}
+          >
+            <div
+              className={testLightMode ? lightDividerClass : darkDividerClass}
+            >
               <button
                 type="button"
                 className="group flex w-full items-center justify-between focus:outline-none"
@@ -212,12 +255,22 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                     />
                   </span>
                   <div>
-                    <span className="truncate font-lunch text-lg font-medium">
+                    <span
+                      className={`${
+                        testLightMode ? "text-dashboardLight-secondary" : ""
+                      } truncate font-lunch text-lg font-medium`}
+                    >
                       Dashboard
                     </span>
                   </div>
                 </span>
-                <span className="text-neutral-2 opacity-60 transition-opacity group-hover:opacity-100">
+                <span
+                  className={`${
+                    testLightMode
+                      ? "text-dashboardLight-secondary"
+                      : "text-neutral-2"
+                  } opacity-60 transition-opacity group-hover:opacity-100`}
+                >
                   <UpDownChevron size={16} color="currentColor" />
                 </span>
               </button>
@@ -227,7 +280,13 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                   type="button"
                   className="group flex w-full items-center justify-between text-sm focus:outline-none"
                 >
-                  <span className="flex items-center gap-3 px-3 py-1.5 text-dashboard-secondary">
+                  <span
+                    className={`${
+                      testLightMode
+                        ? "text-dashboardLight-secondary"
+                        : "text-dashboard-secondary"
+                    } flex items-center gap-3 px-3 py-1.5`}
+                  >
                     <span className="relative">
                       <WalletIcon size={16} color="currentColor" />
                       <span
@@ -236,7 +295,11 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                         } absolute -top-px size-2.5 rounded-full border-2 border-gray-900 shadow-[inset_0_0.5px_0_theme(colors.white/10%),inset_0_0_0_0.5px_theme(colors.white/10%)]`}
                       />
                     </span>
-                    <span className="truncate text-sm">
+                    <span
+                      className={`${
+                        testLightMode ? "text-dashboardLight-secondary" : ""
+                      } truncate text-sm`}
+                    >
                       {connected
                         ? `${shortenEthereumAddress(address as string, 8, 8)}`
                         : "Connect wallet"}
@@ -249,7 +312,13 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                   type="button"
                   className="group flex w-full items-center justify-between text-sm focus:outline-none"
                 >
-                  <span className="flex items-center gap-3 px-3 py-1.5 text-dashboard-secondary">
+                  <span
+                    className={`${
+                      testLightMode
+                        ? "text-dashboardLight-secondary"
+                        : "text-dashboard-secondary"
+                    } flex items-center gap-3 px-3 py-1.5`}
+                  >
                     <ChainIcon size={16} color="currentColor" />
                     <span className="text-sm">
                       {connected && chain ? chain.name : "Switch chains"}
@@ -264,14 +333,17 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                 <div className="space-y-xs isolate px-4">
                   {navLinks.slice(0, 3).map((link) => {
                     return (
-                      <NavLink key={link.id} link={link} pathname={pathname} />
+                      <NavLink
+                        key={link.id}
+                        link={link}
+                        pathname={pathname}
+                        lightMode={testLightMode}
+                      />
                     );
                   })}
                 </div>
                 <div className="space-y-2 px-3">
-                  <span className="pl-3 text-xs font-medium text-gray-400">
-                    Loyalty Program
-                  </span>
+                  <span className={sectionNameClass}>Loyalty Program</span>
                   <div className="space-y-xs">
                     {navLinks.slice(3, 8).map((link) => {
                       return (
@@ -279,15 +351,14 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                           key={link.id}
                           link={link}
                           pathname={pathname}
+                          lightMode={testLightMode}
                         />
                       );
                     })}
                   </div>
                 </div>
                 <div className="space-y-2 px-3">
-                  <span className="pl-3 text-xs font-medium text-gray-400">
-                    Program Users
-                  </span>
+                  <span className={sectionNameClass}>Program Users</span>
                   <div className="space-y-xs">
                     {navLinks.slice(8, 11).map((link) => {
                       return (
@@ -295,15 +366,14 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                           key={link.id}
                           link={link}
                           pathname={pathname}
+                          lightMode={testLightMode}
                         />
                       );
                     })}
                   </div>
                 </div>
                 <div className="space-y-2 px-3">
-                  <span className="pl-3 text-xs font-medium text-gray-400">
-                    Developers
-                  </span>
+                  <span className={sectionNameClass}>Developers</span>
                   <div className="space-y-xs">
                     {navLinks.slice(11, 13).map((link) => {
                       return (
@@ -311,6 +381,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                           key={link.id}
                           link={link}
                           pathname={pathname}
+                          lightMode={testLightMode}
                         />
                       );
                     })}
@@ -319,7 +390,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
               </nav>
             </div>
           </aside>
-          <main className="relative isolate h-[calc(100%-0.5rem)] flex-1 self-end rounded-tl-2xl bg-white shadow-[0_0_0_1px,-2px_0_2px_-1px,-4px_0_4px_-2px] shadow-black/60">
+          <main className={testLightMode ? lightMainClass : darkMainClass}>
             <div className="mx-auto h-full min-w-[42rem] max-w-6xl overflow-y-auto rounded-[inherit] p-10 pb-20 font-lunch">
               {children}
             </div>

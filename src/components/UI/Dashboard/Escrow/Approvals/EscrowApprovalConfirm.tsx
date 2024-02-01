@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useEscrowApprovals } from "~/customHooks/useEscrowApprovals/useEscrowApprovals";
@@ -7,15 +8,16 @@ import { type ApprovalSubmitStatus } from "./EscrowApprovalsForm";
 import DashboardPageLoading from "../../DashboardPageLoading";
 import DashboardInfoBox from "../../DashboardInfoBox";
 import DashboardSummaryTable from "../../DashboardSummaryTable";
+import EscrowApprovalReceipt from "./EscrowApprovalReceipt";
 import { api } from "~/utils/api";
-import type { EscrowType } from "@prisma/client";
-import { toastLoading } from "~/components/UI/Toast/Toast";
+import { type EscrowType } from "@prisma/client";
+import { toastLoading, dismissToast } from "~/components/UI/Toast/Toast";
 
 //TODO- this flow is temporary as it may change due to changes that I will...
 //potentially make in the smart contracts (these steps can maybe be avoided or grouped) in the...
 //next versions of the smart contracts.
 
-//TODO 1/30 - finish this
+//TODO 1/31 - finish this (and see if useEffect is really the best way here)
 
 interface EscrowApprovalStatusProps {
   submitStatus: ApprovalSubmitStatus;
@@ -39,8 +41,15 @@ export default function EscrowApprovalConfirm({
 }: EscrowApprovalStatusProps) {
   const { isConnected, address: userConnectedAddress } = useAccount();
   const { openConnectModal } = useConnectModal();
-  const { senderAddress, rewardAddress, rewardInfo, isLoading, isSuccess } =
-    useEscrowApprovalsStore((state) => state);
+  const {
+    senderAddress,
+    rewardAddress,
+    rewardInfo,
+    isLoading: approvalsLoading,
+    isSuccess: approvalsSuccess,
+    isRewardAddressApproved: isRewardsApprovedState,
+    isSenderApproved: isSenderApprovedState,
+  } = useEscrowApprovalsStore((state) => state);
 
   const { isSenderApproved, isERC20TokenApproved, isCollectionApproved } =
     useEscrowContractRead(
@@ -50,31 +59,53 @@ export default function EscrowApprovalConfirm({
   const { approveSender, approveRewards } = useEscrowApprovals();
   const { mutate: updateEscrowDb } = api.escrow.doApprovalsUpdate.useMutation();
 
+  useEffect(() => {
+    if (isSenderApprovedState && isRewardsApprovedState) {
+      verifyContractStateChangeUpdateDb();
+      dismissToast();
+    }
+  }, [isSenderApprovedState, isRewardsApprovedState]);
+
   const handleWriteDetailsToContract = async (): Promise<void> => {
-    //TODO - this is unfinished (finishing 1/30 && 1/31)
-    toastLoading(
-      "Follow the 2 prompts in your wallet to approve sender and rewards contract",
-    );
+    toastLoading("View the prompt in wallet to approve sender");
     if (escrowDetails) {
-      try {
-        const approvedSenderSuccess = await approveSender(
-          escrowDetails.escrowAddress,
-        );
-        if (approvedSenderSuccess) {
-          await approveRewards(escrowDetails.escrowAddress);
-        }
-      } catch (error) {
-        console.error("error from handle write", error);
+      const approvedSenderSuccess = await approveSender(
+        escrowDetails.escrowAddress,
+      );
+      if (approvedSenderSuccess) {
+        dismissToast();
+        toastLoading("One more wallet prompt to approve rewards contract");
+        await approveRewards(escrowDetails.escrowAddress);
       }
     }
+  };
+
+  const verifyContractStateChangeUpdateDb = async (): Promise<void> => {
+    const escrowRewardType = escrowDetails?.escrowType;
+    const isSenderApprovedInContract = await isSenderApproved(senderAddress);
+    let rewardsApprovedInContract: boolean = false;
+
+    if (escrowRewardType === "ERC20") {
+      rewardsApprovedInContract = await isERC20TokenApproved(rewardAddress);
+    }
+
+    if (escrowRewardType === "ERC721" || escrowRewardType === "ERC1155") {
+      rewardsApprovedInContract = await isCollectionApproved(rewardAddress);
+    }
+
+    updateEscrowDb({
+      escrowAddress: escrowDetails?.escrowAddress ?? "",
+      senderAddress: isSenderApprovedInContract ? senderAddress : undefined,
+      rewardAddress: rewardsApprovedInContract ? rewardAddress : undefined,
+      isSenderApproved: isSenderApprovedInContract,
+      isRewardApproved: rewardsApprovedInContract,
+    });
   };
 
   if (submitStatus === "Loading") {
     return <DashboardPageLoading />;
   }
-  if (submitStatus === "Confirmed" || submitStatus === "Failure") {
-    return <div>TODO confirmed or failure</div>;
-  }
+  if (approvalsLoading || approvalsSuccess) return <EscrowApprovalReceipt />;
 
   return (
     <div className="space-y-8">
@@ -117,12 +148,13 @@ export default function EscrowApprovalConfirm({
           Go back
         </button>
         <button
+          disabled={approvalsLoading || approvalsSuccess}
           onClick={
             isConnected && userConnectedAddress
               ? handleWriteDetailsToContract
               : openConnectModal
           }
-          className="relative ms-4 inline-flex h-10 w-auto min-w-10 select-none appearance-none items-center justify-center whitespace-nowrap rounded-md bg-primary-1 pe-4 ps-4 align-middle align-middle font-semibold leading-[1.2] text-white"
+          className="relative ms-4 inline-flex h-10 w-auto min-w-10 select-none appearance-none items-center justify-center whitespace-nowrap rounded-md bg-primary-1 pe-4 ps-4 align-middle align-middle font-semibold leading-[1.2] text-white disabled:bg-dashboard-input disabled:text-dashboard-lightGray"
           type="button"
         >
           Write details to contract

@@ -91,6 +91,7 @@ export function useEscrowApprovals() {
   };
 
   const approveSender = async (escrowAddress: string): Promise<boolean> => {
+    setIsLoading(true);
     const contractConfig = {
       address: escrowAddress as `0x${string}`,
       abi,

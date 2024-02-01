@@ -6,6 +6,7 @@ interface DashboardInputBoxProps {
   errorState?: string;
   isValid: boolean;
   isRequiredField?: boolean;
+  disableCondition: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => any;
 }
 
@@ -17,6 +18,7 @@ export default function DashboardSingleInputBox({
   errorState,
   isValid,
   isRequiredField,
+  disableCondition,
   onChange,
 }: DashboardInputBoxProps) {
   return (
@@ -51,6 +53,7 @@ export default function DashboardSingleInputBox({
                     <div className="flex justify-between"></div>
                     <div className="relative isolate flex w-full">
                       <input
+                        disabled={disableCondition}
                         id={`${stateVar}-input`}
                         value={stateVar}
                         onChange={onChange}
@@ -59,7 +62,7 @@ export default function DashboardSingleInputBox({
                           isValid
                             ? "focus:border-primary-1"
                             : "focus:border-error-1"
-                        } relative h-8 w-full min-w-0 appearance-none rounded-md border border-dashboard-border1 pe-3 ps-3 text-[13px] font-normal outline-none`}
+                        } relative h-8 w-full min-w-0 appearance-none rounded-md border border-dashboard-border1 pe-3 ps-3 text-[13px] font-normal outline-none disabled:cursor-not-allowed disabled:bg-stone-200`}
                         spellCheck="false"
                         autoCorrect="off"
                         autoComplete="off"

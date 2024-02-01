@@ -189,6 +189,8 @@ export const loyaltyProgramsRouter = createTRPCRouter({
           escrowType: details.escrow.escrowType,
           creatorAddress: details.creator.address,
           depositKey: details.escrow.depositKey,
+          isRewardApproved: details.escrow.isRewardApproved,
+          isSenderApproved: details.escrow.isSenderApproved,
         };
     }),
 });
