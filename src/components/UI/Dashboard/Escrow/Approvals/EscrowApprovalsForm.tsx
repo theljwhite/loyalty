@@ -15,7 +15,7 @@ import DashboardInfoBanner from "../../DashboardInfoBanner";
 import EscrowApprovalConfirm from "./EscrowApprovalConfirm";
 import { FormErrorIcon } from "../../Icons";
 
-//TODO 1/31 - still needs UI for errors, submit error, etc
+//TODO - still needs UI for errors, submit error, etc
 
 type EscrowInputError = {
   valid: boolean;
