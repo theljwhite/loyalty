@@ -120,7 +120,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
   const { openConnectModal } = useConnectModal();
   const { openChainModal } = useChainModal();
   const [isClient, setIsClient] = useState<boolean>();
-  const [testLightMode, setTestLightMode] = useState<boolean>(true);
+  const [testLightMode, setTestLightMode] = useState<boolean>(false);
 
   const connected = isConnected && address && isClient;
 
