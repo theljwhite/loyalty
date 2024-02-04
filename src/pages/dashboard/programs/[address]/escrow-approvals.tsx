@@ -1,5 +1,5 @@
 import { type NextPage } from "next";
-import { handleServerAuth } from "~/utils/handleServerAuth";
+import { handleLoyaltyPathValidation } from "~/utils/handleServerAuth";
 import { type GetServerSideProps, GetServerSidePropsContext } from "next";
 import { getDashboardLayout } from "~/layouts/LayoutDashboard";
 import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
@@ -12,7 +12,7 @@ import EscrowApprovalsForm from "~/components/UI/Dashboard/Escrow/Approvals/Escr
 export const getServerSideProps: GetServerSideProps = async (
   ctx: GetServerSidePropsContext,
 ) => {
-  return handleServerAuth(ctx);
+  return handleLoyaltyPathValidation(ctx);
 };
 
 const EscrowApprovals: NextPage = () => {

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { type GetServerSidePropsContext, type GetServerSideProps } from "next";
-import { handleServerAuth } from "~/utils/handleServerAuth";
+import { handleLoyaltyPathValidation } from "~/utils/handleServerAuth";
 import { getDashboardLayout } from "~/layouts/LayoutDashboard";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
@@ -72,7 +72,7 @@ const quickStartOptionsData: QuickStartOptions[] = [
 export const getServerSideProps: GetServerSideProps = async (
   ctx: GetServerSidePropsContext,
 ) => {
-  return handleServerAuth(ctx);
+  return handleLoyaltyPathValidation(ctx);
 };
 
 export default function DashboardHome() {

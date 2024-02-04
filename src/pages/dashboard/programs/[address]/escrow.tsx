@@ -2,7 +2,7 @@ import { type NextPage } from "next";
 import { useRouter } from "next/router";
 import { getDashboardLayout } from "~/layouts/LayoutDashboard";
 import { type GetServerSideProps, GetServerSidePropsContext } from "next";
-import { handleServerAuth } from "~/utils/handleServerAuth";
+import { handleLoyaltyPathValidation } from "~/utils/handleServerAuth";
 import { api } from "~/utils/api";
 import { escrowStateDisplay } from "~/components/UI/Dashboard/DashboardStateStatus";
 import DashboardInfoBox from "~/components/UI/Dashboard/DashboardInfoBox";
@@ -16,7 +16,7 @@ import { getBlockExplorerUrl } from "~/helpers/getBlockExplorerUrl";
 export const getServerSideProps: GetServerSideProps = async (
   ctx: GetServerSidePropsContext,
 ) => {
-  return handleServerAuth(ctx);
+  return handleLoyaltyPathValidation(ctx);
 };
 
 const Escrow: NextPage = () => {
@@ -67,8 +67,8 @@ const Escrow: NextPage = () => {
             escrowStateDisplay.get(escrowContract?.state)?.message ??
             "Your escrow contract needs additional settings before it can begin rewarding users"
           }
-          outlink="TODO route for escrow overview"
-          outlinkText="Manage my settings in Escrow Settings tab"
+          outlink="TODO route for escrow approvals/deposit"
+          outlinkText="Manage my settings in Escrow Approvals"
         />
       )}
       {escrowContract && (
