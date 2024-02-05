@@ -178,7 +178,7 @@ export const loyaltyProgramsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const details = await ctx.db.loyaltyProgram.findUnique({
         where: { address: input.loyaltyAddress },
-        select: { escrow: true, creator: true },
+        select: { escrow: true, creator: true, programEnd: true },
       });
 
       if (!details || !details.escrow) {
@@ -191,6 +191,7 @@ export const loyaltyProgramsRouter = createTRPCRouter({
           depositKey: details.escrow.depositKey,
           isRewardApproved: details.escrow.isRewardApproved,
           isSenderApproved: details.escrow.isSenderApproved,
+          programEnd: details.programEnd,
         };
     }),
 });
