@@ -10,6 +10,7 @@ import DashboardSingleInputBox from "../DashboardSingleInputBox";
 import DashboardSimpleInputModal from "../DashboardSimpleInputModal";
 import DashboardSelectBox from "../DashboardSelectBox";
 import DashboardActionButton from "../DashboardActionButton";
+import { toastLoading, dismissToast } from "../../Toast/Toast";
 import { DateIcon, ClockIcon, FormErrorIcon } from "../Icons";
 import { TWO_HOURS, ONE_WEEK } from "~/constants/timeAndDate";
 import DatePicker from "react-datepicker";
@@ -20,12 +21,8 @@ import "react-datepicker/dist/react-datepicker.css";
 //width needs fixed
 
 //TODO - validate that deposit end date doesnt interfere with loyalty program end date...
-//...although the escrow contracts have handling for this...
-//...they will revert setDepositKey TX if dates are too close together
-
-//TODO - handle date formatting/selection better
-
-//TODO 2/4 && 2/5 ***** finish this overall
+//...although the escrow contracts have handling for this, maybe do it here too...
+//...(they will revert setDepositKey TX if dates are too close together)
 
 export default function BeginDepositPeriod() {
   const twoHoursFromCurrDateRounded = new Date(
@@ -45,8 +42,7 @@ export default function BeginDepositPeriod() {
   const [depositTime, setDepositTime] = useState<Date | null>(
     twoHoursFromCurrDateRounded,
   );
-
-  const [depositError, setDepositError] = useState<boolean>(false);
+  const [depositError, setDepositError] = useState<string>("");
 
   const { isConnected, address } = useAccount();
   const { openConnectModal } = useConnectModal();
@@ -55,7 +51,7 @@ export default function BeginDepositPeriod() {
   const { address: loyaltyAddress } = router.query;
 
   const { setDepositKey } = useEscrowApprovals();
-  const { depositPeriodEndsAt, setDepositPeriodEndsAt } =
+  const { depositPeriodEndsAt, setDepositPeriodEndsAt, isLoading, isSuccess } =
     useEscrowApprovalsStore((state) => state);
 
   const { data: escrowDetails, isLoading: escrowLoading } =
@@ -65,7 +61,18 @@ export default function BeginDepositPeriod() {
     );
 
   const handleBeginDepositPeriod = async (): Promise<void> => {
-    //TODO finish
+    setDepositError("");
+    toastLoading("Request sent to wallet.", true);
+    if (!depositPeriodEndsAt) {
+      setDepositError("Must select a deposit period end date");
+      return;
+    }
+    if (!escrowDetails?.depositKey) {
+      setDepositError("Failed to validate deposit key. Try later.");
+    }
+    if (escrowDetails?.depositKey) {
+      await setDepositKey(escrowDetails.depositKey);
+    }
   };
 
   const onDepositKeyEntryChange = (
@@ -79,13 +86,27 @@ export default function BeginDepositPeriod() {
   };
 
   const onDepositEndDateChange = (date: Date | null): void => {
-    if (date) setDepositEndDate(date);
+    setDepositEndDate(date);
+    if (depositTime && date) {
+      combineTimeAndDate(depositTime, date);
+    }
   };
 
-  const onDepositEndTimeChange = (date: Date | null): void => {
-    if (date) {
-      setDepositTime(date);
+  const onDepositEndTimeChange = (timeDate: Date | null): void => {
+    setDepositTime(timeDate);
+    if (timeDate && depositEndsDate) {
+      combineTimeAndDate(timeDate, depositEndsDate);
     }
+  };
+
+  const combineTimeAndDate = (time: Date, date: Date): void => {
+    const timeInHours = time.getHours();
+    const timeMinutes = time.getMinutes();
+    const combinedDate = new Date(date);
+    combinedDate.setHours(timeInHours);
+    combinedDate.setMinutes(timeMinutes);
+    combinedDate.setSeconds(0);
+    setDepositPeriodEndsAt(combinedDate);
   };
 
   const openBeginDepositModal = (): void => {
@@ -105,17 +126,6 @@ export default function BeginDepositPeriod() {
           containerBg="bg-neutral-2"
           dataLoading={escrowLoading}
         />
-        <DashboardSingleInputBox
-          title="Deposit Key"
-          placeholder="Your Deposit Key Here"
-          description="Paste your deposit key here to verify that you are ready to begin your escrow contract's deposit period"
-          stateVar={depositKeyEntry}
-          onChange={onDepositKeyEntryChange}
-          disableCondition={false}
-          isValid={depositKeyEntryValid}
-          isRequiredField
-        />
-
         <DashboardSelectBox
           title="Deposit Period End Date"
           description="How long do you need to deposit tokens into your escrow contract?"
@@ -134,7 +144,7 @@ export default function BeginDepositPeriod() {
                 <div className="flex">
                   <label className="relative flex w-full">
                     <DatePicker
-                      className="relative h-8 w-full min-w-[300px] cursor-pointer appearance-none rounded-l-md border border-dashboard-border1 ps-3 text-[13px] font-normal leading-normal text-dashboard-lightGray outline-none"
+                      className="relative h-8 w-full min-w-[500px] cursor-pointer appearance-none rounded-l-md border border-dashboard-border1 ps-3 text-[13px] font-normal leading-normal text-dashboard-lightGray outline-none"
                       selected={depositEndsDate}
                       onChange={(date) => onDepositEndDateChange(date)}
                       showPreviousMonths={false}
@@ -157,7 +167,7 @@ export default function BeginDepositPeriod() {
                 <div className="flex">
                   <label className="relative flex w-full">
                     <DatePicker
-                      className="relative h-8 w-full min-w-[300px] cursor-pointer appearance-none rounded-l-md border border-dashboard-border1 ps-3 text-[13px] font-normal leading-normal text-dashboard-lightGray outline-none"
+                      className="relative h-8 w-full min-w-[500px] cursor-pointer appearance-none rounded-l-md border border-dashboard-border1 ps-3 text-[13px] font-normal leading-normal text-dashboard-lightGray outline-none"
                       selected={depositTime}
                       onChange={(date) => onDepositEndTimeChange(date)}
                       minTime={twoHoursFromCurrDateRounded}
@@ -190,11 +200,6 @@ export default function BeginDepositPeriod() {
         />
 
         <div className="mt-6 flex flex-row items-center">
-          {depositError && (
-            <span className="flex flex-row gap-1 truncate pl-4 font-medium text-error-1">
-              <FormErrorIcon size={20} color="currentColor" /> {depositError}
-            </span>
-          )}
           <DashboardActionButton
             btnText="Go back"
             linkPath={"/dashboard/programs/TODO/escrow"}
@@ -211,6 +216,11 @@ export default function BeginDepositPeriod() {
               isConnected && address ? openBeginDepositModal : openConnectModal
             }
           />
+          {depositError && (
+            <span className="flex flex-row gap-1 truncate pl-4 font-medium text-error-1">
+              <FormErrorIcon size={20} color="currentColor" /> {depositError}
+            </span>
+          )}
         </div>
       </div>
       {isModalOpen && (
@@ -225,6 +235,7 @@ export default function BeginDepositPeriod() {
           inputDisabled={false}
           inputPlaceholder="Your deposit key here"
           btnTitle="Begin deposit period"
+          btnDisabled={!depositKeyEntryValid}
           onActionBtnClick={handleBeginDepositPeriod}
           setIsModalOpen={setIsModalOpen}
           bannerInfo="Learn more about Deposit Period."

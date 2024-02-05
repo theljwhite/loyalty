@@ -16,6 +16,7 @@ interface DashboardSimpleInputModalProps {
   inputValid: boolean;
   onActionBtnClick: React.MouseEventHandler;
   btnTitle: string;
+  btnDisabled: boolean;
   setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
@@ -33,6 +34,7 @@ export default function DashboardSimpleInputModal({
   inputValid,
   onActionBtnClick,
   btnTitle,
+  btnDisabled,
   setIsModalOpen,
 }: DashboardSimpleInputModalProps) {
   const closeModalOnOverlayClick = (
@@ -115,8 +117,9 @@ export default function DashboardSimpleInputModal({
                 Cancel
               </button>
               <button
+                disabled={btnDisabled}
                 onClick={onActionBtnClick}
-                className="relative inline-flex h-8 min-w-10 appearance-none items-center justify-center whitespace-nowrap rounded-md bg-primary-1 py-0 pe-3 ps-3 align-middle font-semibold leading-[1.2] text-white outline-none"
+                className="relative inline-flex h-8 min-w-10 appearance-none items-center justify-center whitespace-nowrap rounded-md bg-primary-1 py-0 pe-3 ps-3 align-middle font-semibold leading-[1.2] text-white outline-none disabled:cursor-not-allowed disabled:bg-stone-200 disabled:text-gray-400"
               >
                 {btnTitle}
               </button>

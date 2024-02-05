@@ -12,8 +12,6 @@ import { useContractFactoryParams } from "~/customHooks/useContractFactoryParams
 import { useError } from "~/customHooks/useError";
 import { encodeBytes32String, hexlify } from "ethers";
 
-const TEST_ERC1155_CONTRACT = "0xDEdb5ed1278080BC750633346f2dAE54131D1a92";
-
 export function useEscrowApprovals() {
   const { chain } = useNetwork();
   const {
@@ -123,10 +121,9 @@ export function useEscrowApprovals() {
     return false;
   };
 
-  const setDepositKey = async (): Promise<void> => {
+  const setDepositKey = async (key: string): Promise<void> => {
+    setIsLoading(true);
     try {
-      //TODO: generate/fetch key from database
-      const key = "testkey";
       const keyBytes32 = encodeBytes32String(key);
       const depositEndsAt: number = Date.parse(`${depositPeriodEndsAt}`) / 1000;
       const contractConfig = {
@@ -136,7 +133,7 @@ export function useEscrowApprovals() {
       const setDepositKey = await writeContract({
         ...contractConfig,
         functionName: "setDepositKey",
-        args: [keyBytes32],
+        args: [keyBytes32, depositEndsAt],
       });
       const receipt = await waitForTransaction({
         chainId: chain?.id,
@@ -148,6 +145,7 @@ export function useEscrowApprovals() {
         setIsSuccess(true);
       }
     } catch (e) {
+      console.log("e", e);
       handleErrorFlow(e, "Setting deposit key failed");
       setIsLoading(false);
       setError(error);
