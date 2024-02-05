@@ -41,6 +41,11 @@ Dashboard Balances:
 Experimenting with lighter Dashboard colors:
 ![Dashboard Light](https://i.ibb.co/GvdN79h/lightcropped.png)
 
+Other Stuff (Unfinished):
+![Set Deposit Period](https://i.ibb.co/0QK2vVT/deposit-Period.png)
+
+...etc (will update with more screenshots)
+
 This app utilizes Prisma, TRPC, Tailwind, Ethers, Wagmi, RainbowKit, and more.
 This app was scaffolded using create T3 app. Read more about it here:
 

@@ -121,13 +121,16 @@ export function useEscrowApprovals() {
     return false;
   };
 
-  const setDepositKey = async (key: string): Promise<void> => {
+  const setDepositKey = async (
+    key: string,
+    escrowAddress: string,
+  ): Promise<void> => {
     setIsLoading(true);
     try {
       const keyBytes32 = encodeBytes32String(key);
       const depositEndsAt: number = Date.parse(`${depositPeriodEndsAt}`) / 1000;
       const contractConfig = {
-        address: rewardAddress as `0x${string}`,
+        address: escrowAddress as `0x${string}`,
         abi,
       };
       const setDepositKey = await writeContract({

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import { useAccount } from "wagmi";
@@ -6,11 +6,10 @@ import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useEscrowApprovals } from "~/customHooks/useEscrowApprovals/useEscrowApprovals";
 import { useEscrowApprovalsStore } from "~/customHooks/useEscrowApprovals/store";
 import DashboardCopyDataBox from "../DashboardCopyDataBox";
-import DashboardSingleInputBox from "../DashboardSingleInputBox";
 import DashboardSimpleInputModal from "../DashboardSimpleInputModal";
 import DashboardSelectBox from "../DashboardSelectBox";
 import DashboardActionButton from "../DashboardActionButton";
-import { toastLoading, dismissToast } from "../../Toast/Toast";
+import { toastLoading, toastSuccess } from "../../Toast/Toast";
 import { DateIcon, ClockIcon, FormErrorIcon } from "../Icons";
 import { TWO_HOURS, ONE_WEEK } from "~/constants/timeAndDate";
 import DatePicker from "react-datepicker";
@@ -23,6 +22,8 @@ import "react-datepicker/dist/react-datepicker.css";
 //TODO - validate that deposit end date doesnt interfere with loyalty program end date...
 //...although the escrow contracts have handling for this, maybe do it here too...
 //...(they will revert setDepositKey TX if dates are too close together)
+
+//TODO - also try to eliminate the need for a useEffect here in the future.
 
 export default function BeginDepositPeriod() {
   const twoHoursFromCurrDateRounded = new Date(
@@ -59,19 +60,40 @@ export default function BeginDepositPeriod() {
       { loyaltyAddress: String(loyaltyAddress) },
       { refetchOnWindowFocus: false, enabled: Boolean(loyaltyAddress) },
     );
+  const { mutate: updateEscrowDb } = api.escrow.doApprovalsUpdate.useMutation();
+
+  useEffect(() => {
+    if (isLoading) {
+      setIsModalOpen(false);
+    }
+    if (isSuccess && escrowDetails) {
+      toastSuccess("Deposit key set in contract and deposit period has begun.");
+      updateEscrowDb({
+        escrowAddress: escrowDetails.escrowAddress,
+        isDepositKeySet: true,
+        depositEndDate: depositPeriodEndsAt,
+      });
+    }
+  }, [isLoading, isSuccess, setIsModalOpen]);
 
   const handleBeginDepositPeriod = async (): Promise<void> => {
-    setDepositError("");
-    toastLoading("Request sent to wallet.", true);
     if (!depositPeriodEndsAt) {
       setDepositError("Must select a deposit period end date");
       return;
     }
     if (!escrowDetails?.depositKey) {
       setDepositError("Failed to validate deposit key. Try later.");
+      return;
     }
-    if (escrowDetails?.depositKey) {
-      await setDepositKey(escrowDetails.depositKey);
+
+    setDepositError("");
+    toastLoading("Request sent to wallet.", true);
+
+    if (escrowDetails?.depositKey && escrowDetails?.escrowAddress) {
+      await setDepositKey(
+        escrowDetails.depositKey,
+        escrowDetails.escrowAddress,
+      );
     }
   };
 
@@ -144,7 +166,7 @@ export default function BeginDepositPeriod() {
                 <div className="flex">
                   <label className="relative flex w-full">
                     <DatePicker
-                      className="relative h-8 w-full min-w-[500px] cursor-pointer appearance-none rounded-l-md border border-dashboard-border1 ps-3 text-[13px] font-normal leading-normal text-dashboard-lightGray outline-none"
+                      className="relative h-8 w-full min-w-[300px] cursor-pointer appearance-none rounded-l-md border border-dashboard-border1 ps-3 text-[13px] font-normal leading-normal text-dashboard-lightGray outline-none"
                       selected={depositEndsDate}
                       onChange={(date) => onDepositEndDateChange(date)}
                       showPreviousMonths={false}
@@ -167,7 +189,7 @@ export default function BeginDepositPeriod() {
                 <div className="flex">
                   <label className="relative flex w-full">
                     <DatePicker
-                      className="relative h-8 w-full min-w-[500px] cursor-pointer appearance-none rounded-l-md border border-dashboard-border1 ps-3 text-[13px] font-normal leading-normal text-dashboard-lightGray outline-none"
+                      className="relative h-8 w-full min-w-[300px] cursor-pointer appearance-none rounded-l-md border border-dashboard-border1 ps-3 text-[13px] font-normal leading-normal text-dashboard-lightGray outline-none"
                       selected={depositTime}
                       onChange={(date) => onDepositEndTimeChange(date)}
                       minTime={twoHoursFromCurrDateRounded}
