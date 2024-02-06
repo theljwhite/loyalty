@@ -64,6 +64,7 @@ export default {
           border1: "#D6D6D6",
           lightGray: "#737373",
           lightGray2: "#9394a1",
+          darkGray: "#424242",
           lighterText: "#5e5f6e",
           neutral: "#525252",
           menu: "#f8f9fd",

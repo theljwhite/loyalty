@@ -89,6 +89,16 @@ export const escrowRouter = createTRPCRouter({
         isDepositKeySet: escrow.isDepositKeySet,
       };
     }),
+  getEscrowState: protectedProcedure
+    .input(z.object({ loyaltyAddress: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const escrow = await ctx.db.escrow.findUnique({
+        where: { loyaltyAddress: input.loyaltyAddress },
+        select: { state: true },
+      });
+      if (!escrow) throw new TRPCError({ code: "NOT_FOUND" });
+      return escrow.state;
+    }),
   updateEscrowState: protectedProcedure
     .input(z.object({ escrowAddress: z.string(), newEscrowState: escrowState }))
     .mutation(async ({ ctx, input }) => {
@@ -98,6 +108,26 @@ export const escrowRouter = createTRPCRouter({
         data: { state: newEscrowState },
       });
       return updatedEscrowState.state;
+    }),
+  getDepositRelatedData: protectedProcedure
+    .input(z.object({ loyaltyAddress: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const escrow = await ctx.db.escrow.findUnique({
+        where: { loyaltyAddress: input.loyaltyAddress },
+        select: {
+          state: true,
+          escrowType: true,
+          depositEndDate: true,
+          address: true,
+          depositKey: true,
+        },
+      });
+      const loyaltyProgram = await ctx.db.loyaltyProgram.findUnique({
+        where: { address: input.loyaltyAddress },
+        select: { chain: true, chainId: true, programEnd: true },
+      });
+
+      return { escrow, loyaltyProgram };
     }),
   doApprovalsUpdate: protectedProcedure
     .input(
@@ -144,7 +174,7 @@ export const escrowRouter = createTRPCRouter({
           isRewardApproved,
           isDepositKeySet,
           depositEndDate,
-          state: allApprovalsComplete ? "AwaitingEscrowSettings" : undefined,
+          state: allApprovalsComplete ? "DepositPeriod" : undefined,
         },
       });
 

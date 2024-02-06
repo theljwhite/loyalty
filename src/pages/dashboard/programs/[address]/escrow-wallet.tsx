@@ -6,9 +6,14 @@ import { api } from "~/utils/api";
 import { type GetServerSideProps, GetServerSidePropsContext } from "next";
 import { handleLoyaltyPathValidation } from "~/utils/handleServerAuth";
 import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
-import DashboardInfoBanner from "~/components/UI/Dashboard/DashboardInfoBanner";
 import DashboardPageLoading from "~/components/UI/Dashboard/DashboardPageLoading";
-import BeginDepositPeriod from "~/components/UI/Dashboard/Escrow/BeginDepositPeriod";
+import DashboardInfoBox from "~/components/UI/Dashboard/DashboardInfoBox";
+import DashboardPageError from "~/components/UI/Dashboard/DashboardPageError";
+import DashboardCopyDataBox from "~/components/UI/Dashboard/DashboardCopyDataBox";
+import BeginDepositPeriod from "~/components/UI/Dashboard/Escrow/Wallet/BeginDepositPeriod";
+import DepositERC20 from "~/components/UI/Dashboard/Escrow/Wallet/DepositERC20";
+import DepositERC721 from "~/components/UI/Dashboard/Escrow/Wallet/DepositERC721";
+import DepositERC1155 from "~/components/UI/Dashboard/Escrow/Wallet/DepositERC1155";
 
 export const getServerSideProps: GetServerSideProps = async (
   ctx: GetServerSidePropsContext,
@@ -21,19 +26,40 @@ const EscrowWallet: NextPage = () => {
   const router = useRouter();
   const { address: loyaltyAddress } = router.query;
 
-  const { data: escrowApprovals, isLoading: escrowApprovalsLoading } =
-    api.escrow.getEscrowApprovalsStatus.useQuery(
-      {
-        loyaltyAddress: String(loyaltyAddress) ?? "",
-      },
-      { refetchOnWindowFocus: false },
-    );
+  const {
+    data: escrowApprovals,
+    isLoading: escrowApprovalsLoading,
+    isError: approvalsErr,
+  } = api.escrow.getEscrowApprovalsStatus.useQuery(
+    {
+      loyaltyAddress: String(loyaltyAddress) ?? "",
+    },
+    { refetchOnWindowFocus: false },
+  );
+
+  const {
+    data: contractsDb,
+    isLoading: contractDbLoading,
+    isError: contractsDbErr,
+  } = api.escrow.getDepositRelatedData.useQuery(
+    {
+      loyaltyAddress: String(loyaltyAddress) ?? "",
+    },
+    { refetchOnWindowFocus: false },
+  );
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  if (escrowApprovalsLoading) return <DashboardPageLoading />;
+  if (escrowApprovalsLoading || contractDbLoading)
+    return <DashboardPageLoading />;
+
+  if (contractsDbErr || approvalsErr) {
+    return (
+      <DashboardPageError message="Error fetching escrow related info. Please try again later." />
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -41,9 +67,48 @@ const EscrowWallet: NextPage = () => {
         title="Escrow Wallet"
         info="Manage deposits and balances in your escrow contract"
       />
-      {isClient && !escrowApprovals?.allApprovalsComplete && (
-        <BeginDepositPeriod />
+      {escrowApprovals?.allApprovalsComplete &&
+        contractsDb?.escrow?.state === "DepositPeriod" && (
+          <DashboardInfoBox
+            infoType="warn"
+            info={`Your deposit period is currently active. Deposit period ends on: ${contractsDb.escrow.depositEndDate?.toLocaleDateString()}`}
+          />
+        )}
+
+      {(!escrowApprovals?.isRewardApproved ||
+        !escrowApprovals.isSenderApproved) && (
+        <DashboardInfoBox
+          infoType="warn"
+          info="You still need to enter your sender address and/or rewards contract address for approval - then you can begin managing deposits"
+          outlinkText="Take me to Escrow Approvals"
+          outlink={`/dashboard/programs/${loyaltyAddress}/escrow-approvals`}
+        />
       )}
+
+      {escrowApprovals?.allApprovalsComplete && contractsDb.escrow && (
+        <div className="space-y-8">
+          <DashboardCopyDataBox
+            title="Your Deposit Key"
+            description="Your deposit key for depositing tokens into your escrow contract."
+            copyBoxLabel="Deposit Key"
+            dataToCopy={contractsDb?.escrow?.depositKey ?? ""}
+            copySuccessMessage="Copied deposit key"
+            isSecret
+            containerBg="bg-neutral-2"
+            dataLoading={contractDbLoading}
+          />
+
+          {contractsDb.escrow.escrowType === "ERC20" ? (
+            <DepositERC20 />
+          ) : contractsDb.escrow.escrowType === "ERC721" ? (
+            <DepositERC721 />
+          ) : (
+            contractsDb.escrow.escrowType === "ERC1155" && <DepositERC1155 />
+          )}
+        </div>
+      )}
+
+      {isClient && !escrowApprovals?.isDepositKeySet && <BeginDepositPeriod />}
     </div>
   );
 };
