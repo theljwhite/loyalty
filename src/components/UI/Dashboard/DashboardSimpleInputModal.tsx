@@ -111,12 +111,14 @@ export default function DashboardSimpleInputModal({
           <footer className="mt-8 flex items-center justify-between py-0 pe-6 ps-6">
             <div className="flex w-full justify-between">
               <button
+                type="button"
                 onClick={() => setIsModalOpen(false)}
                 className="relative inline-flex h-8 min-w-10 appearance-none items-center justify-center whitespace-nowrap rounded-md bg-transparent py-0 pe-3 ps-3 align-middle font-semibold leading-[1.2] text-primary-1 outline-none"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 disabled={btnDisabled}
                 onClick={onActionBtnClick}
                 className="relative inline-flex h-8 min-w-10 appearance-none items-center justify-center whitespace-nowrap rounded-md bg-primary-1 py-0 pe-3 ps-3 align-middle font-semibold leading-[1.2] text-white outline-none disabled:cursor-not-allowed disabled:bg-stone-200 disabled:text-gray-400"

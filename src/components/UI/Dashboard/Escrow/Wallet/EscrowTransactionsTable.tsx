@@ -5,8 +5,9 @@ import DepositERC20 from "./DepositERC20";
 import DepositERC721 from "./DepositERC721";
 import DepositERC1155 from "./DepositERC1155";
 import { api } from "~/utils/api";
+import { EthIcon, SortIcon } from "../../Icons";
 
-import { CoinsOne, EthIcon, SortIcon } from "../../Icons";
+//TODO 2-7 - this is unfinished
 
 export default function EscrowTransactionsTable() {
   const router = useRouter();
@@ -52,11 +53,11 @@ export default function EscrowTransactionsTable() {
             <div className="flex flex-1">
               <div className="w-full max-w-72">
                 <div className="relative isolate flex w-full">
-                  <div className="z-2 absolute left-0 top-0 flex h-8 w-8 items-center justify-center text-[13px]">
+                  <div className="absolute left-0 top-0 flex h-8 w-8 items-center justify-center text-[13px]">
                     <EthIcon size={20} color="currentColor" />
                   </div>
                   <DashboardInput
-                    stateVar={"string"}
+                    stateVar={"TODO"}
                     onChange={(e) => console.log("e")}
                     placeholder="Eth address here"
                     disableCondition={false}
@@ -123,26 +124,6 @@ export default function EscrowTransactionsTable() {
           </button>
         </div>
       </div>
-
-      {/* {isDepositKeyModalOpen && (
-      <DashboardSimpleInputModal
-        modalTitle="Confirm your ERC20 deposit"
-        modalDescription="Enter your deposit key to confirm your deposit"
-        inputLabel="Enter Deposit Key"
-        inputOnChange={handleAmountChange}
-        inputHelpMsg="Deposited tokens will remain locked in escrow until loyalty program has concluded or tokens have been rewarded"
-        inputState={depositAmount}
-        inputInstruction="Enter your deposit key to confirm that you wish to deposit"
-        inputPlaceholder="Your Deposit Key Here"
-        inputDisabled={false}
-        inputValid={true}
-        btnTitle="Confirm deposit"
-        btnDisabled={false}
-        onActionBtnClick={handleDeposit}
-        bannerInfo="Learn more about deposits and how tokens are managed"
-        setIsModalOpen={setIsDepositModalOpen}
-      />
-    )} */}
     </>
   );
 }

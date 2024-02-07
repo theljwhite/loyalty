@@ -5,39 +5,65 @@ import { type FetchTokenResult } from "wagmi/actions";
 import { useAccount, useContractWrite } from "wagmi";
 import { parseUnits } from "ethers";
 import { useContractFactoryParams } from "../useContractFactoryParams/useContractFactoryParams";
+import { useDepositRewardsStore } from "./store";
+import { toastLoading } from "~/components/UI/Toast/Toast";
 
-//TODO - error handle / loading etc state for UI (maybe just with state, no zustand store)
-//TODO 2/6 - this is unfinished btw
+//TODO - this is unfinished and may need some reformatting to clean up a bit.
+//but for the first pass, it should work for now.
+//can get rid of the arguments in the hook with additional DB fetches
+//from this hook instead of passing the values in elsewhere.
+//(probably wont even require an extra call due to query caching)
+
+//2-7 working on this and the entire Escrow > Wallet > Deposit flow
 
 export default function useDepositRewards(
   rewardAddress: string,
+  escrowAddress: string,
   deployedChainId: number,
 ) {
   const { address: userConnectedAddress } = useAccount();
   const { abi: erc20Abi } = useContractFactoryParams("ERC20");
 
+  const { erc20DepositAmount, setIsLoading, setIsSuccess, setError } =
+    useDepositRewardsStore((state) => state);
+
   const {
     data: erc20Write,
     isLoading: erc20WriteLoading,
     isSuccess: erc20WriteSuccess,
-    write: depositErc20Write,
+    write: depositERC20ToContract,
   } = useContractWrite({
-    address: rewardAddress as `0x${string}`,
+    address: escrowAddress as `0x${string}`,
     abi: erc20Abi,
     functionName: "depositBudget",
+    args: [],
   });
 
-  const depositERC20 = async (depositAmount: string): Promise<void> => {
-    const balanceError = await checkUserERC20Balance(depositAmount);
+  const depositERC20 = async (): Promise<void> => {
+    setIsLoading(true);
+    const balanceError = await checkUserERC20Balance();
     if (!balanceError) {
-      //TODO - deposit balance to contract
-      console.log("no err");
+      try {
+        const tokenInfo: FetchTokenResult = await fetchToken({
+          address: rewardAddress as `0x${string}`,
+          chainId: deployedChainId,
+        });
+        const formattedDepositAmount: bigint = parseUnits(
+          erc20DepositAmount,
+          tokenInfo.decimals,
+        );
+        depositERC20ToContract({
+          args: [formattedDepositAmount, rewardAddress],
+        });
+      } catch (error) {
+        setError(JSON.stringify(error).slice(0, 50));
+        console.log("error from deposit-->", error);
+      }
     }
   };
 
-  const checkUserERC20Balance = async (
-    depositAmount: string,
-  ): Promise<string> => {
+  const checkUserERC20Balance = async (): Promise<string> => {
+    let errorMessage: string = "";
     try {
       const tokenInfo: FetchTokenResult = await fetchToken({
         address: rewardAddress as `0x${string}`,
@@ -45,7 +71,7 @@ export default function useDepositRewards(
       });
 
       const formattedDepositAmount: bigint = parseUnits(
-        depositAmount,
+        erc20DepositAmount,
         tokenInfo.decimals,
       );
       const balance = await fetchBalance({
@@ -59,9 +85,15 @@ export default function useDepositRewards(
           : BigInt(balance.value);
 
       if (formattedBalance >= formattedDepositAmount) return "";
-      else return "Insufficient balance";
+      else {
+        errorMessage = "Insufficient balance";
+        setError(errorMessage);
+        return errorMessage;
+      }
     } catch (error) {
-      return "Error fetching token balances. Try later.";
+      errorMessage = "Error fetching token balances. Try later.";
+      setError(errorMessage);
+      return errorMessage;
     }
   };
 

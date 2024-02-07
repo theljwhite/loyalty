@@ -6,15 +6,20 @@ import { api } from "~/utils/api";
 import DashboardSimpleInputModal from "../../DashboardSimpleInputModal";
 import { CoinsOne } from "../../Icons";
 import useDepositRewards from "~/customHooks/useDepositRewards/useDepositRewards";
+import { useDepositRewardsStore } from "~/customHooks/useDepositRewards/store";
+import DepositReceipt from "./DepositReceipt";
 
 //TODO - validate user connected to deployed loyalty program chain
 //prob need to make a global util for this
 
-//TODO 2/6 - this is unfinished btw
+//TODO 2/7 - this is unfinished btw
 
 export default function DepositERC20() {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState<boolean>(false);
-  const [depositAmount, setDepositAmount] = useState<string>("");
+  const [isReceiptOpen, setIsReceiptOpen] = useState<boolean>(true);
+
+  const { isLoading, isSuccess, erc20DepositAmount, setERC20DepositAmount } =
+    useDepositRewardsStore((state) => state);
 
   const router = useRouter();
   const { address: loyaltyAddress } = router.query;
@@ -28,9 +33,9 @@ export default function DepositERC20() {
     },
     { refetchOnWindowFocus: false },
   );
-
   const { depositERC20 } = useDepositRewards(
     contractsDb?.escrow?.rewardAddress ?? "",
+    contractsDb?.escrow?.address ?? "",
     contractsDb?.loyaltyProgram?.chainId ?? 0,
   );
 
@@ -38,11 +43,11 @@ export default function DepositERC20() {
     e: React.ChangeEvent<HTMLInputElement>,
   ): Promise<void> => {
     const { value } = e.target;
-    setDepositAmount(value);
+    setERC20DepositAmount(value);
   };
 
   const handleDeposit = async (): Promise<void> => {
-    await depositERC20(depositAmount);
+    await depositERC20();
   };
 
   return (
@@ -74,7 +79,7 @@ export default function DepositERC20() {
           inputLabel="Deposit Amount"
           inputOnChange={handleAmountChange}
           inputHelpMsg="Deposited tokens will remain locked in escrow until loyalty program has concluded or tokens have been rewarded"
-          inputState={depositAmount}
+          inputState={erc20DepositAmount}
           inputInstruction="Enter the amount of tokens that you wish to deposit"
           inputPlaceholder="ie: 0.20"
           inputDisabled={false}
@@ -86,6 +91,7 @@ export default function DepositERC20() {
           setIsModalOpen={setIsDepositModalOpen}
         />
       )}
+      {isReceiptOpen && <DepositReceipt setIsReceiptOpen={setIsReceiptOpen} />}
     </>
   );
 }
