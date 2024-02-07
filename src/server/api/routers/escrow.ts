@@ -120,6 +120,7 @@ export const escrowRouter = createTRPCRouter({
           depositEndDate: true,
           address: true,
           depositKey: true,
+          rewardAddress: true,
         },
       });
       const loyaltyProgram = await ctx.db.loyaltyProgram.findUnique({

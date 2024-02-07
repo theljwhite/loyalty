@@ -11,9 +11,7 @@ import DashboardInfoBox from "~/components/UI/Dashboard/DashboardInfoBox";
 import DashboardPageError from "~/components/UI/Dashboard/DashboardPageError";
 import DashboardCopyDataBox from "~/components/UI/Dashboard/DashboardCopyDataBox";
 import BeginDepositPeriod from "~/components/UI/Dashboard/Escrow/Wallet/BeginDepositPeriod";
-import DepositERC20 from "~/components/UI/Dashboard/Escrow/Wallet/DepositERC20";
-import DepositERC721 from "~/components/UI/Dashboard/Escrow/Wallet/DepositERC721";
-import DepositERC1155 from "~/components/UI/Dashboard/Escrow/Wallet/DepositERC1155";
+import EscrowTransactionsTable from "~/components/UI/Dashboard/Escrow/Wallet/EscrowTransactionsTable";
 
 export const getServerSideProps: GetServerSideProps = async (
   ctx: GetServerSidePropsContext,
@@ -70,7 +68,7 @@ const EscrowWallet: NextPage = () => {
       {escrowApprovals?.allApprovalsComplete &&
         contractsDb?.escrow?.state === "DepositPeriod" && (
           <DashboardInfoBox
-            infoType="warn"
+            infoType="success"
             info={`Your deposit period is currently active. Deposit period ends on: ${contractsDb.escrow.depositEndDate?.toLocaleDateString()}`}
           />
         )}
@@ -97,14 +95,7 @@ const EscrowWallet: NextPage = () => {
             containerBg="bg-neutral-2"
             dataLoading={contractDbLoading}
           />
-
-          {contractsDb.escrow.escrowType === "ERC20" ? (
-            <DepositERC20 />
-          ) : contractsDb.escrow.escrowType === "ERC721" ? (
-            <DepositERC721 />
-          ) : (
-            contractsDb.escrow.escrowType === "ERC1155" && <DepositERC1155 />
-          )}
+          <EscrowTransactionsTable />
         </div>
       )}
 
