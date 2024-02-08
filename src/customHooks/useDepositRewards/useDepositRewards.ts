@@ -2,7 +2,7 @@ import { allMoralisEvmChains } from "~/configs/moralis";
 import { type EvmChain } from "moralis/common-evm-utils";
 import { fetchBalance, fetchToken } from "wagmi/actions";
 import { type FetchTokenResult } from "wagmi/actions";
-import { useAccount, useContractWrite } from "wagmi";
+import { useAccount, useContractWrite, useWaitForTransaction } from "wagmi";
 import { parseUnits } from "ethers";
 import { useContractFactoryParams } from "../useContractFactoryParams/useContractFactoryParams";
 import { useDepositRewardsStore } from "./store";
@@ -24,20 +24,21 @@ export default function useDepositRewards(
   const { address: userConnectedAddress } = useAccount();
   const { abi: erc20Abi } = useContractFactoryParams("ERC20");
 
-  const { erc20DepositAmount, setIsLoading, setIsSuccess, setError } =
-    useDepositRewardsStore((state) => state);
-
   const {
-    data: erc20Write,
-    isLoading: erc20WriteLoading,
-    isSuccess: erc20WriteSuccess,
-    write: depositERC20ToContract,
-  } = useContractWrite({
-    address: escrowAddress as `0x${string}`,
-    abi: erc20Abi,
-    functionName: "depositBudget",
-    args: [],
-  });
+    erc20DepositAmount,
+    setIsLoading,
+    setIsSuccess,
+    setError,
+    setDepositReceipt,
+  } = useDepositRewardsStore((state) => state);
+
+  const { data: erc20DepositData, write: depositERC20ToContract } =
+    useContractWrite({
+      address: escrowAddress as `0x${string}`,
+      abi: erc20Abi,
+      functionName: "depositBudget",
+      args: [],
+    });
 
   const depositERC20 = async (): Promise<void> => {
     setIsLoading(true);
@@ -55,6 +56,19 @@ export default function useDepositRewards(
         depositERC20ToContract({
           args: [formattedDepositAmount, rewardAddress],
         });
+        const depositTransaction = useWaitForTransaction({
+          hash: erc20DepositData?.hash,
+        });
+        console.log("deposit tx -->", depositTransaction.data);
+        if (depositTransaction.isSuccess) {
+          setDepositReceipt({
+            hash: depositTransaction.data?.transactionHash as string,
+            gasUsed: depositTransaction.data?.gasUsed ?? BigInt(0),
+            gasPrice: depositTransaction.data?.effectiveGasPrice ?? BigInt(0),
+          });
+          setIsLoading(false);
+          setIsSuccess(true);
+        }
       } catch (error) {
         setError(JSON.stringify(error).slice(0, 50));
         console.log("error from deposit-->", error);

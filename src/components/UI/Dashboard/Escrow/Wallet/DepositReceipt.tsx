@@ -1,5 +1,6 @@
 import { useDepositRewardsStore } from "~/customHooks/useDepositRewards/store";
 import DashboardModalWrapper from "../../DashboardModalWrapper";
+import DashboardSummaryTable from "../../DashboardSummaryTable";
 import { ModalSpinner } from "~/components/UI/Misc/Spinners";
 import { InfoIcon } from "../../Icons";
 import Link from "next/link";
@@ -13,7 +14,9 @@ interface DepositReceiptProps {
 export default function DepositReceipt({
   setIsReceiptOpen,
 }: DepositReceiptProps) {
-  const { isLoading, isSuccess } = useDepositRewardsStore((state) => state);
+  const { isLoading, isSuccess, depositReceipt } = useDepositRewardsStore(
+    (state) => state,
+  );
 
   return (
     <DashboardModalWrapper setIsModalOpen={setIsReceiptOpen}>
@@ -26,13 +29,30 @@ export default function DepositReceipt({
       </header>
       <div className="relative mt-6 w-full">
         <div className="flex-1 py-0 pe-6 ps-6">
-          <div className="flex flex-col items-center justify-center">
-            <ModalSpinner size={40} />
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center">
+              <ModalSpinner size={40} />
 
-            <span className="text-md mt-2 font-normal leading-5 text-dashboard-lightGray">
-              Please wait while your deposit is processed
-            </span>
-          </div>
+              <span className="text-md mt-2 font-normal leading-5 text-dashboard-lightGray">
+                Please wait while your deposit is processed
+              </span>
+            </div>
+          )}
+          {isSuccess && depositReceipt && (
+            <div className="flex flex-col items-center justify-center">
+              <span className="text-md mt-2 font-normal leading-5 text-dashboard-lightGray">
+                Deposit successful. Details:
+              </span>
+              <div>
+                {/* TODO  */}
+                {/* <DashboardSummaryTable
+            title="Your Deposit Transaction"
+            dataObj={depositReceipt}
+            />  */}
+                {JSON.stringify(depositReceipt)}
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <footer className="mt-8 flex items-center justify-between py-0 pe-6 ps-6">

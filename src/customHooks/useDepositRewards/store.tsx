@@ -9,9 +9,8 @@ type ERC1155Deposit = {
 
 type DepositReceipt = {
   hash: string;
-  block: string;
-  explorer: string;
-  depositedAt: number;
+  gasUsed: bigint;
+  gasPrice: bigint;
 };
 
 export interface DepositRewardsState {
@@ -45,7 +44,11 @@ export const useDepositRewardsStore = create<DepositRewardsState>((set) => {
     erc1155DepositAmount: 0,
     erc721Deposit: [],
     erc1155Deposit: [],
-    depositReceipt: { hash: "", block: "", explorer: "", depositedAt: 0 },
+    depositReceipt: {
+      hash: "",
+      gasUsed: BigInt(0),
+      gasPrice: BigInt(0),
+    },
   };
 
   return {
