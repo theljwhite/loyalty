@@ -1,4 +1,7 @@
-import { ETHEREUM_ADDRESS_REGEX } from "~/constants/regularExpressions";
+import {
+  ETHEREUM_ADDRESS_REGEX,
+  ETHEREUM_ADDRESS_LIST_REGEX,
+} from "~/constants/regularExpressions";
 
 //senderInput takes in a string array because in the future, the smart contracts...
 //...may accept multiple sender addreses
@@ -18,5 +21,11 @@ export const rewardAddressInputError = (rewardAddress: string): string => {
     return "Must enter a valid contract address";
   }
 
+  return "";
+};
+
+export const depositorsInputError = (depositorsString: string): string => {
+  const isValidAddressList = ETHEREUM_ADDRESS_LIST_REGEX.test(depositorsString);
+  if (!isValidAddressList) return "Must enter valid ethereum addresses";
   return "";
 };

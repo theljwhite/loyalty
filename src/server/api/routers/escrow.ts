@@ -23,13 +23,23 @@ const createEscrowInputSchema = z.object({
   escrowType: z.enum(["ERC20", "ERC721", "ERC1155"]),
   state: escrowState,
   loyaltyAddress: z.string(),
+  rewardAddress: z.string(),
+  senderAddress: z.string(),
 });
 
 export const escrowRouter = createTRPCRouter({
   createEscrow: protectedProcedure
     .input(createEscrowInputSchema)
     .mutation(async ({ ctx, input }) => {
-      const { address, creatorId, escrowType, state, loyaltyAddress } = input;
+      const {
+        address,
+        creatorId,
+        escrowType,
+        state,
+        loyaltyAddress,
+        rewardAddress,
+        senderAddress,
+      } = input;
 
       const user = await ctx.db.user.findUnique({ where: { id: creatorId } });
       if (!user || user.role != "Creator") {
@@ -43,6 +53,8 @@ export const escrowRouter = createTRPCRouter({
           escrowType,
           state,
           loyaltyAddress,
+          rewardAddress,
+          senderAddress,
         },
       });
 

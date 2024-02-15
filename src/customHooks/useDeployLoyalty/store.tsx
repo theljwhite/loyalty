@@ -25,6 +25,7 @@ export interface DeployLoyaltyState {
   objectives: Objective[];
   authorities: Authority[];
   tiers: Tier[];
+  isSkippingTiers: boolean;
   rewardType: RewardType;
   programStart: Date;
   programEndsAt: Date;
@@ -39,6 +40,7 @@ export interface DeployLoyaltyState {
   setObjectives: (objectives: Objective[]) => void;
   setAuthorities: (authorities: Authority[]) => void;
   setTiers: (tiers: Tier[]) => void;
+  setIsSkippingTiers: (isSkippingTiers: boolean) => void;
   setRewardType: (rewardType: RewardType) => void;
   setProgramStart: (start: Date) => void;
   setProgramEnd: (end: Date) => void;
@@ -82,6 +84,7 @@ export const useDeployLoyaltyStore = create<DeployLoyaltyState>((set, get) => {
     ],
     authorities: [],
     tiers: [],
+    isSkippingTiers: false,
     rewardType: RewardType.Points,
     programStart: programStart,
     programEndsAt: programEnd,
@@ -129,6 +132,7 @@ export const useDeployLoyaltyStore = create<DeployLoyaltyState>((set, get) => {
     setObjectives: (objectives: Objective[]) => set({ objectives }),
     setAuthorities: (authorities: Authority[]) => set({ authorities }),
     setTiers: (tiers: Tier[]) => set({ tiers }),
+    setIsSkippingTiers: (isSkippingTiers: boolean) => set({ isSkippingTiers }),
     setRewardType: (rewardType: RewardType) => set({ rewardType }),
     setProgramStart: (start: Date) => set({ programStart: start }),
     setProgramEnd: (end: Date) => set({ programEndsAt: end }),

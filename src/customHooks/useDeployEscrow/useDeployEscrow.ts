@@ -1,6 +1,7 @@
 import { useSession } from "next-auth/react";
 import { useDeployLoyaltyStore } from "../useDeployLoyalty/store";
-import { useContractFactoryParams } from "../useContractFactoryParams/useContractFactoryParams";
+import { useEscrowApprovalsStore } from "../useEscrowApprovals/store";
+import { useEscrowAbi } from "../useContractAbi/useContractAbi";
 import { EscrowContractState, useDeployEscrowStore } from "./store";
 import { useError } from "../useError";
 import { useEthersSigner } from "~/helpers/ethers";
@@ -10,7 +11,7 @@ import {
   writeContract,
   waitForTransaction,
 } from "wagmi/actions";
-import Loyalty from "~/contractsAndAbis/Loyalty/Loyalty.json";
+import Loyalty from "~/contractsAndAbis/0.01/Loyalty/Loyalty.json";
 import { api } from "~/utils/api";
 import {
   dismissToast,
@@ -31,9 +32,14 @@ export function useDeployEscrow() {
 
   const { rewardType, programEndsAt, deployLoyaltyData } =
     useDeployLoyaltyStore((state) => state);
+
+  const { rewardAddress, senderAddress } = useEscrowApprovalsStore(
+    (state) => state,
+  );
+
   const { error, handleErrorFlow } = useError();
   const signer = useEthersSigner();
-  const factoryParams = useContractFactoryParams(escrowType);
+  const factoryParams = useEscrowAbi(escrowType);
   const { data: session } = useSession();
   const { mutate: createEscrowDbRecord } =
     api.escrow.createEscrow.useMutation();
@@ -51,6 +57,8 @@ export function useDeployEscrow() {
         deployLoyaltyData.address,
         deployLoyaltyData.creator,
         Date.parse(`${programEndsAt}`) / 1000,
+        rewardAddress,
+        senderAddress ? [senderAddress] : [],
       );
       const transaction = escrowContract.deploymentTransaction();
       if (transaction) {
@@ -70,6 +78,8 @@ export function useDeployEscrow() {
           escrowType,
           state: "AwaitingEscrowApprovals",
           loyaltyAddress: deployLoyaltyData.address,
+          rewardAddress,
+          senderAddress,
         });
       }
     } catch (e) {

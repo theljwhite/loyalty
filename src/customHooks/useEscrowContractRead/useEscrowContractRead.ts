@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { readContract } from "wagmi/actions";
-import { useContractFactoryParams } from "../useContractFactoryParams/useContractFactoryParams";
+import { useEscrowAbi } from "../useContractAbi/useContractAbi";
 import { type EscrowType } from "@prisma/client";
 import { type Abi } from "viem";
 
@@ -20,10 +20,16 @@ export function useEscrowContractRead(
   escrowType: EscrowType,
 ) {
   const [readContractError, setReadContractError] = useState<string>("");
-  const { abi } = useContractFactoryParams(escrowType);
+  const { abi: latestAbi } = useEscrowAbi(escrowType);
+  const { abi: abiVersion0_01 } = useEscrowAbi(escrowType, "0.01");
+
   const escrowContractConfig = {
     address: escrowAddress as `0x${string}`,
-    abi: abi as Abi,
+    abi: latestAbi as Abi,
+  };
+  const escrowContract0_01Config = {
+    address: escrowAddress as `0x${string}`,
+    abi: abiVersion0_01 as Abi,
   };
 
   const getEscrowState = async (): Promise<string | undefined> => {
@@ -44,7 +50,7 @@ export function useEscrowContractRead(
   const isSenderApproved = async (senderAddress: string): Promise<boolean> => {
     try {
       const isApproved = (await readContract({
-        ...escrowContractConfig,
+        ...escrowContract0_01Config,
         functionName: "isSenderApproved",
         args: [senderAddress],
       })) as boolean;
@@ -61,7 +67,7 @@ export function useEscrowContractRead(
   ): Promise<boolean> => {
     try {
       const isTokenApproved = (await readContract({
-        ...escrowContractConfig,
+        ...escrowContract0_01Config,
         functionName: "isTokenApproved",
         args: [tokenAddress],
       })) as boolean;
@@ -78,7 +84,7 @@ export function useEscrowContractRead(
   ): Promise<boolean> => {
     try {
       const isApproved = (await readContract({
-        ...escrowContractConfig,
+        ...escrowContract0_01Config,
         functionName: "isCollectionApproved",
         args: [collectionAddress],
       })) as boolean;

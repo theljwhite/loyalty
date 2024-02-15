@@ -1,4 +1,3 @@
-import Loyalty from "~/contractsAndAbis/Loyalty/Loyalty.json";
 import { useSession } from "next-auth/react";
 import { useAccount, useNetwork } from "wagmi";
 import { ContractFactory, encodeBytes32String } from "ethers";
@@ -8,12 +7,13 @@ import { useContractFactoryStore } from "../useContractFactory";
 import { useEthersSigner } from "~/helpers/ethers";
 import { useError } from "../useError";
 import { api } from "~/utils/api";
-import { RewardType } from "./types";
+import { RewardType, Tier } from "./types";
 import {
   toastSuccess,
   toastLoading,
   dismissToast,
 } from "~/components/UI/Toast/Toast";
+import { useLoyaltyAbi } from "../useContractAbi/useContractAbi";
 
 export function useDeployLoyalty() {
   const { data: session } = useSession();
@@ -31,6 +31,7 @@ export function useDeployLoyalty() {
     setIsSuccess,
   } = useDeployLoyaltyStore((state) => state);
 
+  const { abi, bytecode } = useLoyaltyAbi();
   const { chain } = useNetwork();
   const { address } = useAccount();
   const signer = useEthersSigner();
@@ -45,11 +46,7 @@ export function useDeployLoyalty() {
     setIsLoading(true);
     toastLoading("Deploy request sent.", true);
     try {
-      const loyaltyFactory = new ContractFactory(
-        Loyalty.abi,
-        Loyalty.bytecode,
-        await signer,
-      );
+      const loyaltyFactory = new ContractFactory(abi, bytecode, await signer);
       const targetObjectivesBytes32 = objectives.map((obj) =>
         encodeBytes32String(obj.title.trim().slice(0, 30)),
       );
@@ -58,6 +55,13 @@ export function useDeployLoyalty() {
       );
       const objectivesRewards: number[] = objectives.map((obj) => obj.reward);
       const tierSortingEnabled = tiers && tiers.length > 0;
+      const tierNamesBytes32 = tiers.map((tier: Tier) =>
+        encodeBytes32String(tier.name.trim().slice(0, 30)),
+      );
+      const tierRewardsRequired: number[] = tiers.map(
+        (tier: Tier) => tier.rewardsRequired,
+      );
+
       const loyaltyContract = await loyaltyFactory.deploy(
         name,
         targetObjectivesBytes32,
@@ -66,6 +70,8 @@ export function useDeployLoyalty() {
         rewardType,
         Date.parse(`${programEndsAt}`) / 1000,
         tierSortingEnabled,
+        tierSortingEnabled ? tierNamesBytes32 : [],
+        tierSortingEnabled ? tierRewardsRequired : [],
       );
       const loyaltyContractAddress = await loyaltyContract.getAddress();
       const transaction = loyaltyContract.deploymentTransaction();
@@ -100,6 +106,7 @@ export function useDeployLoyalty() {
           programStart,
           programEnd: programEndsAt,
           rewardType,
+          version: process.env.NEXT_PUBLIC_CONTRACT_VERSION,
         });
 
         giveCreatorRole({ userId: session?.user.id ?? "" });
@@ -109,7 +116,6 @@ export function useDeployLoyalty() {
         toastSuccess("Loyalty program has successfully been deployed");
       }
     } catch (error) {
-      console.log("error", error);
       handleErrorFlow(error, "Loyalty program could not be deployed");
       loyaltyDeployState.setStatus("ERROR");
       loyaltyDeployState.setError(error as any);

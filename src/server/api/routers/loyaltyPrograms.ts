@@ -44,6 +44,7 @@ const createLoyaltyInputSchema = z.object({
   programStart: z.date(),
   programEnd: z.date(),
   rewardType: z.number(),
+  version: z.string().optional(),
 });
 
 export const loyaltyProgramsRouter = createTRPCRouter({
@@ -71,6 +72,7 @@ export const loyaltyProgramsRouter = createTRPCRouter({
           programEnd: input.programEnd,
           rewardType: formattedRewardType,
           tiersActive: input.tiers && input.tiers.length > 0 ? true : false,
+          version: input.version,
         },
       });
 

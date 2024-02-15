@@ -56,7 +56,8 @@ const validateObjectives = (objectives: Objective[]): string => {
 
   return "";
 };
-const validateTiers = (tiers: Tier[]): string => {
+const validateTiers = (tiers: Tier[], isSkippingTiers: boolean): string => {
+  if (isSkippingTiers) return "";
   if (tiers.length < MIN_TIERS_LENGTH) {
     return `Add more tiers. Must have at least ${MIN_TIERS_LENGTH} tiers`;
   }

@@ -8,7 +8,7 @@ import {
 import { erc721ABI, useNetwork } from "wagmi";
 import { supportsInterfaceAbi } from "~/contractsAndAbis/ERC721Utilities/supportsInterfaceAbi";
 import { useEscrowApprovalsStore } from "./store";
-import { useContractFactoryParams } from "~/customHooks/useContractFactoryParams/useContractFactoryParams";
+import { useEscrowAbi } from "~/customHooks/useContractAbi/useContractAbi";
 import { useError } from "~/customHooks/useError";
 import { encodeBytes32String, hexlify } from "ethers";
 
@@ -26,20 +26,25 @@ export function useEscrowApprovals() {
     setIsLoading,
     setError,
   } = useEscrowApprovalsStore((state) => state);
-  const { abi } = useContractFactoryParams(escrowType);
+  const { abi: latestAbi } = useEscrowAbi(escrowType);
+  const { abi: abiVersion0_01 } = useEscrowAbi(escrowType, "0.01");
   const { error, handleErrorFlow } = useError();
 
   const approveRewards = async (escrowAddress: string): Promise<void> => {
     setIsLoading(true);
     const isApproved = true;
+    const oldContractConfig = {
+      address: escrowAddress as `0x${string}`,
+      abi: abiVersion0_01,
+    };
     const contractConfig = {
       address: escrowAddress as `0x${string}`,
-      abi,
+      abi: latestAbi,
     };
     try {
       if (escrowType === "ERC20" && (await isERC20Verified())) {
         const approveRewards = await writeContract({
-          ...contractConfig,
+          ...oldContractConfig,
           functionName: "approveToken",
           args: [rewardAddress, isApproved],
         });
@@ -92,7 +97,7 @@ export function useEscrowApprovals() {
     setIsLoading(true);
     const contractConfig = {
       address: escrowAddress as `0x${string}`,
-      abi,
+      abi: abiVersion0_01,
     };
     const isApproved = true;
     try {
@@ -131,7 +136,7 @@ export function useEscrowApprovals() {
       const depositEndsAt: number = Date.parse(`${depositPeriodEndsAt}`) / 1000;
       const contractConfig = {
         address: escrowAddress as `0x${string}`,
-        abi,
+        abi: latestAbi,
       };
       const setDepositKey = await writeContract({
         ...contractConfig,

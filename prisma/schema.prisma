@@ -29,6 +29,7 @@ model LoyaltyProgram {
     rewardType    RewardType
     escrowAddress String?      @unique
     escrow        Escrow?
+    version       String       @default("0.01")
     createdAt     DateTime     @default(now())
     updatedAt     DateTime     @updatedAt
 }

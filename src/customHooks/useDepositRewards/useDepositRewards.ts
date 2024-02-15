@@ -4,7 +4,7 @@ import { fetchBalance, fetchToken } from "wagmi/actions";
 import { type FetchTokenResult } from "wagmi/actions";
 import { useAccount, useContractWrite, useWaitForTransaction } from "wagmi";
 import { parseUnits } from "ethers";
-import { useContractFactoryParams } from "../useContractFactoryParams/useContractFactoryParams";
+import { useEscrowAbi } from "../useContractAbi/useContractAbi";
 import { useDepositRewardsStore } from "./store";
 import { toastLoading } from "~/components/UI/Toast/Toast";
 
@@ -22,7 +22,7 @@ export default function useDepositRewards(
   deployedChainId: number,
 ) {
   const { address: userConnectedAddress } = useAccount();
-  const { abi: erc20Abi } = useContractFactoryParams("ERC20");
+  const { abi: erc20Abi } = useEscrowAbi("ERC20");
 
   const {
     erc20DepositAmount,

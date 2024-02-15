@@ -21,9 +21,7 @@ export interface EscrowApprovalsState {
   isLoading: boolean;
   isSuccess: boolean;
   error: string;
-  isModalOpen: boolean;
-  step: number;
-  furthestStep: number;
+
   setEscrowType: (escrowType: EscrowType) => void;
   setSenderAddress: (senderAddress: string) => void;
   setRewardAddress: (rewardAddress: string) => void;
@@ -37,9 +35,6 @@ export interface EscrowApprovalsState {
   setIsLoading: (isLoading: boolean) => void;
   setIsSuccess: (isSuccess: boolean) => void;
   setError: (error: string) => void;
-  setIsModalOpen: (isModalOpen: boolean) => void;
-  setStep: (step: number) => void;
-  setFurthestStep: (furthestStep: number) => void;
 }
 
 export const useEscrowApprovalsStore = create<EscrowApprovalsState>((set) => {
@@ -86,8 +81,5 @@ export const useEscrowApprovalsStore = create<EscrowApprovalsState>((set) => {
     setIsLoading: (isLoading: boolean) => set({ isLoading }),
     setIsSuccess: (isSuccess: boolean) => set({ isSuccess }),
     setError: (error: string) => set({ error }),
-    setIsModalOpen: (isModalOpen: boolean) => set({ isModalOpen }),
-    setStep: (step: number) => set({ step }),
-    setFurthestStep: (furthestStep: number) => set({ furthestStep }),
   };
 });

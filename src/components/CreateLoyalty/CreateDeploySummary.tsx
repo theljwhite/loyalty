@@ -103,39 +103,41 @@ export default function CreateDeploySummary({
                 </div>
               </div>
             </div>
-            <div className="mt-4 rounded-lg border border-dashboard-menuInner bg-white">
-              <h2 className="flex h-10 w-full items-center justify-between rounded-t-lg border border-b bg-dashboard-input pe-5 ps-5 text-sm font-semibold leading-[1.2] text-dashboard-heading">
-                {name} Tiers
-              </h2>
-              <div
-                style={{ scrollbarWidth: "none" }}
-                className="max-h-[460px] p-5"
-              >
-                <div className="flex flex-col break-words">
-                  <div className="relative w-full">
-                    {tiers.map((tier) => {
-                      return (
-                        <div
-                          key={tier.id}
-                          className="flex flex-row items-center gap-2 py-2"
-                        >
-                          <input
-                            placeholder={tier.name}
-                            className="text-md relative h-10 w-full appearance-none rounded-md border-2 border-transparent bg-dashboard-input pe-4 ps-4 outline-none"
-                            disabled={true}
-                          />
-                          <input
-                            placeholder={`${tier.rewardsRequired} points required`}
-                            className="text-md relative h-10 w-full appearance-none rounded-md border-2 border-transparent bg-dashboard-input pe-4 ps-4 outline-none"
-                            disabled={true}
-                          />
-                        </div>
-                      );
-                    })}
+            {tiers.length > 0 && (
+              <div className="mt-4 rounded-lg border border-dashboard-menuInner bg-white">
+                <h2 className="flex h-10 w-full items-center justify-between rounded-t-lg border border-b bg-dashboard-input pe-5 ps-5 text-sm font-semibold leading-[1.2] text-dashboard-heading">
+                  {name} Tiers
+                </h2>
+                <div
+                  style={{ scrollbarWidth: "none" }}
+                  className="max-h-[460px] p-5"
+                >
+                  <div className="flex flex-col break-words">
+                    <div className="relative w-full">
+                      {tiers.map((tier) => {
+                        return (
+                          <div
+                            key={tier.id}
+                            className="flex flex-row items-center gap-2 py-2"
+                          >
+                            <input
+                              placeholder={tier.name}
+                              className="text-md relative h-10 w-full appearance-none rounded-md border-2 border-transparent bg-dashboard-input pe-4 ps-4 outline-none"
+                              disabled={true}
+                            />
+                            <input
+                              placeholder={`${tier.rewardsRequired} points required`}
+                              className="text-md relative h-10 w-full appearance-none rounded-md border-2 border-transparent bg-dashboard-input pe-4 ps-4 outline-none"
+                              disabled={true}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}

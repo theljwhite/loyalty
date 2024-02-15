@@ -691,3 +691,23 @@ export const ERC1155Icon = ({ color, size }: IconProps): JSX.Element => (
     </g>
   </svg>
 );
+
+export const CheckboxCheck = ({
+  color,
+  w,
+  h,
+}: IconProps & { w: number; h: number }): JSX.Element => (
+  <svg
+    width={w}
+    height={h}
+    fill="none"
+    strokeWidth={2}
+    stroke={color}
+    strokeDasharray={16}
+    opacity={1}
+    strokeDashoffset={0}
+    viewBox="0 0 12 10"
+  >
+    <polyline points="1.5 6 4.5 9 10.5 1"></polyline>
+  </svg>
+);

@@ -10,24 +10,21 @@ import {
   TrashcanDelete,
   EditPencil,
   FormErrorIcon,
+  CheckboxCheck,
 } from "../UI/Dashboard/Icons";
 import Link from "next/link";
 import { ROUTE_DOCS_MAIN } from "~/configs/routes";
 
-//TODO - this can be made into a single reusable component probably...
-//...so that it can be used for CreateTiers and CreateObjectives (same component) for both flows
-
 export default function CreateTiers() {
   const [isEditorOpen, setIsEditorOpen] = useState<boolean>(false);
-  const { tiers, setTiers, step, errors } = useDeployLoyaltyStore(
-    (state) => state,
-  );
+  const { tiers, setTiers, isSkippingTiers, setIsSkippingTiers, step, errors } =
+    useDeployLoyaltyStore((state) => state);
   const [activeTier, setActiveTier] = useState<number>(tiers.length);
 
   const currentStepError = errors.find((error) => error.step === step);
   const tiersValidation = validationFuncs.get(step);
   const onNextStep = useNextLoyaltyStep([
-    () => tiersValidation?.[0]?.validation(tiers),
+    () => tiersValidation?.[0]?.validation(tiers, isSkippingTiers),
   ]);
 
   const editExistingTier = (id: number): void => {
@@ -204,6 +201,33 @@ export default function CreateTiers() {
             <span className="text-dashboard-tooltip">
               Showing {tiers.length} tiers
             </span>
+          </div>
+
+          <div className="my-12 text-dashboard-menuText">
+            <label className="relative inline-flex cursor-pointer items-center align-top">
+              <input
+                onChange={(e) => setIsSkippingTiers(e.target.checked)}
+                type="checkbox"
+                className="absolute m-[-1px] h-px w-px overflow-hidden whitespace-nowrap border-none"
+              />
+              <span
+                className={`${
+                  isSkippingTiers
+                    ? "border-primary-1 bg-primary-2 hover:bg-primary-1"
+                    : "bg-transparent"
+                } inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border-2 align-top text-white`}
+              >
+                {isSkippingTiers && (
+                  <div className="flex h-full items-center justify-center">
+                    <CheckboxCheck w={12} h={10} color="white" />
+                  </div>
+                )}
+              </span>
+              <span className="text-md ms-2 select-none">
+                I choose not to use tiers. Skip adding tiers. Tiers cannot be
+                added at a later date.
+              </span>
+            </label>
           </div>
 
           <div className="mt-6 flex flex-row items-center">
