@@ -13,6 +13,20 @@ type DepositReceipt = {
   gasPrice: bigint;
 };
 
+export type TransactionItemType =
+  | "UNKNOWN"
+  | "DEPOSIT"
+  | "CONTRACT_CREATION"
+  | "CONTRACT_CALL";
+
+export type TransactionsListItem = {
+  to: string | null;
+  from: string | null;
+  amount: string | null;
+  time: Date;
+  type: TransactionItemType;
+};
+
 export interface DepositRewardsState {
   isLoading: boolean;
   isSuccess: boolean;
@@ -23,6 +37,10 @@ export interface DepositRewardsState {
   erc721Deposit: string[];
   erc1155Deposit: ERC1155Deposit[];
   depositReceipt: DepositReceipt;
+  transactionList: TransactionsListItem[];
+  txListLoading: boolean;
+  txListError: string;
+  txListSuccess: boolean;
   setIsLoading: (isLoading: boolean) => void;
   setIsSuccess: (isSuccess: boolean) => void;
   setError: (error: string) => void;
@@ -32,6 +50,10 @@ export interface DepositRewardsState {
   setERC721Deposit: (erc721Deposit: string[]) => void;
   setERC1155Deposit: (erc1155Deposit: ERC1155Deposit[]) => void;
   setDepositReceipt: (depositReceipt: DepositReceipt) => void;
+  setTransactionList: (transactionList: TransactionsListItem[]) => void;
+  setTxListLoading: (txListLoading: boolean) => void;
+  setTxListError: (txListError: string) => void;
+  setTxListSuccess: (txListSuccess: boolean) => void;
 }
 
 export const useDepositRewardsStore = create<DepositRewardsState>((set) => {
@@ -49,6 +71,10 @@ export const useDepositRewardsStore = create<DepositRewardsState>((set) => {
       gasUsed: BigInt(0),
       gasPrice: BigInt(0),
     },
+    transactionList: [],
+    txListLoading: false,
+    txListError: "",
+    txListSuccess: false,
   };
 
   return {
@@ -67,5 +93,10 @@ export const useDepositRewardsStore = create<DepositRewardsState>((set) => {
       set({ erc1155Deposit }),
     setDepositReceipt: (depositReceipt: DepositReceipt) =>
       set({ depositReceipt }),
+    setTransactionList: (transactionList: TransactionsListItem[]) =>
+      set({ transactionList }),
+    setTxListLoading: (txListLoading: boolean) => set({ txListLoading }),
+    setTxListError: (txListError: string) => set({ txListError }),
+    setTxListSuccess: (txListSuccess: boolean) => set({ txListSuccess }),
   };
 });

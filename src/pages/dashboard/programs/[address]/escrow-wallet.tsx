@@ -65,26 +65,25 @@ const EscrowWallet: NextPage = () => {
         title="Escrow Wallet"
         info="Manage deposits and balances in your escrow contract"
       />
-      {escrowApprovals?.allApprovalsComplete &&
-        contractsDb?.escrow?.state === "DepositPeriod" && (
-          <DashboardInfoBox
-            infoType="success"
-            info={`Your deposit period is currently active. Deposit period ends on: ${contractsDb.escrow.depositEndDate?.toLocaleDateString()}`}
-          />
-        )}
 
-      {(!escrowApprovals?.isRewardApproved ||
-        !escrowApprovals.isSenderApproved) && (
+      {!escrowApprovals.isDepositKeySet && (
         <DashboardInfoBox
           infoType="warn"
-          info="You still need to enter your sender address and/or rewards contract address for approval - then you can begin managing deposits"
-          outlinkText="Take me to Escrow Approvals"
-          outlink={`/dashboard/programs/${loyaltyAddress}/escrow-approvals`}
+          info="You still need to choose a deposit period end date and deposit tokens into your escrow contract to be used as rewards. Once you choose an end date and write it to your contract, your deposit period will begin."
         />
       )}
 
       {escrowApprovals?.allApprovalsComplete && contractsDb.escrow && (
         <div className="space-y-8">
+          <DashboardCopyDataBox
+            title="Your Escrow Contract Address"
+            description={`Your escrow contract address, deployed on ${contractsDb.loyaltyProgram?.chain}.`}
+            copyBoxLabel="Escrow ContractAddress"
+            dataToCopy={contractsDb?.escrow?.address ?? ""}
+            copySuccessMessage="Copied escrow address"
+            containerBg="bg-neutral-2"
+            dataLoading={contractDbLoading}
+          />
           <DashboardCopyDataBox
             title="Your Deposit Key"
             description="Your deposit key for depositing tokens into your escrow contract."

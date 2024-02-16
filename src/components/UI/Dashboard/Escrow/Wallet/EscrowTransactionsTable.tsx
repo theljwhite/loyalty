@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/router";
+import { api } from "~/utils/api";
+import useDepositRewards from "~/customHooks/useDepositRewards/useDepositRewards";
+import { useDepositRewardsStore } from "~/customHooks/useDepositRewards/store";
+import shortenEthereumAddress from "~/helpers/shortenEthAddress";
 import DashboardInput from "../../DashboardInput";
 import DepositERC20 from "./DepositERC20";
 import DepositERC721 from "./DepositERC721";
 import DepositERC1155 from "./DepositERC1155";
-import { api } from "~/utils/api";
 import { EthIcon, SortIcon } from "../../Icons";
-
-//TODO 2-7 - this is unfinished
 
 export default function EscrowTransactionsTable() {
   const router = useRouter();
@@ -19,6 +20,24 @@ export default function EscrowTransactionsTable() {
     { refetchOnWindowFocus: false },
   );
 
+  const { transactionList } = useDepositRewardsStore((state) => state);
+
+  const { getWalletERC20Transfers, getWalletTransactionsVerbose } =
+    useDepositRewards(
+      contractsDb?.escrow?.rewardAddress ?? "",
+      contractsDb?.escrow?.address ?? "",
+      contractsDb?.loyaltyProgram?.chainId ?? 0,
+    );
+
+  // useEffect(() => {
+  //   fetchTransactions();
+  // }, []);
+
+  const fetchTransactions = async (): Promise<void> => {
+    await getWalletTransactionsVerbose();
+    await getWalletERC20Transfers();
+  };
+
   return (
     <>
       <div>
@@ -27,12 +46,12 @@ export default function EscrowTransactionsTable() {
             <div className="flex flex-col justify-center gap-2">
               <div className="break-words">
                 <p className="mb-0 text-lg font-semibold text-dashboard-activeTab">
-                  Escrow Transctions
+                  Escrow Transactions
                 </p>
               </div>
               <div className="break-words">
                 <p className="mb-0 text-sm font-normal leading-5 text-dashboard-neutral">
-                  View escrow contract&apos;s balances or make a deposit.
+                  View escrow contract&apos;s transactions or make a deposit
                 </p>
               </div>
             </div>
@@ -83,10 +102,13 @@ export default function EscrowTransactionsTable() {
             <thead className="table-header-group align-middle">
               <tr className="table-row overflow-hidden">
                 <th className="table-cell border-b border-dashboard-border1 py-3 pe-6 ps-6 text-start text-xs capitalize leading-4">
-                  Depositor
+                  Type
                 </th>
                 <th className="table-cell border-b border-dashboard-border1 py-3 pe-6 ps-6 text-start text-xs capitalize leading-4">
-                  Type
+                  From
+                </th>
+                <th className="table-cell border-b border-dashboard-border1 py-3 pe-6 ps-6 text-start text-xs capitalize leading-4">
+                  To
                 </th>
                 <th className="table-cell border-b border-dashboard-border1 py-3 pe-6 ps-6 text-start text-xs capitalize leading-4">
                   Amount
@@ -94,20 +116,64 @@ export default function EscrowTransactionsTable() {
               </tr>
             </thead>
             <tbody className="table-row-group align-middle">
-              <tr className="table-row">
-                <td
-                  colSpan={4}
-                  className="table-cell border-b border-dashboard-border1 py-4 pe-6 ps-6 text-start leading-5 text-dashboard-lightGray"
-                >
-                  <div className="flex">
-                    <div className="flex w-full justify-center">
-                      <span className="text-center text-xs font-normal leading-[1.125rem] text-black opacity-65">
-                        No transactions to display
-                      </span>
+              {transactionList.length == 0 && (
+                <tr className="table-row">
+                  <td
+                    colSpan={4}
+                    className="table-cell border-b border-dashboard-border1 py-4 pe-6 ps-6 text-start leading-5 text-dashboard-lightGray"
+                  >
+                    <div className="flex">
+                      <div className="flex w-full justify-center">
+                        <span className="text-center text-xs font-normal leading-[1.125rem] text-black opacity-65">
+                          No transactions to display
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </td>
-              </tr>
+                  </td>
+                </tr>
+              )}
+              {transactionList.map((tx, index) => {
+                return (
+                  <tr key={index} className="table-row">
+                    <td className="rounded-y-md whitespace-nowrap py-4 pe-6 ps-6 text-start text-[13px] font-normal leading-5">
+                      <div className="flex">
+                        <div className="flex items-center">
+                          <p className="line-clamp-1 overflow-hidden text-ellipsis text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
+                            {tx.type}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="rounded-y-md whitespace-nowrap py-4 pe-6 ps-6 text-start text-[13px] font-normal leading-5">
+                      <div className="flex">
+                        <div className="flex items-center">
+                          <p className="line-clamp-1 overflow-hidden text-ellipsis text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
+                            {shortenEthereumAddress(tx.from ?? "", 8, 8)}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="rounded-y-md whitespace-nowrap py-4 pe-6 ps-6 text-start text-[13px] font-normal leading-5">
+                      <div className="flex">
+                        <div className="flex items-center">
+                          <p className="line-clamp-1 overflow-hidden text-ellipsis text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
+                            {shortenEthereumAddress(tx.to ?? "", 8, 8)}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="rounded-y-md whitespace-nowrap py-4 pe-6 ps-6 text-start text-[13px] font-normal leading-5">
+                      <div className="flex">
+                        <div className="flex items-center">
+                          <p className="line-clamp-1 overflow-hidden text-ellipsis text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
+                            {tx.amount}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

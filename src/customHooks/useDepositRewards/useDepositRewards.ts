@@ -1,9 +1,15 @@
 import { allMoralisEvmChains } from "~/configs/moralis";
-import { type EvmChain } from "moralis/common-evm-utils";
+import {
+  type GetWalletTokenTransfersJSONResponse,
+  type EvmChain,
+  type GetWalletTransactionsVerboseJSONResponse,
+} from "moralis/common-evm-utils";
+import { type TransactionItemType } from "./store";
 import { fetchBalance, fetchToken } from "wagmi/actions";
+import Moralis from "moralis";
 import { type FetchTokenResult } from "wagmi/actions";
 import { useAccount, useContractWrite, useWaitForTransaction } from "wagmi";
-import { parseUnits } from "ethers";
+import { decodeBytes32String, parseUnits } from "ethers";
 import { useEscrowAbi } from "../useContractAbi/useContractAbi";
 import { useDepositRewardsStore } from "./store";
 import { toastLoading } from "~/components/UI/Toast/Toast";
@@ -26,10 +32,14 @@ export default function useDepositRewards(
 
   const {
     erc20DepositAmount,
+    transactionList,
     setIsLoading,
     setIsSuccess,
     setError,
     setDepositReceipt,
+    setTransactionList,
+    setTxListError,
+    setTxListLoading,
   } = useDepositRewardsStore((state) => state);
 
   const { data: erc20DepositData, write: depositERC20ToContract } =
@@ -59,7 +69,7 @@ export default function useDepositRewards(
         const depositTransaction = useWaitForTransaction({
           hash: erc20DepositData?.hash,
         });
-        console.log("deposit tx -->", depositTransaction.data);
+
         if (depositTransaction.isSuccess) {
           setDepositReceipt({
             hash: depositTransaction.data?.transactionHash as string,
@@ -71,7 +81,6 @@ export default function useDepositRewards(
         }
       } catch (error) {
         setError(JSON.stringify(error).slice(0, 50));
-        console.log("error from deposit-->", error);
       }
     }
   };
@@ -111,15 +120,130 @@ export default function useDepositRewards(
     }
   };
 
+  const getWalletTransactionsVerbose = async (): Promise<
+    GetWalletTransactionsVerboseJSONResponse["result"] | undefined
+  > => {
+    setTxListLoading(true);
+
+    try {
+      const evmChain = findIfMoralisEvmChain();
+      if (!evmChain) {
+        setTxListError(
+          "Couldnt fetch transactions for deployed chain at this time",
+        );
+        return;
+      }
+      if (!Moralis.Core.isStarted) {
+        await Moralis.start({
+          apiKey: process.env.NEXT_PUBLIC_MORALIS_API_KEY,
+        });
+      }
+      const response =
+        await Moralis.EvmApi.transaction.getWalletTransactionsVerbose({
+          address: userConnectedAddress ?? "",
+          chain: evmChain,
+          limit: 10,
+        });
+
+      if (response) {
+        const results = response.toJSON();
+        const relevantTransactions = results.result.filter(
+          (tx) =>
+            tx.to_address === escrowAddress.toLowerCase() ||
+            tx.receipt_contract_address === escrowAddress.toLowerCase(),
+        );
+
+        const formattedTransactions = relevantTransactions.map((tx) => {
+          let transactionType: TransactionItemType = "UNKNOWN";
+          if (
+            tx.to_address == escrowAddress.toLowerCase() &&
+            tx.value === "0"
+          ) {
+            transactionType = "CONTRACT_CALL";
+          }
+          if (
+            !tx.to_address &&
+            tx.receipt_contract_address === escrowAddress.toLowerCase()
+          ) {
+            transactionType = "CONTRACT_CREATION";
+          }
+          const transaction = {
+            to: tx.to_address,
+            from: tx.from_address,
+            amount: tx.value,
+            type: transactionType,
+            time: new Date(tx.block_timestamp),
+          };
+
+          return transaction;
+        });
+
+        setTransactionList(formattedTransactions);
+        return relevantTransactions;
+      }
+    } catch (error) {
+      setTxListError(
+        `Error fetching transactions. Details: ${JSON.stringify(error).slice(
+          0,
+          50,
+        )}`,
+      );
+    }
+  };
+
+  const getWalletERC20Transfers = async (): Promise<
+    GetWalletTokenTransfersJSONResponse["result"] | undefined
+  > => {
+    try {
+      const evmChain = findIfMoralisEvmChain();
+      if (!evmChain) {
+        setTxListError(
+          "Couldnt fetch transactions for deployed chain at this time",
+        );
+        return;
+      }
+      if (!Moralis.Core.isStarted) {
+        await Moralis.start({
+          apiKey: process.env.NEXT_PUBLIC_MORALIS_API_KEY,
+        });
+      }
+
+      const response = await Moralis.EvmApi.token.getWalletTokenTransfers({
+        chain: evmChain,
+        address: userConnectedAddress ?? "",
+      });
+      if (response) {
+        const results = response.toJSON();
+        const transfers = results.result.filter(
+          (transfer) =>
+            transfer.from_address === userConnectedAddress?.toLowerCase() &&
+            transfer.to_address === escrowAddress.toLowerCase(),
+        );
+        return transfers;
+      }
+    } catch (error) {
+      setTxListError(
+        `Error fetching transactions. Details: ${JSON.stringify(error).slice(
+          0,
+          50,
+        )}`,
+      );
+    }
+  };
+
   const findIfMoralisEvmChain = (): EvmChain | undefined => {
-    //TODO - this will be used later for ERC721 and ERC1155 balances
     const deployedEvmChain = allMoralisEvmChains.find(
       (chain) => Number(chain.hex) === deployedChainId,
     );
-    console.log("dep", deployedChainId);
+
     if (deployedEvmChain) return deployedEvmChain;
     else return undefined;
   };
 
-  return { depositERC20 };
+  return {
+    depositERC20,
+
+    getWalletERC20Transfers,
+    getWalletTransactionsVerbose,
+  };
 }

@@ -6,7 +6,6 @@ import { type Abi } from "viem";
 
 export enum EscrowStateReturn {
   Idle,
-  AwaitingEscrowApprovals,
   DepositPeriod,
   AwaitingEscrowSettings,
   InIssuance,
