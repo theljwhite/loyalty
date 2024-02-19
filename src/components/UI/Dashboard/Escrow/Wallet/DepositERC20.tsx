@@ -7,19 +7,16 @@ import DashboardSimpleInputModal from "../../DashboardSimpleInputModal";
 import { CoinsOne } from "../../Icons";
 import useDepositRewards from "~/customHooks/useDepositRewards/useDepositRewards";
 import { useDepositRewardsStore } from "~/customHooks/useDepositRewards/store";
-import DepositReceipt from "./DepositReceipt";
-import { useEscrowContractRead } from "~/customHooks/useEscrowContractRead/useEscrowContractRead";
+import DashboardModalStatus from "../../DashboardModalStatus";
+import { ROUTE_DOCS_MAIN } from "~/configs/routes";
 
 //TODO - validate user connected to deployed loyalty program chain
 //prob need to make a global util for this
 
-//TODO 2/7 - this is unfinished btw
-
 export default function DepositERC20() {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState<boolean>(false);
-  const [isReceiptOpen, setIsReceiptOpen] = useState<boolean>(false);
 
-  const { isLoading, isSuccess, erc20DepositAmount, setERC20DepositAmount } =
+  const { isLoading, erc20DepositAmount, setERC20DepositAmount } =
     useDepositRewardsStore((state) => state);
 
   const router = useRouter();
@@ -48,7 +45,7 @@ export default function DepositERC20() {
   };
 
   const handleDeposit = async (): Promise<void> => {
-    //this is unfinished;
+    setIsDepositModalOpen(false);
     await depositERC20();
   };
 
@@ -93,7 +90,15 @@ export default function DepositERC20() {
           setIsModalOpen={setIsDepositModalOpen}
         />
       )}
-      {isReceiptOpen && <DepositReceipt setIsReceiptOpen={setIsReceiptOpen} />}
+      {isLoading && (
+        <DashboardModalStatus
+          title="Processing deposit"
+          description="Please idle while your transaction is processed"
+          helpMsg="Need help with depositing?"
+          helpLink={ROUTE_DOCS_MAIN}
+          status="loading"
+        />
+      )}
     </>
   );
 }

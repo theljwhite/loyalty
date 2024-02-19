@@ -9,6 +9,11 @@ import DepositERC20 from "./DepositERC20";
 import DepositERC721 from "./DepositERC721";
 import DepositERC1155 from "./DepositERC1155";
 import { EthIcon, SortIcon } from "../../Icons";
+import {
+  DashboardLoadingSpinner,
+  DataTableSpinner,
+} from "~/components/UI/Misc/Spinners";
+import { getElapsedTime } from "~/constants/timeAndDate";
 
 export default function EscrowTransactionsTable() {
   const router = useRouter();
@@ -20,7 +25,9 @@ export default function EscrowTransactionsTable() {
     { refetchOnWindowFocus: false },
   );
 
-  const { transactionList } = useDepositRewardsStore((state) => state);
+  const { transactionList, txListLoading } = useDepositRewardsStore(
+    (state) => state,
+  );
 
   const { getWalletERC20Transfers, getWalletTransactionsVerbose } =
     useDepositRewards(
@@ -34,8 +41,8 @@ export default function EscrowTransactionsTable() {
   // }, []);
 
   const fetchTransactions = async (): Promise<void> => {
-    await getWalletTransactionsVerbose();
-    await getWalletERC20Transfers();
+    const walletTransactions = await getWalletTransactionsVerbose();
+    const walletERC20Transfers = await getWalletERC20Transfers();
   };
 
   return (
@@ -105,6 +112,9 @@ export default function EscrowTransactionsTable() {
                   Type
                 </th>
                 <th className="table-cell border-b border-dashboard-border1 py-3 pe-6 ps-6 text-start text-xs capitalize leading-4">
+                  Age
+                </th>
+                <th className="table-cell border-b border-dashboard-border1 py-3 pe-6 ps-6 text-start text-xs capitalize leading-4">
                   From
                 </th>
                 <th className="table-cell border-b border-dashboard-border1 py-3 pe-6 ps-6 text-start text-xs capitalize leading-4">
@@ -116,10 +126,25 @@ export default function EscrowTransactionsTable() {
               </tr>
             </thead>
             <tbody className="table-row-group align-middle">
-              {transactionList.length == 0 && (
+              {txListLoading ? (
                 <tr className="table-row">
                   <td
-                    colSpan={4}
+                    colSpan={5}
+                    className="table-cell border-b border-dashboard-border1 py-4 pe-6 ps-6 text-start leading-5 text-dashboard-lightGray"
+                  >
+                    <div className="flex">
+                      <div className="flex w-full justify-center">
+                        <span className="text-center text-xs font-normal leading-[1.125rem] text-black opacity-65">
+                          <DashboardLoadingSpinner size={40} />
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ) : transactionList.length == 0 ? (
+                <tr className="table-row">
+                  <td
+                    colSpan={5}
                     className="table-cell border-b border-dashboard-border1 py-4 pe-6 ps-6 text-start leading-5 text-dashboard-lightGray"
                   >
                     <div className="flex">
@@ -131,49 +156,59 @@ export default function EscrowTransactionsTable() {
                     </div>
                   </td>
                 </tr>
+              ) : (
+                transactionList.slice(0, 10).map((tx, index) => {
+                  return (
+                    <tr key={index} className="table-row">
+                      <td className="rounded-y-md whitespace-nowrap py-4 pe-6 ps-6 text-start text-[13px] font-normal leading-5">
+                        <div className="flex">
+                          <div className="flex items-center">
+                            <p className="line-clamp-1 overflow-hidden text-ellipsis text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
+                              {tx.type}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className=" whitespace-nowrap py-4 pe-6 ps-6 text-start text-[13px] font-normal leading-5">
+                        <div className="flex">
+                          <div className="flex items-center">
+                            <p className="line-clamp-1 overflow-hidden text-ellipsis text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
+                              {getElapsedTime(tx.time, new Date())}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="rounded-y-md whitespace-nowrap py-4 pe-6 ps-6 text-start text-[13px] font-normal leading-5">
+                        <div className="flex">
+                          <div className="flex items-center">
+                            <p className="line-clamp-1 overflow-hidden text-ellipsis text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
+                              {shortenEthereumAddress(tx.from ?? "", 8, 8)}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="rounded-y-md whitespace-nowrap py-4 pe-6 ps-6 text-start text-[13px] font-normal leading-5">
+                        <div className="flex">
+                          <div className="flex items-center">
+                            <p className="line-clamp-1 overflow-hidden text-ellipsis text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
+                              {shortenEthereumAddress(tx.to ?? "", 8, 8)}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="rounded-y-md whitespace-nowrap py-4 pe-6 ps-6 text-start text-[13px] font-normal leading-5">
+                        <div className="flex">
+                          <div className="flex items-center">
+                            <p className="line-clamp-1 overflow-hidden text-ellipsis text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
+                              {tx.amount}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
-              {transactionList.map((tx, index) => {
-                return (
-                  <tr key={index} className="table-row">
-                    <td className="rounded-y-md whitespace-nowrap py-4 pe-6 ps-6 text-start text-[13px] font-normal leading-5">
-                      <div className="flex">
-                        <div className="flex items-center">
-                          <p className="line-clamp-1 overflow-hidden text-ellipsis text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
-                            {tx.type}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="rounded-y-md whitespace-nowrap py-4 pe-6 ps-6 text-start text-[13px] font-normal leading-5">
-                      <div className="flex">
-                        <div className="flex items-center">
-                          <p className="line-clamp-1 overflow-hidden text-ellipsis text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
-                            {shortenEthereumAddress(tx.from ?? "", 8, 8)}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="rounded-y-md whitespace-nowrap py-4 pe-6 ps-6 text-start text-[13px] font-normal leading-5">
-                      <div className="flex">
-                        <div className="flex items-center">
-                          <p className="line-clamp-1 overflow-hidden text-ellipsis text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
-                            {shortenEthereumAddress(tx.to ?? "", 8, 8)}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="rounded-y-md whitespace-nowrap py-4 pe-6 ps-6 text-start text-[13px] font-normal leading-5">
-                      <div className="flex">
-                        <div className="flex items-center">
-                          <p className="line-clamp-1 overflow-hidden text-ellipsis text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
-                            {tx.amount}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
             </tbody>
           </table>
         </div>

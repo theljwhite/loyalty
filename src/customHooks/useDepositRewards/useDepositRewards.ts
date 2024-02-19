@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { allMoralisEvmChains } from "~/configs/moralis";
 import {
   type GetWalletTokenTransfersJSONResponse,
@@ -9,10 +10,15 @@ import { fetchBalance, fetchToken } from "wagmi/actions";
 import Moralis from "moralis";
 import { type FetchTokenResult } from "wagmi/actions";
 import { useAccount, useContractWrite, useWaitForTransaction } from "wagmi";
-import { decodeBytes32String, parseUnits } from "ethers";
+import { parseUnits } from "ethers";
 import { useEscrowAbi } from "../useContractAbi/useContractAbi";
 import { useDepositRewardsStore } from "./store";
-import { toastLoading } from "~/components/UI/Toast/Toast";
+import {
+  toastSuccess,
+  toastLoading,
+  toastError,
+  dismissToast,
+} from "~/components/UI/Toast/Toast";
 
 //TODO - this is unfinished and may need some reformatting to clean up a bit.
 //but for the first pass, it should work for now.
@@ -42,16 +48,26 @@ export default function useDepositRewards(
     setTxListLoading,
   } = useDepositRewardsStore((state) => state);
 
-  const { data: erc20DepositData, write: depositERC20ToContract } =
-    useContractWrite({
-      address: escrowAddress as `0x${string}`,
-      abi: erc20Abi,
-      functionName: "depositBudget",
-      args: [],
-    });
+  const {
+    data: erc20DepositData,
+    write: depositERC20ToContract,
+    error: erc20DepositWriteErrror,
+  } = useContractWrite({
+    address: escrowAddress as `0x${string}`,
+    abi: erc20Abi,
+    functionName: "depositBudget",
+    args: [],
+  });
+
+  useEffect(() => {
+    if (erc20DepositWriteErrror) {
+      handleDepositErrors(erc20DepositWriteErrror);
+    }
+  }, [erc20DepositWriteErrror]);
 
   const depositERC20 = async (): Promise<void> => {
     setIsLoading(true);
+    toastLoading("Request sent to wallet.");
     const balanceError = await checkUserERC20Balance();
     if (!balanceError) {
       try {
@@ -78,8 +94,12 @@ export default function useDepositRewards(
           });
           setIsLoading(false);
           setIsSuccess(true);
+          dismissToast();
+
+          toastSuccess("Deposit was successful.");
         }
       } catch (error) {
+        setIsLoading(false);
         setError(JSON.stringify(error).slice(0, 50));
       }
     }
@@ -111,6 +131,7 @@ export default function useDepositRewards(
       else {
         errorMessage = "Insufficient balance";
         setError(errorMessage);
+        toastError("Your token balance is insufficient for specified amount.");
         return errorMessage;
       }
     } catch (error) {
@@ -179,6 +200,7 @@ export default function useDepositRewards(
         });
 
         setTransactionList(formattedTransactions);
+        setTxListLoading(false);
         return relevantTransactions;
       }
     } catch (error) {
@@ -219,6 +241,16 @@ export default function useDepositRewards(
             transfer.from_address === userConnectedAddress?.toLowerCase() &&
             transfer.to_address === escrowAddress.toLowerCase(),
         );
+
+        const formattedTransfers = transfers.map((tx) => ({
+          to: tx.to_address,
+          from: tx.from_address,
+          amount: tx.value,
+          type: "DEPOSIT" as TransactionItemType,
+          time: new Date(tx.block_timestamp),
+        }));
+        // setTransactionList(formattedTransfers);
+
         return transfers;
       }
     } catch (error) {
@@ -240,9 +272,18 @@ export default function useDepositRewards(
     else return undefined;
   };
 
+  const handleDepositErrors = (error: Error): void => {
+    const errorMessage = error.message.toLowerCase();
+    let toastErrorMessage: string = "";
+    if (errorMessage.includes("insufficient allowance")) {
+      toastErrorMessage = "Insufficient allowance for reward token";
+    }
+
+    toastError(toastErrorMessage);
+  };
+
   return {
     depositERC20,
-
     getWalletERC20Transfers,
     getWalletTransactionsVerbose,
   };

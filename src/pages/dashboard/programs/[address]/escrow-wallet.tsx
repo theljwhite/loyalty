@@ -78,7 +78,7 @@ const EscrowWallet: NextPage = () => {
           <DashboardCopyDataBox
             title="Your Escrow Contract Address"
             description={`Your escrow contract address, deployed on ${contractsDb.loyaltyProgram?.chain}.`}
-            copyBoxLabel="Escrow ContractAddress"
+            copyBoxLabel="Escrow Contract Address"
             dataToCopy={contractsDb?.escrow?.address ?? ""}
             copySuccessMessage="Copied escrow address"
             containerBg="bg-neutral-2"

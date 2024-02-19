@@ -59,7 +59,7 @@ export interface DepositRewardsState {
 export const useDepositRewardsStore = create<DepositRewardsState>((set) => {
   const initialState = {
     isLoading: false,
-    isSuccess: false,
+    isSuccess: true,
     error: "",
     erc20DepositAmount: "",
     erc721DepositAmount: 0,
