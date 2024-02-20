@@ -9,7 +9,12 @@ import { type TransactionItemType } from "./store";
 import { fetchBalance, fetchToken } from "wagmi/actions";
 import Moralis from "moralis";
 import { type FetchTokenResult } from "wagmi/actions";
-import { useAccount, useContractWrite, useWaitForTransaction } from "wagmi";
+import {
+  useAccount,
+  useContractRead,
+  useContractWrite,
+  useWaitForTransaction,
+} from "wagmi";
 import { parseUnits } from "ethers";
 import { useEscrowAbi } from "../useContractAbi/useContractAbi";
 import { useDepositRewardsStore } from "./store";
@@ -19,14 +24,10 @@ import {
   toastError,
   dismissToast,
 } from "~/components/UI/Toast/Toast";
+import { erc20ABI as standardERC20Abi } from "wagmi";
 
 //TODO - this is unfinished and may need some reformatting to clean up a bit.
 //but for the first pass, it should work for now.
-//can get rid of the arguments in the hook with additional DB fetches
-//from this hook instead of passing the values in elsewhere.
-//(probably wont even require an extra call due to query caching)
-
-//2-7 working on this and the entire Escrow > Wallet > Deposit flow
 
 export default function useDepositRewards(
   rewardAddress: string,
@@ -38,19 +39,45 @@ export default function useDepositRewards(
 
   const {
     erc20DepositAmount,
-    transactionList,
-    setIsLoading,
     setIsSuccess,
     setError,
     setDepositReceipt,
+    setIsDepositReceiptOpen,
     setTransactionList,
     setTxListError,
     setTxListLoading,
   } = useDepositRewardsStore((state) => state);
 
+  const { data: allowance } = useContractRead({
+    address: rewardAddress as `0x${string}`,
+    abi: standardERC20Abi,
+    functionName: "allowance",
+    args: [
+      userConnectedAddress as `0x${string}`,
+      escrowAddress as `0x${string}`,
+    ],
+  });
+
+  const {
+    data: approveData,
+    write: approve,
+    error: approveError,
+  } = useContractWrite({
+    address: rewardAddress as `0x${string}`,
+    abi: standardERC20Abi,
+    functionName: "approve",
+  });
+
+  const { data: approveReceipt } = useWaitForTransaction({
+    hash: approveData ? approveData.hash : undefined,
+    enabled: Boolean(approveData),
+  });
+
   const {
     data: erc20DepositData,
     write: depositERC20ToContract,
+    isSuccess: erc20DepositSuccess,
+    isLoading: erc20DepositLoading,
     error: erc20DepositWriteErrror,
   } = useContractWrite({
     address: escrowAddress as `0x${string}`,
@@ -59,15 +86,73 @@ export default function useDepositRewards(
     args: [],
   });
 
+  const { data: depositERC20Receipt } = useWaitForTransaction({
+    hash: erc20DepositData ? erc20DepositData.hash : undefined,
+    enabled: Boolean(erc20DepositData),
+  });
+
   useEffect(() => {
+    if (erc20DepositLoading) {
+      dismissToast();
+    }
     if (erc20DepositWriteErrror) {
       handleDepositErrors(erc20DepositWriteErrror);
     }
-  }, [erc20DepositWriteErrror]);
+    if (erc20DepositData && erc20DepositSuccess) {
+      toastSuccess("Your deposit was successful.");
+      setIsSuccess(true);
+    }
+    if (depositERC20Receipt) {
+      setDepositReceipt({
+        hash: depositERC20Receipt.transactionHash,
+        gasUsed: depositERC20Receipt.gasUsed,
+        gasPrice: depositERC20Receipt.effectiveGasPrice,
+      });
+      setIsDepositReceiptOpen(true);
+    }
+  }, [
+    erc20DepositWriteErrror,
+    erc20DepositData,
+    erc20DepositSuccess,
+    erc20DepositLoading,
+    depositERC20Receipt,
+  ]);
+
+  useEffect(() => {
+    if (approveReceipt) {
+      dismissToast();
+      depositERC20();
+    }
+    if (approveError) {
+      handleDepositErrors(approveError);
+    }
+  }, [approveReceipt, approveError]);
+
+  const handleApproveAndDeposit = async (): Promise<void> => {
+    try {
+      const tokenInfo: FetchTokenResult = await fetchToken({
+        address: rewardAddress as `0x${string}`,
+        chainId: deployedChainId,
+      });
+      const formattedDepositAmount: bigint = parseUnits(
+        erc20DepositAmount,
+        tokenInfo.decimals,
+      );
+      if (allowance && allowance >= formattedDepositAmount) {
+        await depositERC20();
+      } else {
+        toastLoading("Approve escrow to manage your reward tokens.", true);
+        approve({
+          args: [escrowAddress as `0x${string}`, formattedDepositAmount],
+        });
+      }
+    } catch (error) {
+      handleDepositErrors(error as Error);
+    }
+  };
 
   const depositERC20 = async (): Promise<void> => {
-    setIsLoading(true);
-    toastLoading("Request sent to wallet.");
+    toastLoading("Deposit request sent to wallet", true);
     const balanceError = await checkUserERC20Balance();
     if (!balanceError) {
       try {
@@ -79,27 +164,11 @@ export default function useDepositRewards(
           erc20DepositAmount,
           tokenInfo.decimals,
         );
+
         depositERC20ToContract({
           args: [formattedDepositAmount, rewardAddress],
         });
-        const depositTransaction = useWaitForTransaction({
-          hash: erc20DepositData?.hash,
-        });
-
-        if (depositTransaction.isSuccess) {
-          setDepositReceipt({
-            hash: depositTransaction.data?.transactionHash as string,
-            gasUsed: depositTransaction.data?.gasUsed ?? BigInt(0),
-            gasPrice: depositTransaction.data?.effectiveGasPrice ?? BigInt(0),
-          });
-          setIsLoading(false);
-          setIsSuccess(true);
-          dismissToast();
-
-          toastSuccess("Deposit was successful.");
-        }
       } catch (error) {
-        setIsLoading(false);
         setError(JSON.stringify(error).slice(0, 50));
       }
     }
@@ -216,6 +285,7 @@ export default function useDepositRewards(
   const getWalletERC20Transfers = async (): Promise<
     GetWalletTokenTransfersJSONResponse["result"] | undefined
   > => {
+    //TODO - unfinished
     try {
       const evmChain = findIfMoralisEvmChain();
       if (!evmChain) {
@@ -278,13 +348,19 @@ export default function useDepositRewards(
     if (errorMessage.includes("insufficient allowance")) {
       toastErrorMessage = "Insufficient allowance for reward token";
     }
+    if (errorMessage.includes("user rejected the request")) {
+      toastErrorMessage = "You rejected the wallet request";
+    }
 
-    toastError(toastErrorMessage);
+    toastError(
+      toastErrorMessage ?? "Error depositing. Please try again later.",
+    );
   };
 
   return {
     depositERC20,
     getWalletERC20Transfers,
     getWalletTransactionsVerbose,
+    handleApproveAndDeposit,
   };
 }

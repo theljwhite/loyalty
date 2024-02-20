@@ -41,6 +41,7 @@ export interface DepositRewardsState {
   txListLoading: boolean;
   txListError: string;
   txListSuccess: boolean;
+  isDepositReceiptOpen: boolean;
   setIsLoading: (isLoading: boolean) => void;
   setIsSuccess: (isSuccess: boolean) => void;
   setError: (error: string) => void;
@@ -54,12 +55,13 @@ export interface DepositRewardsState {
   setTxListLoading: (txListLoading: boolean) => void;
   setTxListError: (txListError: string) => void;
   setTxListSuccess: (txListSuccess: boolean) => void;
+  setIsDepositReceiptOpen: (isDepositReceiptOpen: boolean) => void;
 }
 
 export const useDepositRewardsStore = create<DepositRewardsState>((set) => {
   const initialState = {
     isLoading: false,
-    isSuccess: true,
+    isSuccess: false,
     error: "",
     erc20DepositAmount: "",
     erc721DepositAmount: 0,
@@ -75,6 +77,7 @@ export const useDepositRewardsStore = create<DepositRewardsState>((set) => {
     txListLoading: false,
     txListError: "",
     txListSuccess: false,
+    isDepositReceiptOpen: false,
   };
 
   return {
@@ -98,5 +101,7 @@ export const useDepositRewardsStore = create<DepositRewardsState>((set) => {
     setTxListLoading: (txListLoading: boolean) => set({ txListLoading }),
     setTxListError: (txListError: string) => set({ txListError }),
     setTxListSuccess: (txListSuccess: boolean) => set({ txListSuccess }),
+    setIsDepositReceiptOpen: (isDepositReceiptOpen: boolean) =>
+      set({ isDepositReceiptOpen }),
   };
 });

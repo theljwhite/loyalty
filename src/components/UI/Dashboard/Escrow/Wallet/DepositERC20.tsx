@@ -8,16 +8,21 @@ import { CoinsOne } from "../../Icons";
 import useDepositRewards from "~/customHooks/useDepositRewards/useDepositRewards";
 import { useDepositRewardsStore } from "~/customHooks/useDepositRewards/store";
 import DashboardModalStatus from "../../DashboardModalStatus";
-import { ROUTE_DOCS_MAIN } from "~/configs/routes";
+import DashboardSummaryTable from "../../DashboardSummaryTable";
 
 //TODO - validate user connected to deployed loyalty program chain
 //prob need to make a global util for this
 
 export default function DepositERC20() {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState<boolean>(false);
-
-  const { isLoading, erc20DepositAmount, setERC20DepositAmount } =
-    useDepositRewardsStore((state) => state);
+  const {
+    isSuccess,
+    isDepositReceiptOpen,
+    erc20DepositAmount,
+    depositReceipt,
+    setERC20DepositAmount,
+    setIsDepositReceiptOpen,
+  } = useDepositRewardsStore((state) => state);
 
   const router = useRouter();
   const { address: loyaltyAddress } = router.query;
@@ -31,7 +36,7 @@ export default function DepositERC20() {
     },
     { refetchOnWindowFocus: false },
   );
-  const { depositERC20 } = useDepositRewards(
+  const { handleApproveAndDeposit } = useDepositRewards(
     contractsDb?.escrow?.rewardAddress ?? "",
     contractsDb?.escrow?.address ?? "",
     contractsDb?.loyaltyProgram?.chainId ?? 0,
@@ -46,7 +51,7 @@ export default function DepositERC20() {
 
   const handleDeposit = async (): Promise<void> => {
     setIsDepositModalOpen(false);
-    await depositERC20();
+    await handleApproveAndDeposit();
   };
 
   return (
@@ -90,13 +95,23 @@ export default function DepositERC20() {
           setIsModalOpen={setIsDepositModalOpen}
         />
       )}
-      {isLoading && (
+      {isSuccess && isDepositReceiptOpen && (
         <DashboardModalStatus
-          title="Processing deposit"
-          description="Please idle while your transaction is processed"
-          helpMsg="Need help with depositing?"
-          helpLink={ROUTE_DOCS_MAIN}
-          status="loading"
+          title="Deposit successful"
+          description="Your ERC20 deposit into escrow contract was successful."
+          status="success"
+          setIsModalOpen={setIsDepositReceiptOpen}
+          additionalStyling={
+            <DashboardSummaryTable
+              title="Transaction details"
+              dataObj={{
+                hash: depositReceipt.hash,
+                gasCost: depositReceipt.gasPrice.toString(),
+                gasUsed: depositReceipt.gasUsed.toString(),
+                depositedAmount: erc20DepositAmount,
+              }}
+            />
+          }
         />
       )}
     </>

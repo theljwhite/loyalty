@@ -94,11 +94,31 @@ export function useEscrowContractRead(
     }
   };
 
+  //ERC20 escrow specific calls
+  const getERC20EscrowBalance = async (): Promise<number> => {
+    try {
+      const escrowBalance = (await readContract({
+        ...escrowContractConfig,
+        functionName: "lookupEscrowBalance",
+      })) as number;
+
+      return escrowBalance;
+    } catch (error) {
+      setReadContractError(JSON.stringify(error).slice(0, 50));
+      return 0;
+    }
+  };
+
+  //ERC721 escrow specific calls - TODO
+
+  //ERC1155 escrow specific calls - TODO
+
   return {
     getEscrowState,
     isSenderApproved,
     isERC20TokenApproved,
     isCollectionApproved,
+    getERC20EscrowBalance,
     readContractError,
   };
 }
