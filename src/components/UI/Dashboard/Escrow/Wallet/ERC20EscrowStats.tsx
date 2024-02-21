@@ -34,7 +34,7 @@ export default function ERC20EscrowStats() {
   const [erc20BalanceDisplay, setERC20BalanceDisplay] = useState<
     number | string
   >("");
-  const { isSuccess } = useDepositRewardsStore((state) => state);
+  const { isSuccess: depositSucces } = useDepositRewardsStore((state) => state);
 
   const router = useRouter();
   const { address: loyaltyAddress } = router.query;
@@ -51,9 +51,9 @@ export default function ERC20EscrowStats() {
   );
 
   useEffect(() => {
-    //TODO - make this refetch on deposit success
+    //TODO - ensure refetch on deposit success
     fetchEscrowBalance();
-  }, []);
+  }, [depositSucces]);
 
   const fetchEscrowBalance = async (): Promise<void> => {
     const erc20ContractBalance = await getERC20EscrowBalance();
@@ -69,9 +69,9 @@ export default function ERC20EscrowStats() {
       />
       <StatsCard
         title="Deposit Period"
-        info={"Deposit period active until"}
+        info={"Deposit period is active until"}
         stat={
-          `${data?.escrow?.depositEndDate?.toLocaleDateString()} at ${data?.escrow?.depositEndDate?.toLocaleTimeString()}` ??
+          `${data?.escrow?.depositEndDate?.toLocaleTimeString()} on ${data?.escrow?.depositEndDate?.toLocaleDateString()}` ??
           ""
         }
       />

@@ -44,6 +44,9 @@ Experimenting with lighter Dashboard colors:
 Other Stuff (Unfinished):
 ![Set Deposit Period](https://i.ibb.co/0QK2vVT/deposit-Period.png)
 
+Escrow Wallet (Unfinished):
+![Escrow Wallet Unfinished](https://i.ibb.co/yVDR4S7/escrow-Wallet1.png)
+
 ...etc (will update with more screenshots)
 
 This app utilizes Prisma, TRPC, Tailwind, Ethers, Wagmi, RainbowKit, and more.

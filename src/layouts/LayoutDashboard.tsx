@@ -21,6 +21,7 @@ import {
   ROUTE_DASHBOARD_TIERS,
   ROUTE_DASHBOARD_ESCROW_OVERVIEW,
   ROUTE_DASHBOARD_ESCROW_SETTINGS,
+  ROUTE_DASHBOARD_ESCROW_WALLET,
   ROUTE_DASHBOARD_USER_COMPLETION,
   ROUTE_DASHBOARD_USER_POINTS,
   ROUTE_DASHBOARD_USER_REWARDS,
@@ -173,36 +174,42 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
     },
     {
       id: 7,
+      label: "Escrow Wallet",
+      href: "TODO Fix paths",
+      icon: <WalletIcon size={16} color="currentColor" />,
+    },
+    {
+      id: 8,
       label: "Escrow Settings",
       href: ROUTE_DASHBOARD_ESCROW_SETTINGS,
       icon: <SettingsOne size={16} color="currentColor" />,
     },
     {
-      id: 8,
+      id: 9,
       label: "User Objectives",
       href: ROUTE_DASHBOARD_USER_COMPLETION,
       icon: <ChecklistIcon size={16} color="currentColor" />,
     },
     {
-      id: 9,
+      id: 10,
       label: "User Points",
       href: ROUTE_DASHBOARD_USER_POINTS,
       icon: <PointsIcon size={16} color="currentColor" />,
     },
     {
-      id: 10,
+      id: 11,
       label: "User Rewards",
       href: ROUTE_DASHBOARD_USER_REWARDS,
       icon: <CoinsOne size={16} color="currentColor" />,
     },
     {
-      id: 11,
+      id: 12,
       label: "API Keys",
       href: ROUTE_DASHBOARD_API_KEY,
       icon: <KeyIcon size={16} color="currentColor" />,
     },
     {
-      id: 12,
+      id: 13,
       label: "Domains",
       href: ROUTE_DASHBOARD_DOMAINS,
       icon: <DomainIcon size={16} color="currentColor" />,
@@ -345,7 +352,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                 <div className="space-y-2 px-3">
                   <span className={sectionNameClass}>Loyalty Program</span>
                   <div className="space-y-xs">
-                    {navLinks.slice(3, 8).map((link) => {
+                    {navLinks.slice(3, 9).map((link) => {
                       return (
                         <NavLink
                           key={link.id}
@@ -360,7 +367,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                 <div className="space-y-2 px-3">
                   <span className={sectionNameClass}>Program Users</span>
                   <div className="space-y-xs">
-                    {navLinks.slice(8, 11).map((link) => {
+                    {navLinks.slice(9, 11).map((link) => {
                       return (
                         <NavLink
                           key={link.id}
@@ -375,7 +382,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                 <div className="space-y-2 px-3">
                   <span className={sectionNameClass}>Developers</span>
                   <div className="space-y-xs">
-                    {navLinks.slice(11, 13).map((link) => {
+                    {navLinks.slice(11, 14).map((link) => {
                       return (
                         <NavLink
                           key={link.id}

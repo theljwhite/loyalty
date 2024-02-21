@@ -9,6 +9,8 @@ export const ROUTE_DASHBOARD_TIERS = "/dashboard/tiers";
 
 export const ROUTE_DASHBOARD_ESCROW_OVERVIEW = "/dashboard/escrow/overview";
 export const ROUTE_DASHBOARD_ESCROW_SETTINGS = "/dashboard/escrow/settings";
+export const ROUTE_DASHBOARD_ESCROW_WALLET = (loyaltyAddress: string) =>
+  `/dashboard/programs/${loyaltyAddress}/escrow-wallet`;
 
 export const ROUTE_DASHBOARD_USER_POINTS = "/dashboard/users/points";
 export const ROUTE_DASHBOARD_USER_REWARDS = "/dashboard/users/rewards";
