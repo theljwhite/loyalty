@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import { useEscrowContractRead } from "~/customHooks/useEscrowContractRead/useEscrowContractRead";
+import { useDepositRewardsStore } from "~/customHooks/useDepositRewards/store";
 
 type StatsCardProps = {
   title: string;
@@ -33,6 +34,8 @@ export default function ERC20EscrowStats() {
   const [erc20BalanceDisplay, setERC20BalanceDisplay] = useState<
     number | string
   >("");
+  const { isSuccess } = useDepositRewardsStore((state) => state);
+
   const router = useRouter();
   const { address: loyaltyAddress } = router.query;
   const { data } = api.escrow.getDepositRelatedData.useQuery(
@@ -48,11 +51,11 @@ export default function ERC20EscrowStats() {
   );
 
   useEffect(() => {
-    fetchStats();
+    //TODO - make this refetch on deposit success
+    fetchEscrowBalance();
   }, []);
 
-  const fetchStats = async (): Promise<void> => {
-    //TODO - other quick stats fetching here (number of users, etc);
+  const fetchEscrowBalance = async (): Promise<void> => {
     const erc20ContractBalance = await getERC20EscrowBalance();
     setERC20BalanceDisplay(erc20ContractBalance);
   };
@@ -61,13 +64,16 @@ export default function ERC20EscrowStats() {
     <div className="my-8 flex flex-row items-stretch gap-3">
       <StatsCard
         title="Escrow balance"
-        info="Balance of escrow contract"
+        info="ERC20 balance of escrow contract"
         stat={erc20BalanceDisplay}
       />
       <StatsCard
         title="Deposit Period"
         info={"Deposit period active until"}
-        stat={data?.escrow?.depositEndDate?.toLocaleDateString() ?? ""}
+        stat={
+          `${data?.escrow?.depositEndDate?.toLocaleDateString()} at ${data?.escrow?.depositEndDate?.toLocaleTimeString()}` ??
+          ""
+        }
       />
     </div>
   );

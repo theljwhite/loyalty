@@ -1,14 +1,11 @@
 import { useEffect } from "react";
 import { allMoralisEvmChains } from "~/configs/moralis";
-import {
-  type GetWalletTokenTransfersJSONResponse,
-  type EvmChain,
-  type GetWalletTransactionsVerboseJSONResponse,
-} from "moralis/common-evm-utils";
-import { type TransactionItemType } from "./store";
+import { type EvmChain } from "moralis/common-evm-utils";
+import { type TransactionsListItem, type TransactionItemType } from "./store";
 import { fetchBalance, fetchToken } from "wagmi/actions";
 import Moralis from "moralis";
 import { type FetchTokenResult } from "wagmi/actions";
+import { erc20ABI as standardERC20Abi } from "wagmi";
 import {
   useAccount,
   useContractRead,
@@ -24,7 +21,6 @@ import {
   toastError,
   dismissToast,
 } from "~/components/UI/Toast/Toast";
-import { erc20ABI as standardERC20Abi } from "wagmi";
 
 //TODO - this is unfinished and may need some reformatting to clean up a bit.
 //but for the first pass, it should work for now.
@@ -211,10 +207,8 @@ export default function useDepositRewards(
   };
 
   const getWalletTransactionsVerbose = async (): Promise<
-    GetWalletTransactionsVerboseJSONResponse["result"] | undefined
+    TransactionsListItem[] | undefined
   > => {
-    setTxListLoading(true);
-
     try {
       const evmChain = findIfMoralisEvmChain();
       if (!evmChain) {
@@ -263,14 +257,12 @@ export default function useDepositRewards(
             amount: tx.value,
             type: transactionType,
             time: new Date(tx.block_timestamp),
+            blockHash: tx.block_hash,
           };
-
           return transaction;
         });
 
-        setTransactionList(formattedTransactions);
-        setTxListLoading(false);
-        return relevantTransactions;
+        return formattedTransactions;
       }
     } catch (error) {
       setTxListError(
@@ -283,9 +275,8 @@ export default function useDepositRewards(
   };
 
   const getWalletERC20Transfers = async (): Promise<
-    GetWalletTokenTransfersJSONResponse["result"] | undefined
+    TransactionsListItem[] | undefined
   > => {
-    //TODO - unfinished
     try {
       const evmChain = findIfMoralisEvmChain();
       if (!evmChain) {
@@ -315,13 +306,13 @@ export default function useDepositRewards(
         const formattedTransfers = transfers.map((tx) => ({
           to: tx.to_address,
           from: tx.from_address,
-          amount: tx.value,
+          amount: tx.value_decimal as string,
           type: "DEPOSIT" as TransactionItemType,
           time: new Date(tx.block_timestamp),
+          blockHash: tx.block_hash,
         }));
-        // setTransactionList(formattedTransfers);
 
-        return transfers;
+        return formattedTransfers;
       }
     } catch (error) {
       setTxListError(
@@ -330,6 +321,27 @@ export default function useDepositRewards(
           50,
         )}`,
       );
+    }
+  };
+
+  const fetchAllERC20Transactions = async (): Promise<void> => {
+    setTxListLoading(true);
+    const walletTransactions = await getWalletTransactionsVerbose();
+    const walletERC20Transfers = await getWalletERC20Transfers();
+
+    if (walletTransactions && walletERC20Transfers) {
+      const filteredMatchingTransactions = walletTransactions.filter(
+        (walletTx) =>
+          !walletERC20Transfers.some(
+            (walletTransfer) => walletTx.blockHash === walletTransfer.blockHash,
+          ),
+      );
+      const combinedTransactions: TransactionsListItem[] = [
+        ...walletERC20Transfers,
+        ...filteredMatchingTransactions,
+      ];
+      setTxListLoading(false);
+      setTransactionList(combinedTransactions);
     }
   };
 
@@ -359,8 +371,7 @@ export default function useDepositRewards(
 
   return {
     depositERC20,
-    getWalletERC20Transfers,
-    getWalletTransactionsVerbose,
     handleApproveAndDeposit,
+    fetchAllERC20Transactions,
   };
 }

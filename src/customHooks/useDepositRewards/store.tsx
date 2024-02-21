@@ -25,6 +25,7 @@ export type TransactionsListItem = {
   amount: string | null;
   time: Date;
   type: TransactionItemType;
+  blockHash: string | null;
 };
 
 export interface DepositRewardsState {

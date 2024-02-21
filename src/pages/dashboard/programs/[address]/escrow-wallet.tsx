@@ -74,7 +74,7 @@ const EscrowWallet: NextPage = () => {
         />
       )}
 
-      {escrowApprovals?.allApprovalsComplete && contractsDb.escrow && (
+      {escrowApprovals?.isDepositKeySet && contractsDb.escrow && (
         <div className="space-y-8">
           <DashboardCopyDataBox
             title="Your Escrow Contract Address"

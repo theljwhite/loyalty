@@ -3,6 +3,7 @@ import { readContract } from "wagmi/actions";
 import { useEscrowAbi } from "../useContractAbi/useContractAbi";
 import { type EscrowType } from "@prisma/client";
 import { type Abi } from "viem";
+import { formatEther, parseUnits } from "ethers/utils";
 
 export enum EscrowStateReturn {
   Idle,
@@ -29,6 +30,20 @@ export function useEscrowContractRead(
   const escrowContract0_01Config = {
     address: escrowAddress as `0x${string}`,
     abi: abiVersion0_01 as Abi,
+  };
+
+  const getEscrowVersion = async (): Promise<string> => {
+    try {
+      const version = (await readContract({
+        ...escrowContractConfig,
+        functionName: "version",
+      })) as string;
+      console.log("version");
+      return version;
+    } catch (error) {
+      setReadContractError(JSON.stringify(error).slice(0, 50));
+      return "";
+    }
   };
 
   const getEscrowState = async (): Promise<string | undefined> => {
@@ -95,17 +110,18 @@ export function useEscrowContractRead(
   };
 
   //ERC20 escrow specific calls
-  const getERC20EscrowBalance = async (): Promise<number> => {
+  const getERC20EscrowBalance = async (): Promise<string> => {
     try {
       const escrowBalance = (await readContract({
         ...escrowContractConfig,
         functionName: "lookupEscrowBalance",
-      })) as number;
+      })) as bigint;
 
-      return escrowBalance;
+      const balanceToString = formatEther(escrowBalance);
+      return balanceToString;
     } catch (error) {
       setReadContractError(JSON.stringify(error).slice(0, 50));
-      return 0;
+      return "";
     }
   };
 
@@ -114,6 +130,7 @@ export function useEscrowContractRead(
   //ERC1155 escrow specific calls - TODO
 
   return {
+    getEscrowVersion,
     getEscrowState,
     isSenderApproved,
     isERC20TokenApproved,

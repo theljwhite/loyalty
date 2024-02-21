@@ -9,10 +9,7 @@ import DepositERC20 from "./DepositERC20";
 import DepositERC721 from "./DepositERC721";
 import DepositERC1155 from "./DepositERC1155";
 import { EthIcon, SortIcon } from "../../Icons";
-import {
-  DashboardLoadingSpinner,
-  DataTableSpinner,
-} from "~/components/UI/Misc/Spinners";
+import { DashboardLoadingSpinner } from "~/components/UI/Misc/Spinners";
 import { getElapsedTime } from "~/constants/timeAndDate";
 
 export default function EscrowTransactionsTable() {
@@ -29,20 +26,18 @@ export default function EscrowTransactionsTable() {
     (state) => state,
   );
 
-  const { getWalletERC20Transfers, getWalletTransactionsVerbose } =
-    useDepositRewards(
-      contractsDb?.escrow?.rewardAddress ?? "",
-      contractsDb?.escrow?.address ?? "",
-      contractsDb?.loyaltyProgram?.chainId ?? 0,
-    );
+  const { fetchAllERC20Transactions } = useDepositRewards(
+    contractsDb?.escrow?.rewardAddress ?? "",
+    contractsDb?.escrow?.address ?? "",
+    contractsDb?.loyaltyProgram?.chainId ?? 0,
+  );
 
-  // useEffect(() => {
-  //   fetchTransactions();
-  // }, []);
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
 
   const fetchTransactions = async (): Promise<void> => {
-    const walletTransactions = await getWalletTransactionsVerbose();
-    const walletERC20Transfers = await getWalletERC20Transfers();
+    await fetchAllERC20Transactions();
   };
 
   return (
