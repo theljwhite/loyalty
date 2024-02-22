@@ -157,6 +157,28 @@ export function useTokenBalances() {
     }
   };
 
+  const getNFTsByContract = async (
+    contractAddress: string,
+    evmChain: EvmChain,
+    limit?: number,
+  ): Promise<WalletNFT[] | null> => {
+    try {
+      runFetchBalanceChecks();
+      const response = await Moralis.EvmApi.nft.getContractNFTs({
+        chain: evmChain,
+        address: contractAddress,
+        format: "decimal",
+        limit,
+      });
+      const balance = response.result;
+      const formattedNfts = formatWalletNFTReturn(balance);
+      return formattedNfts;
+    } catch (error) {
+      setBalanceQueryError(handleError(error));
+      return null;
+    }
+  };
+
   const getNFTCollections = async (
     evmChain: EvmChain,
     limit?: number,
@@ -263,5 +285,6 @@ export function useTokenBalances() {
     getCommonChainNFTs,
     getNFTsByChain,
     getNFTCollections,
+    getNFTsByContract,
   };
 }

@@ -117,6 +117,8 @@ export function useEscrowContractRead(
         functionName: "lookupEscrowBalance",
       })) as bigint;
 
+      console.log("escrow balance -->", escrowBalance);
+
       const balanceToString = formatEther(escrowBalance);
       return balanceToString;
     } catch (error) {

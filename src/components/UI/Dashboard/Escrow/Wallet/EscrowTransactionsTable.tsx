@@ -35,6 +35,8 @@ export default function EscrowTransactionsTable() {
   );
 
   useEffect(() => {
+    //TODO - refetch on deposit success - wait a bit first so that
+    //results are updated?
     if (isConnected && address) {
       fetchTransactions();
     }

@@ -34,7 +34,9 @@ export default function ERC20EscrowStats() {
   const [erc20BalanceDisplay, setERC20BalanceDisplay] = useState<
     number | string
   >("");
-  const { isSuccess: depositSucces } = useDepositRewardsStore((state) => state);
+  const { isSuccess: depositSuccess } = useDepositRewardsStore(
+    (state) => state,
+  );
 
   const router = useRouter();
   const { address: loyaltyAddress } = router.query;
@@ -51,9 +53,10 @@ export default function ERC20EscrowStats() {
   );
 
   useEffect(() => {
-    //TODO - ensure refetch on deposit success
+    //TODO - refetch on deposit success - wait a bit first so that
+    //results are updated?
     fetchEscrowBalance();
-  }, [depositSucces]);
+  }, [depositSuccess]);
 
   const fetchEscrowBalance = async (): Promise<void> => {
     const erc20ContractBalance = await getERC20EscrowBalance();
