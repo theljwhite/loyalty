@@ -21,7 +21,6 @@ import {
 
 export function useDeployEscrow() {
   const {
-    escrowType,
     setError,
     setIsLoading,
     setIsSuccess,
@@ -29,6 +28,7 @@ export function useDeployEscrow() {
     setIsEscrowContractSetInLoyalty,
     setContractState,
   } = useDeployEscrowStore((state) => state);
+  const { escrowType } = useEscrowApprovalsStore((state) => state);
 
   const { rewardType, programEndsAt, deployLoyaltyData } =
     useDeployLoyaltyStore((state) => state);
@@ -85,7 +85,6 @@ export function useDeployEscrow() {
     } catch (e) {
       setError(error);
       handleErrorFlow(e, "Escrow contract could not be deployed");
-      console.log("error", error);
     }
   };
 

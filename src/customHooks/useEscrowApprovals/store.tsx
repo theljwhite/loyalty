@@ -21,7 +21,6 @@ export interface EscrowApprovalsState {
   isLoading: boolean;
   isSuccess: boolean;
   error: string;
-
   setEscrowType: (escrowType: EscrowType) => void;
   setSenderAddress: (senderAddress: string) => void;
   setRewardAddress: (rewardAddress: string) => void;

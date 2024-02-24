@@ -351,7 +351,7 @@ export default function useDepositRewards(
     );
 
     if (deployedEvmChain) return deployedEvmChain;
-    else return undefined;  
+    else return undefined;
   };
 
   const handleDepositErrors = (error: Error): void => {

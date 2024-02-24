@@ -12,19 +12,19 @@ import { copyTextToClipboard } from "~/helpers/copyTextToClipboard";
 import { NUMBERS_SEPARATED_BY_COMMAS_REGEX } from "~/constants/regularExpressions";
 import DashboardModalWrapper from "../../DashboardModalWrapper";
 import { ClipboardOne, CoinsOne, InfoIcon } from "../../Icons";
+import useDepositNFTRewards from "~/customHooks/useDepositRewards/useDepositNFTRewards";
 
 export default function DepositERC721() {
   const [rewardsNftBalance, setRewardsNftBalance] = useState<WalletNFT[]>([]);
   const [tokenIdsToCopy, setTokenIdsToCopy] = useState<string>("");
   const [tokenIdsEntry, setTokenIdsEntry] = useState<string>("");
   const [tokenIdsEntryError, setTokenIdsEntryError] = useState<string>("");
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState<boolean>(false);
 
   const router = useRouter();
   const { address: loyaltyAddress } = router.query;
-  const [isDepositModalOpen, setIsDepositModalOpen] = useState<boolean>(false);
   const { isConnected, address: userConnectedAddress } = useAccount();
   const { openConnectModal } = useConnectModal();
-
   const { getNFTsByContract } = useTokenBalances();
 
   const { data: contractsDb } = api.escrow.getDepositRelatedData.useQuery(
@@ -32,6 +32,12 @@ export default function DepositERC721() {
       loyaltyAddress: String(loyaltyAddress),
     },
     { refetchOnWindowFocus: false },
+  );
+
+  const { depositERC721 } = useDepositNFTRewards(
+    contractsDb?.escrow?.rewardAddress ?? "",
+    contractsDb?.escrow?.address ?? "",
+    contractsDb?.loyaltyProgram?.chainId ?? 0,
   );
 
   useEffect(() => {
@@ -89,6 +95,10 @@ export default function DepositERC721() {
 
   const onDepositClick = (): void => {
     validateTokenIdEntry(tokenIdsEntry);
+    const tokenIdsToDeposit = tokenIdsEntry.split(",");
+    if (contractsDb?.escrow?.depositKey) {
+      depositERC721(tokenIdsToDeposit, contractsDb?.escrow.depositKey);
+    }
   };
 
   const onTokenIdsInputChange = (
