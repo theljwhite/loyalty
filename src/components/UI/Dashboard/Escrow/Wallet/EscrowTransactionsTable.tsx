@@ -12,6 +12,7 @@ import DepositERC721 from "./DepositERC721";
 import DepositERC1155 from "./DepositERC1155";
 import { EthIcon, SortIcon } from "../../Icons";
 import { DashboardLoadingSpinner } from "~/components/UI/Misc/Spinners";
+import useDepositNFTRewards from "~/customHooks/useDepositRewards/useDepositNFTRewards";
 
 export default function EscrowTransactionsTable() {
   const { isConnected, address } = useAccount();
@@ -23,15 +24,24 @@ export default function EscrowTransactionsTable() {
     },
     { refetchOnWindowFocus: false },
   );
+  const rewardAddress = contractsDb?.escrow?.rewardAddress ?? "";
+  const escrowAddress = contractsDb?.escrow?.address ?? "";
+  const deployedChainId = contractsDb?.loyaltyProgram?.chainId ?? 0;
+  const escrowType = contractsDb?.escrow?.escrowType;
 
   const { transactionList, txListLoading } = useDepositRewardsStore(
     (state) => state,
   );
 
   const { fetchAllERC20Transactions } = useDepositRewards(
-    contractsDb?.escrow?.rewardAddress ?? "",
-    contractsDb?.escrow?.address ?? "",
-    contractsDb?.loyaltyProgram?.chainId ?? 0,
+    rewardAddress,
+    escrowAddress,
+    deployedChainId,
+  );
+  const { getNftDepositTransfers } = useDepositNFTRewards(
+    rewardAddress,
+    escrowAddress,
+    deployedChainId,
   );
 
   useEffect(() => {
@@ -43,7 +53,16 @@ export default function EscrowTransactionsTable() {
   }, [isConnected, address]);
 
   const fetchTransactions = async (): Promise<void> => {
-    await fetchAllERC20Transactions();
+    if (escrowType === "ERC20") {
+      await fetchAllERC20Transactions();
+    }
+    if (escrowType === "ERC721") {
+      //TODO fetch ERC721
+      await getNftDepositTransfers();
+    }
+    if (escrowType === "ERC1155") {
+      //TODO fetch ERC1155
+    }
   };
 
   return (
@@ -64,14 +83,12 @@ export default function EscrowTransactionsTable() {
               </div>
             </div>
             <div className="ml-auto">
-              {contractsDb?.escrow?.escrowType === "ERC20" ? (
+              {escrowType === "ERC20" ? (
                 <DepositERC20 />
-              ) : contractsDb?.escrow?.escrowType === "ERC721" ? (
+              ) : escrowType === "ERC721" ? (
                 <DepositERC721 />
               ) : (
-                contractsDb?.escrow?.escrowType === "ERC1155" && (
-                  <DepositERC1155 />
-                )
+                escrowType === "ERC1155" && <DepositERC1155 />
               )}
             </div>
           </div>

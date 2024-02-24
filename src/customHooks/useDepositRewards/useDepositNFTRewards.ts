@@ -4,6 +4,10 @@ import { useAccount } from "wagmi";
 import { erc721ABI as standardERC721Abi } from "wagmi";
 import { waitForTransaction, writeContract, readContract } from "wagmi/actions";
 import { encodeBytes32String } from "ethers";
+import Moralis from "moralis";
+import { type GetContractNFTsJSONResponse } from "moralis/common-evm-utils";
+import { type TransactionsListItem, type TransactionItemType } from "./store";
+import { zeroAddress } from "viem";
 
 export default function useDepositNFTRewards(
   rewardAddress: string,
@@ -18,6 +22,9 @@ export default function useDepositNFTRewards(
     setError,
     setDepositReceipt,
     setIsDepositReceiptOpen,
+    setTxListSuccess,
+    setTxListLoading,
+    setTxListError,
   } = useDepositRewardsStore((state) => state);
 
   const { abi: erc721EscrowAbi } = useEscrowAbi("ERC721");
@@ -98,10 +105,49 @@ export default function useDepositNFTRewards(
     }
   };
 
+  const getNftDepositTransfers = async (): Promise<
+    TransactionsListItem[] | undefined
+  > => {
+    try {
+      if (!Moralis.Core.isStarted) {
+        await Moralis.start({
+          apiKey: process.env.NEXT_PUBLIC_MORALIS_API_KEY,
+        });
+      }
+      const response = await Moralis.EvmApi.nft.getNFTContractTransfers({
+        chain: deployedChainId,
+        format: "decimal",
+        address: rewardAddress,
+      });
+
+      if (response) {
+        const results = response.toJSON();
+        results.result;
+        const transfersToEscrow = results.result.filter(
+          (transfer) =>
+            transfer.from_address === userConnectedAddress?.toLowerCase() &&
+            transfer.to_address === escrowAddress.toLowerCase(),
+        );
+        const formattedTransfers: TransactionsListItem[] =
+          transfersToEscrow.map((transfer) => ({
+            to: transfer.to_address,
+            from: transfer.from_address ?? "",
+            amount: transfer.token_id,
+            type: "DEPOSIT" as TransactionItemType,
+            time: new Date(transfer.block_timestamp),
+            blockHash: transfer.block_hash,
+          }));
+        return formattedTransfers;
+      }
+    } catch (error) {
+      setTxListError("Could not fetch NFT transfers - try again later.");
+    }
+  };
+
   const handleDepositErrors = (error: Error): void => {
     //TODO
     console.log("error from handle deposit errors -->", error);
   };
 
-  return { depositERC721 };
+  return { depositERC721, getNftDepositTransfers };
 }

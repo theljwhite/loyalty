@@ -5,14 +5,17 @@ import { api } from "~/utils/api";
 import { useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useTokenBalances } from "~/customHooks/useTokenBalances/useTokenBalances";
+import useDepositNFTRewards from "~/customHooks/useDepositRewards/useDepositNFTRewards";
+import { useDepositRewardsStore } from "~/customHooks/useDepositRewards/store";
 import { EvmChain } from "moralis/common-evm-utils";
 import { WalletNFT } from "~/customHooks/useTokenBalances/types";
 import { ROUTE_DOCS_MAIN } from "~/configs/routes";
 import { copyTextToClipboard } from "~/helpers/copyTextToClipboard";
 import { NUMBERS_SEPARATED_BY_COMMAS_REGEX } from "~/constants/regularExpressions";
 import DashboardModalWrapper from "../../DashboardModalWrapper";
+import DashboardModalStatus from "../../DashboardModalStatus";
+import DashboardSummaryTable from "../../DashboardSummaryTable";
 import { ClipboardOne, CoinsOne, InfoIcon } from "../../Icons";
-import useDepositNFTRewards from "~/customHooks/useDepositRewards/useDepositNFTRewards";
 
 export default function DepositERC721() {
   const [rewardsNftBalance, setRewardsNftBalance] = useState<WalletNFT[]>([]);
@@ -26,6 +29,8 @@ export default function DepositERC721() {
   const { isConnected, address: userConnectedAddress } = useAccount();
   const { openConnectModal } = useConnectModal();
   const { getNFTsByContract } = useTokenBalances();
+  const { depositReceipt, isDepositReceiptOpen, setIsDepositReceiptOpen } =
+    useDepositRewardsStore((state) => state);
 
   const { data: contractsDb } = api.escrow.getDepositRelatedData.useQuery(
     {
@@ -156,9 +161,6 @@ export default function DepositERC721() {
               </p>
             </header>
             <div className="flex-1 py-0 pe-6 ps-6">
-              {/* {bannerInfo && (
-              <DashboardInfoBanner infoType="info" info={bannerInfo} />
-            )} */}
               <div className="relative mt-6 w-full">
                 <div className="mb-6 flex w-full">
                   <div className="w-full">
@@ -301,6 +303,25 @@ export default function DepositERC721() {
             </footer>
           </>
         </DashboardModalWrapper>
+      )}
+      {isDepositReceiptOpen && (
+        <DashboardModalStatus
+          title="Deposit successful"
+          description="Your ERC20 deposit into escrow contract was successful."
+          status="success"
+          setIsModalOpen={setIsDepositReceiptOpen}
+          additionalStyling={
+            <DashboardSummaryTable
+              title="Transaction details"
+              dataObj={{
+                hash: depositReceipt.hash,
+                gasCost: depositReceipt.gasPrice.toString(),
+                gasUsed: depositReceipt.gasUsed.toString(),
+                depositedAmount: tokenIdsToCopy,
+              }}
+            />
+          }
+        />
       )}
     </>
   );
