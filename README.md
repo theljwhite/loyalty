@@ -47,6 +47,9 @@ Other Stuff (Unfinished):
 Escrow Wallet (Unfinished):
 ![Escrow Wallet Unfinished](https://i.ibb.co/yVDR4S7/escrow-Wallet1.png)
 
+Depositing Rewards (Unfinished):
+![Depositing Rewards Ufinished](https://i.ibb.co/Kmdz9zf/erc721-Deposit.png)
+
 ...etc (will update with more screenshots)
 
 This app utilizes Prisma, TRPC, Tailwind, Ethers, Wagmi, RainbowKit, and more.
