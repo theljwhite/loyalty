@@ -65,6 +65,31 @@ export const escrowRouter = createTRPCRouter({
 
       return escrow;
     }),
+  doDepositPeriodUpdate: protectedProcedure
+    .input(z.object({ escrowAddress: z.string(), depositEndDate: z.date() }))
+    .mutation(async ({ ctx, input }) => {
+      const { escrowAddress, depositEndDate } = input;
+
+      const updatedEscrow = await ctx.db.escrow.update({
+        where: { address: escrowAddress },
+        data: { state: "DepositPeriod", depositEndDate, isDepositKeySet: true },
+      });
+
+      return {
+        state: updatedEscrow.state,
+        depositEndDate: updatedEscrow.depositEndDate,
+      };
+    }),
+  updateEscrowState: protectedProcedure
+    .input(z.object({ escrowAddress: z.string(), newEscrowState: escrowState }))
+    .mutation(async ({ ctx, input }) => {
+      const { escrowAddress, newEscrowState } = input;
+      const updatedEscrowState = await ctx.db.escrow.update({
+        where: { address: escrowAddress },
+        data: { state: newEscrowState },
+      });
+      return updatedEscrowState.state;
+    }),
   getEscrowDepositKey: protectedProcedure
     .input(z.object({ loyaltyAddress: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -111,16 +136,6 @@ export const escrowRouter = createTRPCRouter({
       if (!escrow) throw new TRPCError({ code: "NOT_FOUND" });
       return escrow.state;
     }),
-  updateEscrowState: protectedProcedure
-    .input(z.object({ escrowAddress: z.string(), newEscrowState: escrowState }))
-    .mutation(async ({ ctx, input }) => {
-      const { escrowAddress, newEscrowState } = input;
-      const updatedEscrowState = await ctx.db.escrow.update({
-        where: { address: escrowAddress },
-        data: { state: newEscrowState },
-      });
-      return updatedEscrowState.state;
-    }),
   getDepositRelatedData: protectedProcedure
     .input(z.object({ loyaltyAddress: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -141,56 +156,5 @@ export const escrowRouter = createTRPCRouter({
       });
 
       return { escrow, loyaltyProgram };
-    }),
-  doApprovalsUpdate: protectedProcedure
-    .input(
-      z.object({
-        escrowAddress: z.string(),
-        rewardAddress: z.string().optional(),
-        senderAddress: z.string().optional(),
-        isSenderApproved: z.boolean().optional(),
-        isRewardApproved: z.boolean().optional(),
-        isDepositKeySet: z.boolean().optional(),
-        depositEndDate: z.date().optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const {
-        escrowAddress,
-        rewardAddress,
-        senderAddress,
-        isSenderApproved,
-        isRewardApproved,
-        isDepositKeySet,
-        depositEndDate,
-      } = input;
-
-      const existingApprovals = await ctx.db.escrow.findUnique({
-        where: { address: escrowAddress },
-        select: {
-          isRewardApproved: true,
-          isSenderApproved: true,
-          isDepositKeySet: true,
-        },
-      });
-
-      const allApprovalsComplete = Object.values(existingApprovals ?? {}).every(
-        (value) => value,
-      );
-
-      const updatedEscrow = await ctx.db.escrow.update({
-        where: { address: escrowAddress },
-        data: {
-          rewardAddress,
-          senderAddress,
-          isSenderApproved,
-          isRewardApproved,
-          isDepositKeySet,
-          depositEndDate,
-          state: allApprovalsComplete ? "DepositPeriod" : undefined,
-        },
-      });
-
-      return updatedEscrow;
     }),
 });

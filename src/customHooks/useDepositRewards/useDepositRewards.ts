@@ -1,29 +1,19 @@
-import { useEffect } from "react";
-import { allMoralisEvmChains } from "~/configs/moralis";
-import { type EvmChain } from "moralis/common-evm-utils";
 import { type TransactionsListItem, type TransactionItemType } from "./store";
 import { fetchBalance, fetchToken } from "wagmi/actions";
 import Moralis from "moralis";
 import { type FetchTokenResult } from "wagmi/actions";
 import { erc20ABI as standardERC20Abi } from "wagmi";
-import {
-  useAccount,
-  useContractRead,
-  useContractWrite,
-  useWaitForTransaction,
-} from "wagmi";
+import { useAccount } from "wagmi";
+import { waitForTransaction, writeContract, readContract } from "wagmi/actions";
 import { parseUnits } from "ethers";
+import { findIfMoralisEvmChain } from "~/configs/moralis";
 import { useEscrowAbi } from "../useContractAbi/useContractAbi";
 import { useDepositRewardsStore } from "./store";
 import {
-  toastSuccess,
   toastLoading,
   toastError,
   dismissToast,
 } from "~/components/UI/Toast/Toast";
-
-//TODO - this is unfinished and may need some reformatting to clean up a bit.
-//but for the first pass, it should work for now.
 
 export default function useDepositRewards(
   rewardAddress: string,
@@ -35,6 +25,7 @@ export default function useDepositRewards(
 
   const {
     erc20DepositAmount,
+    setIsLoading,
     setIsSuccess,
     setError,
     setDepositReceipt,
@@ -44,88 +35,18 @@ export default function useDepositRewards(
     setTxListLoading,
   } = useDepositRewardsStore((state) => state);
 
-  const { data: allowance } = useContractRead({
-    address: rewardAddress as `0x${string}`,
-    abi: standardERC20Abi,
-    functionName: "allowance",
-    args: [
-      userConnectedAddress as `0x${string}`,
-      escrowAddress as `0x${string}`,
-    ],
-  });
-
-  const {
-    data: approveData,
-    write: approve,
-    error: approveError,
-  } = useContractWrite({
-    address: rewardAddress as `0x${string}`,
-    abi: standardERC20Abi,
-    functionName: "approve",
-  });
-
-  const { data: approveReceipt } = useWaitForTransaction({
-    hash: approveData ? approveData.hash : undefined,
-    enabled: Boolean(approveData),
-  });
-
-  const {
-    data: erc20DepositData,
-    write: depositERC20ToContract,
-    isSuccess: erc20DepositSuccess,
-    isLoading: erc20DepositLoading,
-    error: erc20DepositWriteErrror,
-  } = useContractWrite({
-    address: escrowAddress as `0x${string}`,
-    abi: erc20Abi,
-    functionName: "depositBudget",
-    args: [],
-  });
-
-  const { data: depositERC20Receipt } = useWaitForTransaction({
-    hash: erc20DepositData ? erc20DepositData.hash : undefined,
-    enabled: Boolean(erc20DepositData),
-  });
-
-  useEffect(() => {
-    if (erc20DepositLoading) {
-      dismissToast();
-    }
-    if (erc20DepositWriteErrror) {
-      handleDepositErrors(erc20DepositWriteErrror);
-    }
-    if (erc20DepositData && erc20DepositSuccess) {
-      toastSuccess("Your deposit was successful.");
-      setIsSuccess(true);
-    }
-    if (depositERC20Receipt) {
-      setDepositReceipt({
-        hash: depositERC20Receipt.transactionHash,
-        gasUsed: depositERC20Receipt.gasUsed,
-        gasPrice: depositERC20Receipt.effectiveGasPrice,
-      });
-      setIsDepositReceiptOpen(true);
-    }
-  }, [
-    erc20DepositWriteErrror,
-    erc20DepositData,
-    erc20DepositSuccess,
-    erc20DepositLoading,
-    depositERC20Receipt,
-  ]);
-
-  useEffect(() => {
-    if (approveReceipt) {
-      dismissToast();
-      depositERC20();
-    }
-    if (approveError) {
-      handleDepositErrors(approveError);
-    }
-  }, [approveReceipt, approveError]);
-
   const handleApproveAndDeposit = async (): Promise<void> => {
+    setIsLoading(true);
     try {
+      const allowance = await readContract({
+        address: rewardAddress as `0x${string}`,
+        abi: standardERC20Abi,
+        functionName: "allowance",
+        args: [
+          userConnectedAddress as `0x${string}`,
+          escrowAddress as `0x${string}`,
+        ],
+      });
       const tokenInfo: FetchTokenResult = await fetchToken({
         address: rewardAddress as `0x${string}`,
         chainId: deployedChainId,
@@ -138,9 +59,21 @@ export default function useDepositRewards(
         await depositERC20();
       } else {
         toastLoading("Approve escrow to manage your reward tokens.", true);
-        approve({
+        const approveTx = await writeContract({
+          address: rewardAddress as `0x${string}`,
+          abi: standardERC20Abi,
+          functionName: "approve",
           args: [escrowAddress as `0x${string}`, formattedDepositAmount],
         });
+
+        const approveReceipt = await waitForTransaction({
+          hash: approveTx.hash,
+        });
+
+        if (approveReceipt.status === "success") {
+          dismissToast();
+          await depositERC20();
+        }
       }
     } catch (error) {
       handleDepositErrors(error as Error);
@@ -161,11 +94,30 @@ export default function useDepositRewards(
           tokenInfo.decimals,
         );
 
-        depositERC20ToContract({
+        const depositTx = await writeContract({
+          address: escrowAddress as `0x${string}`,
+          abi: erc20Abi,
+          functionName: "depositBudget",
           args: [formattedDepositAmount, rewardAddress],
         });
+
+        const depositReceipt = await waitForTransaction({
+          hash: depositTx.hash,
+        });
+
+        if (depositReceipt.status === "success") {
+          setDepositReceipt({
+            hash: depositReceipt.blockHash,
+            gasUsed: depositReceipt.gasUsed,
+            gasPrice: depositReceipt.effectiveGasPrice,
+          });
+          setIsLoading(false);
+          setIsSuccess(true);
+          setIsDepositReceiptOpen(true);
+          dismissToast();
+        }
       } catch (error) {
-        setError(JSON.stringify(error).slice(0, 50));
+        handleDepositErrors(error as Error);
       }
     }
   };
@@ -210,7 +162,7 @@ export default function useDepositRewards(
     TransactionsListItem[] | undefined
   > => {
     try {
-      const evmChain = findIfMoralisEvmChain();
+      const evmChain = findIfMoralisEvmChain(deployedChainId);
       if (!evmChain) {
         setTxListError(
           "Couldnt fetch transactions for deployed chain at this time",
@@ -278,7 +230,7 @@ export default function useDepositRewards(
     TransactionsListItem[] | undefined
   > => {
     try {
-      const evmChain = findIfMoralisEvmChain();
+      const evmChain = findIfMoralisEvmChain(deployedChainId);
       if (!evmChain) {
         setTxListError(
           "Couldnt fetch transactions for deployed chain at this time",
@@ -345,23 +297,23 @@ export default function useDepositRewards(
     }
   };
 
-  const findIfMoralisEvmChain = (): EvmChain | undefined => {
-    const deployedEvmChain = allMoralisEvmChains.find(
-      (chain) => Number(chain.hex) === deployedChainId,
-    );
-
-    if (deployedEvmChain) return deployedEvmChain;
-    else return undefined;
-  };
-
   const handleDepositErrors = (error: Error): void => {
     const errorMessage = error.message.toLowerCase();
+    const errorName = error.name;
+    const errorCause = error.cause;
     let toastErrorMessage: string = "";
+
     if (errorMessage.includes("insufficient allowance")) {
       toastErrorMessage = "Insufficient allowance for reward token";
     }
     if (errorMessage.includes("user rejected the request")) {
       toastErrorMessage = "You rejected the wallet request";
+    }
+    if (
+      errorName === "ContractFunctionExecutionError" &&
+      String(errorCause).includes("DepositPeriodNotActive")
+    ) {
+      toastErrorMessage = "Your escrow contract is not in its deposit period";
     }
 
     toastError(

@@ -60,7 +60,8 @@ export default function BeginDepositPeriod() {
       { loyaltyAddress: String(loyaltyAddress) },
       { refetchOnWindowFocus: false, enabled: Boolean(loyaltyAddress) },
     );
-  const { mutate: updateEscrowDb } = api.escrow.doApprovalsUpdate.useMutation();
+  const { mutate: doDepositPeriodUpdate } =
+    api.escrow.doDepositPeriodUpdate.useMutation();
 
   useEffect(() => {
     if (isLoading) {
@@ -68,9 +69,8 @@ export default function BeginDepositPeriod() {
     }
     if (isSuccess && escrowDetails) {
       toastSuccess("Deposit key set in contract and deposit period has begun.");
-      updateEscrowDb({
+      doDepositPeriodUpdate({
         escrowAddress: escrowDetails.escrowAddress,
-        isDepositKeySet: true,
         depositEndDate: depositPeriodEndsAt,
       });
     }
