@@ -7,6 +7,7 @@ import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useTokenBalances } from "~/customHooks/useTokenBalances/useTokenBalances";
 import useDepositNFTRewards from "~/customHooks/useDepositRewards/useDepositNFTRewards";
 import { useDepositRewardsStore } from "~/customHooks/useDepositRewards/store";
+import { useEscrowContractRead } from "~/customHooks/useEscrowContractRead/useEscrowContractRead";
 import { EvmChain } from "moralis/common-evm-utils";
 import { WalletNFT } from "~/customHooks/useTokenBalances/types";
 import { ROUTE_DOCS_MAIN } from "~/configs/routes";
@@ -16,7 +17,7 @@ import DashboardModalWrapper from "../../DashboardModalWrapper";
 import DashboardModalStatus from "../../DashboardModalStatus";
 import DashboardSummaryTable from "../../DashboardSummaryTable";
 import { ClipboardOne, CoinsOne, InfoIcon } from "../../Icons";
-import { useEscrowContractRead } from "~/customHooks/useEscrowContractRead/useEscrowContractRead";
+import { findIfMoralisEvmChain } from "~/configs/moralis";
 
 export default function DepositERC721() {
   const [rewardsNftBalance, setRewardsNftBalance] = useState<WalletNFT[]>([]);
@@ -38,6 +39,7 @@ export default function DepositERC721() {
     isSuccess,
     setIsDepositReceiptOpen,
     setERC721DepositAmount,
+    setTxListError,
   } = useDepositRewardsStore((state) => state);
 
   const { data: contractsDb } = api.escrow.getDepositRelatedData.useQuery(
@@ -62,25 +64,33 @@ export default function DepositERC721() {
   }, [isSuccess]);
 
   const fetchUserRewardContractERC721Bal = async (): Promise<void> => {
-    const rewardContractNfts = await getNFTsByContract(
-      contractsDb?.escrow?.rewardAddress ?? "",
-      EvmChain.MUMBAI,
+    const evmChain = findIfMoralisEvmChain(
+      contractsDb?.loyaltyProgram?.chainId ?? 0,
     );
-    if (rewardContractNfts && rewardContractNfts.length > 0) {
-      //for now, since Moralis api is delayed, it could still show tokens for user
-      //in their wallet balance that they have already deposited to escrow.
-      //so filter those out.
-      const escrowTokenIds = await getERC721EscrowTokenIds();
-      const filteredBalance = rewardContractNfts.filter(
-        (nft) => !escrowTokenIds.includes(String(nft.tokenId)),
-      );
-      setRewardsNftBalance(filteredBalance);
 
-      const allTokenIdsToCopy: string = filteredBalance
-        .map((item: WalletNFT) => Number(item.tokenId))
-        .sort((a, b) => a - b)
-        .join();
-      setTokenIdsToCopy(allTokenIdsToCopy);
+    if (evmChain) {
+      const rewardContractNfts = await getNFTsByContract(
+        contractsDb?.escrow?.rewardAddress ?? "",
+        EvmChain.MUMBAI,
+      );
+      if (rewardContractNfts && rewardContractNfts.length > 0) {
+        //for now, since Moralis api is delayed, it could still show tokens for user
+        //in their wallet balance that they have already deposited to escrow.
+        //so filter those out.
+        const escrowTokenIds = await getERC721EscrowTokenIds();
+        const filteredBalance = rewardContractNfts.filter(
+          (nft) => !escrowTokenIds.includes(String(nft.tokenId)),
+        );
+        setRewardsNftBalance(filteredBalance);
+
+        const allTokenIdsToCopy: string = filteredBalance
+          .map((item: WalletNFT) => Number(item.tokenId))
+          .sort((a, b) => a - b)
+          .join();
+        setTokenIdsToCopy(allTokenIdsToCopy);
+      }
+    } else {
+      setTxListError("Could not fetch balances for your deployed chain yet");
     }
   };
 
