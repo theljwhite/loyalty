@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import { useAccount } from "wagmi";
@@ -19,6 +19,7 @@ import { EthIcon, SortIcon } from "../../Icons";
 import { DashboardLoadingSpinner } from "~/components/UI/Misc/Spinners";
 
 export default function EscrowTransactionsTable() {
+  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState<boolean>(false);
   const { isConnected, address } = useAccount();
   const router = useRouter();
   const { address: loyaltyAddress } = router.query;
@@ -138,7 +139,6 @@ export default function EscrowTransactionsTable() {
                   <div className="absolute left-0 top-0 flex h-8 w-8 items-center justify-center text-[13px]">
                     <EthIcon size={20} color="currentColor" />
                   </div>
-
                   <DashboardInput
                     stateVar={"TODO"}
                     onChange={(e) => console.log("e")}
@@ -149,13 +149,16 @@ export default function EscrowTransactionsTable() {
                 </div>
               </div>
               <div className="ml-auto flex gap-2">
-                <button className="relative inline-flex h-8 min-w-10 appearance-none items-center justify-center whitespace-nowrap rounded-lg border border-dashboard-border1 py-4 pe-3 ps-3 align-middle text-sm font-semibold leading-5 text-dashboard-darkGray outline-none">
+                <button
+                  onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+                  className="relative inline-flex h-8 min-w-10 appearance-none items-center justify-center whitespace-nowrap rounded-lg border border-dashboard-border1 py-4 pe-3 ps-3 align-middle text-sm font-semibold leading-5 text-dashboard-darkGray outline-none"
+                >
                   <span className="me-2 inline-flex shrink-0 self-center">
                     <SortIcon size={16} color="currentColor" />
                   </span>
                   Sort
                 </button>
-                {/* TODO - drop down menu for sort */}
+                {/* TODO sort dropdown here */}
               </div>
             </div>
           </div>
@@ -258,7 +261,10 @@ export default function EscrowTransactionsTable() {
                           <div className="flex">
                             <div className="flex items-center">
                               <p className="line-clamp-1 overflow-hidden text-ellipsis text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
-                                {tx.amount}
+                                {tx.type !== "BATCH_DEPOSIT" &&
+                                tx.type !== "DEPOSIT"
+                                  ? "N/A"
+                                  : tx.amount}
                               </p>
                             </div>
                           </div>

@@ -16,6 +16,7 @@ import DashboardModalWrapper from "../../DashboardModalWrapper";
 import DashboardModalStatus from "../../DashboardModalStatus";
 import DashboardSummaryTable from "../../DashboardSummaryTable";
 import { ClipboardOne, CoinsOne, InfoIcon } from "../../Icons";
+import { useEscrowContractRead } from "~/customHooks/useEscrowContractRead/useEscrowContractRead";
 
 export default function DepositERC721() {
   const [rewardsNftBalance, setRewardsNftBalance] = useState<WalletNFT[]>([]);
@@ -34,6 +35,7 @@ export default function DepositERC721() {
     erc721DepositAmount,
     depositReceipt,
     isDepositReceiptOpen,
+    isSuccess,
     setIsDepositReceiptOpen,
     setERC721DepositAmount,
   } = useDepositRewardsStore((state) => state);
@@ -50,10 +52,14 @@ export default function DepositERC721() {
     contractsDb?.escrow?.address ?? "",
     contractsDb?.loyaltyProgram?.chainId ?? 0,
   );
+  const { getERC721EscrowTokenIds } = useEscrowContractRead(
+    contractsDb?.escrow?.address ?? "",
+    "ERC721",
+  );
 
   useEffect(() => {
     fetchUserRewardContractERC721Bal();
-  }, []);
+  }, [isSuccess]);
 
   const fetchUserRewardContractERC721Bal = async (): Promise<void> => {
     const rewardContractNfts = await getNFTsByContract(
@@ -61,9 +67,16 @@ export default function DepositERC721() {
       EvmChain.MUMBAI,
     );
     if (rewardContractNfts && rewardContractNfts.length > 0) {
-      setRewardsNftBalance(rewardContractNfts);
+      //for now, since Moralis api is delayed, it could still show tokens for user
+      //in their wallet balance that they have already deposited to escrow.
+      //so filter those out.
+      const escrowTokenIds = await getERC721EscrowTokenIds();
+      const filteredBalance = rewardContractNfts.filter(
+        (nft) => !escrowTokenIds.includes(String(nft.tokenId)),
+      );
+      setRewardsNftBalance(filteredBalance);
 
-      const allTokenIdsToCopy: string = rewardContractNfts
+      const allTokenIdsToCopy: string = filteredBalance
         .map((item: WalletNFT) => Number(item.tokenId))
         .sort((a, b) => a - b)
         .join();
