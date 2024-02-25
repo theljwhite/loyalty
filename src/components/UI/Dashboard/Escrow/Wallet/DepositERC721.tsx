@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import { useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
@@ -29,8 +29,14 @@ export default function DepositERC721() {
   const { isConnected, address: userConnectedAddress } = useAccount();
   const { openConnectModal } = useConnectModal();
   const { getNFTsByContract } = useTokenBalances();
-  const { depositReceipt, isDepositReceiptOpen, setIsDepositReceiptOpen } =
-    useDepositRewardsStore((state) => state);
+
+  const {
+    erc721DepositAmount,
+    depositReceipt,
+    isDepositReceiptOpen,
+    setIsDepositReceiptOpen,
+    setERC721DepositAmount,
+  } = useDepositRewardsStore((state) => state);
 
   const { data: contractsDb } = api.escrow.getDepositRelatedData.useQuery(
     {
@@ -46,10 +52,10 @@ export default function DepositERC721() {
   );
 
   useEffect(() => {
-    fetchRewardContractERC721Balance();
+    fetchUserRewardContractERC721Bal();
   }, []);
 
-  const fetchRewardContractERC721Balance = async (): Promise<void> => {
+  const fetchUserRewardContractERC721Bal = async (): Promise<void> => {
     const rewardContractNfts = await getNFTsByContract(
       contractsDb?.escrow?.rewardAddress ?? "",
       EvmChain.MUMBAI,
@@ -103,6 +109,8 @@ export default function DepositERC721() {
     const tokenIdsToDeposit = tokenIdsEntry.split(",");
     if (contractsDb?.escrow?.depositKey) {
       depositERC721(tokenIdsToDeposit, contractsDb?.escrow.depositKey);
+      setERC721DepositAmount(tokenIdsToDeposit.length);
+      setIsDepositModalOpen(false);
     }
   };
 
@@ -117,10 +125,8 @@ export default function DepositERC721() {
     const tokenIdsNoSpaces = tokenIdsStr.replace(/\s/g, "");
 
     if (!NUMBERS_SEPARATED_BY_COMMAS_REGEX.test(tokenIdsNoSpaces)) {
-      console.log("not valid");
       setTokenIdsEntryError("Invalid entry. Separate token ids by commas.");
     } else {
-      console.log("valid");
       setTokenIdsEntryError("");
     }
   };
@@ -307,7 +313,7 @@ export default function DepositERC721() {
       {isDepositReceiptOpen && (
         <DashboardModalStatus
           title="Deposit successful"
-          description="Your ERC20 deposit into escrow contract was successful."
+          description="Your ERC721 deposit into escrow contract was successful."
           status="success"
           setIsModalOpen={setIsDepositReceiptOpen}
           additionalStyling={
@@ -317,7 +323,7 @@ export default function DepositERC721() {
                 hash: depositReceipt.hash,
                 gasCost: depositReceipt.gasPrice.toString(),
                 gasUsed: depositReceipt.gasUsed.toString(),
-                depositedAmount: tokenIdsToCopy,
+                depositedAmount: `${erc721DepositAmount} tokens`,
               }}
             />
           }

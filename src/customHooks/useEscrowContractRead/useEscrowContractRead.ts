@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { readContract } from "wagmi/actions";
+import { readContract, readContracts } from "wagmi/actions";
 import { useEscrowAbi } from "../useContractAbi/useContractAbi";
 import { type EscrowType } from "@prisma/client";
 import { type Abi } from "viem";
-import { formatEther, parseUnits } from "ethers/utils";
+import { formatEther } from "ethers/utils";
 
 export enum EscrowStateReturn {
   Idle,
@@ -38,7 +38,7 @@ export function useEscrowContractRead(
         ...escrowContractConfig,
         functionName: "version",
       })) as string;
-      console.log("version");
+
       return version;
     } catch (error) {
       setReadContractError(JSON.stringify(error).slice(0, 50));
@@ -117,8 +117,6 @@ export function useEscrowContractRead(
         functionName: "lookupEscrowBalance",
       })) as bigint;
 
-      console.log("escrow balance -->", escrowBalance);
-
       const balanceToString = formatEther(escrowBalance);
       return balanceToString;
     } catch (error) {
@@ -127,9 +125,52 @@ export function useEscrowContractRead(
     }
   };
 
-  //ERC721 escrow specific calls - TODO
+  //ERC721 escrow specific calls
+  const getERC721EscrowTokenIds = async (): Promise<string[]> => {
+    try {
+      const escrowTokenIds = (await readContract({
+        ...escrowContractConfig,
+        functionName: "getTokenIds",
+      })) as bigint[];
+      const tokenIdsToString = escrowTokenIds.map((tkn) => tkn.toString());
 
-  //ERC1155 escrow specific calls - TODO
+      return tokenIdsToString;
+    } catch (error) {
+      setReadContractError(JSON.stringify(error).slice(0, 50));
+      return [];
+    }
+  };
+
+  const getRewardsRelatedEscrowStateVars = async (): Promise<{
+    name: string;
+    symbol: string;
+    address: string;
+  } | null> => {
+    try {
+      const collectionStateVars = (await readContracts({
+        contracts: [
+          { ...escrowContractConfig, functionName: "collectionName" },
+          { ...escrowContractConfig, functionName: "collectionSymbol" },
+          {
+            ...escrowContractConfig,
+            functionName: "collectionAddress",
+          },
+        ],
+      })) as { result: string; status: unknown }[];
+
+      return {
+        name: collectionStateVars[0]?.result ?? "",
+        symbol: collectionStateVars[1]?.result ?? "",
+        address: collectionStateVars[2]?.result ?? "",
+      };
+    } catch (error) {
+      console.error("error", error);
+      return null;
+    }
+  };
+
+  //ERC1155 escrow specific calls
+  //TODO
 
   return {
     getEscrowVersion,
@@ -138,6 +179,8 @@ export function useEscrowContractRead(
     isERC20TokenApproved,
     isCollectionApproved,
     getERC20EscrowBalance,
+    getERC721EscrowTokenIds,
+    getRewardsRelatedEscrowStateVars,
     readContractError,
   };
 }

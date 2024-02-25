@@ -373,5 +373,6 @@ export default function useDepositRewards(
     depositERC20,
     handleApproveAndDeposit,
     fetchAllERC20Transactions,
+    getWalletTransactionsVerbose,
   };
 }

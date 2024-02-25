@@ -38,7 +38,7 @@ export default function EscrowTransactionsTable() {
     escrowAddress,
     deployedChainId,
   );
-  const { getNftDepositTransfers } = useDepositNFTRewards(
+  const { fetchAllERC721Transactions } = useDepositNFTRewards(
     rewardAddress,
     escrowAddress,
     deployedChainId,
@@ -48,18 +48,15 @@ export default function EscrowTransactionsTable() {
     //TODO - refetch on deposit success - wait a bit first so that
     //results are updated?
     if (isConnected && address) {
-      fetchTransactions();
+      fetchTransactionsList();
     }
   }, [isConnected, address]);
 
-  const fetchTransactions = async (): Promise<void> => {
-    if (escrowType === "ERC20") {
-      await fetchAllERC20Transactions();
-    }
-    if (escrowType === "ERC721") {
-      //TODO fetch ERC721
-      await getNftDepositTransfers();
-    }
+  const fetchTransactionsList = async (): Promise<void> => {
+    if (escrowType === "ERC20") await fetchAllERC20Transactions();
+
+    if (escrowType === "ERC721") await fetchAllERC721Transactions();
+
     if (escrowType === "ERC1155") {
       //TODO fetch ERC1155
     }

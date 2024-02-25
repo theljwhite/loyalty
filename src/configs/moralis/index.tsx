@@ -118,3 +118,14 @@ export const allEvmChainsSelectOptions: AllEvmChainsSelectOption[] =
     title: item.name ?? item.hex,
     evmChain: item,
   }));
+
+export const findIfMoralisEvmChain = (
+  deployedChainId: number,
+): EvmChain | undefined => {
+  const deployedEvmChain = allMoralisEvmChains.find(
+    (chain) => Number(chain.hex) === deployedChainId,
+  );
+
+  if (deployedEvmChain) return deployedEvmChain;
+  else return undefined;
+};

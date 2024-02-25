@@ -16,6 +16,7 @@ type DepositReceipt = {
 export type TransactionItemType =
   | "UNKNOWN"
   | "DEPOSIT"
+  | "BATCH_DEPOSIT"
   | "CONTRACT_CREATION"
   | "CONTRACT_CALL";
 
@@ -23,9 +24,11 @@ export type TransactionsListItem = {
   to: string | null;
   from: string | null;
   amount: string | null;
+  tokenId?: string;
   time: Date;
   type: TransactionItemType;
   blockHash: string | null;
+  blockNumber?: string;
 };
 
 export interface DepositRewardsState {

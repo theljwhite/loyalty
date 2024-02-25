@@ -5,9 +5,14 @@ import { erc721ABI as standardERC721Abi } from "wagmi";
 import { waitForTransaction, writeContract, readContract } from "wagmi/actions";
 import { encodeBytes32String } from "ethers";
 import Moralis from "moralis";
-import { type GetContractNFTsJSONResponse } from "moralis/common-evm-utils";
 import { type TransactionsListItem, type TransactionItemType } from "./store";
-import { zeroAddress } from "viem";
+import {
+  dismissToast,
+  toastError,
+  toastLoading,
+  toastSuccess,
+} from "~/components/UI/Toast/Toast";
+import useDepositRewards from "./useDepositRewards";
 
 export default function useDepositNFTRewards(
   rewardAddress: string,
@@ -22,12 +27,19 @@ export default function useDepositNFTRewards(
     setError,
     setDepositReceipt,
     setIsDepositReceiptOpen,
+    setTransactionList,
     setTxListSuccess,
     setTxListLoading,
     setTxListError,
   } = useDepositRewardsStore((state) => state);
 
   const { abi: erc721EscrowAbi } = useEscrowAbi("ERC721");
+
+  const { getWalletTransactionsVerbose } = useDepositRewards(
+    rewardAddress,
+    escrowAddress,
+    deployedChainId,
+  );
 
   const handleDepositContractWrite = async (
     tokenIds: string[],
@@ -44,6 +56,7 @@ export default function useDepositNFTRewards(
       const depositReceipt = await waitForTransaction({ hash: depositTx.hash });
 
       if (depositReceipt.status === "success") {
+        dismissToast();
         setIsLoading(false);
         setIsSuccess(true);
         setDepositReceipt({
@@ -69,6 +82,7 @@ export default function useDepositNFTRewards(
   ): Promise<void> => {
     try {
       setIsLoading(true);
+      toastLoading("Deposit request sent to wallet", true);
 
       const depositKeyBytes32 = encodeBytes32String(depositKey);
 
@@ -122,32 +136,100 @@ export default function useDepositNFTRewards(
 
       if (response) {
         const results = response.toJSON();
-        results.result;
         const transfersToEscrow = results.result.filter(
           (transfer) =>
             transfer.from_address === userConnectedAddress?.toLowerCase() &&
             transfer.to_address === escrowAddress.toLowerCase(),
         );
+
         const formattedTransfers: TransactionsListItem[] =
           transfersToEscrow.map((transfer) => ({
             to: transfer.to_address,
             from: transfer.from_address ?? "",
-            amount: transfer.token_id,
+            amount: transfer.amount ?? "",
+            tokenId: transfer.token_id,
             type: "DEPOSIT" as TransactionItemType,
             time: new Date(transfer.block_timestamp),
             blockHash: transfer.block_hash,
+            blockNumber: transfer.block_number,
           }));
-        return formattedTransfers;
+
+        const transfersWithTransfersGroupedByBlock: TransactionsListItem[] =
+          Object.values(
+            formattedTransfers.reduce(
+              (prev, curr) => {
+                const blockNumber =
+                  curr.blockNumber as keyof TransactionsListItem;
+
+                if (!prev[blockNumber]) {
+                  prev[blockNumber] = [];
+                }
+
+                prev[blockNumber]!.push(curr);
+                return prev;
+              },
+              {} as Record<string, TransactionsListItem[]>,
+            ),
+          ).flatMap((transactions) => {
+            if (transactions.length > 1) {
+              const batchTransferAmount = transactions.length;
+
+              return [
+                {
+                  to: transactions[0]?.to ?? "",
+                  from: transactions[0]?.from ?? "",
+                  amount: String(batchTransferAmount),
+                  tokenId: undefined,
+                  time: transactions[0]?.time ?? new Date(),
+                  type: "BATCH_DEPOSIT",
+                  blockHash: null,
+                  blockNumber: transactions[0]?.blockNumber,
+                },
+              ];
+            }
+
+            return transactions;
+          });
+
+        return transfersWithTransfersGroupedByBlock;
       }
     } catch (error) {
-      setTxListError("Could not fetch NFT transfers - try again later.");
+      console.error("Error from getNftDepositTransfers", error);
+      setTxListError("Error fetching NFT transfers - try again later.");
+    }
+  };
+
+  const fetchAllERC721Transactions = async (): Promise<void> => {
+    setTxListLoading(true);
+    const walletTransactions = await getWalletTransactionsVerbose();
+    const nftTransfers = await getNftDepositTransfers();
+
+    if (walletTransactions && nftTransfers) {
+      const combinedTransactions: TransactionsListItem[] = [
+        ...nftTransfers,
+        ...walletTransactions,
+      ];
+
+      setTransactionList(combinedTransactions);
+      setTxListLoading(false);
     }
   };
 
   const handleDepositErrors = (error: Error): void => {
-    //TODO
     console.log("error from handle deposit errors -->", error);
+    const errorMessage = error.message.toLowerCase();
+    let toastErrorMessage: string = "";
+    if (errorMessage.includes("user rejected the request")) {
+      toastErrorMessage = "You rejected the wallet request";
+    }
+    if (errorMessage.includes("transfer from incorrect owner")) {
+      toastErrorMessage =
+        "You do not own a token you tried to deposit. Did you already deposit this token?";
+    }
+    toastError(
+      toastErrorMessage ?? "Error depositing. Please try again later.",
+    );
   };
 
-  return { depositERC721, getNftDepositTransfers };
+  return { depositERC721, fetchAllERC721Transactions };
 }

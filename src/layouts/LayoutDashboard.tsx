@@ -367,7 +367,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                 <div className="space-y-2 px-3">
                   <span className={sectionNameClass}>Program Users</span>
                   <div className="space-y-xs">
-                    {navLinks.slice(9, 11).map((link) => {
+                    {navLinks.slice(9, 12).map((link) => {
                       return (
                         <NavLink
                           key={link.id}
@@ -382,7 +382,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                 <div className="space-y-2 px-3">
                   <span className={sectionNameClass}>Developers</span>
                   <div className="space-y-xs">
-                    {navLinks.slice(11, 14).map((link) => {
+                    {navLinks.slice(12, 14).map((link) => {
                       return (
                         <NavLink
                           key={link.id}
