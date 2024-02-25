@@ -3,7 +3,12 @@ import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import { useAccount } from "wagmi";
 import useDepositRewards from "~/customHooks/useDepositRewards/useDepositRewards";
-import { useDepositRewardsStore } from "~/customHooks/useDepositRewards/store";
+import useDepositNFTRewards from "~/customHooks/useDepositRewards/useDepositNFTRewards";
+import {
+  useDepositRewardsStore,
+  type TransactionsListItem,
+  type TransactionItemType,
+} from "~/customHooks/useDepositRewards/store";
 import shortenEthereumAddress from "~/helpers/shortenEthAddress";
 import { getElapsedTime } from "~/constants/timeAndDate";
 import DashboardInput from "../../DashboardInput";
@@ -12,7 +17,6 @@ import DepositERC721 from "./DepositERC721";
 import DepositERC1155 from "./DepositERC1155";
 import { EthIcon, SortIcon } from "../../Icons";
 import { DashboardLoadingSpinner } from "~/components/UI/Misc/Spinners";
-import useDepositNFTRewards from "~/customHooks/useDepositRewards/useDepositNFTRewards";
 
 export default function EscrowTransactionsTable() {
   const { isConnected, address } = useAccount();
@@ -29,7 +33,7 @@ export default function EscrowTransactionsTable() {
   const deployedChainId = contractsDb?.loyaltyProgram?.chainId ?? 0;
   const escrowType = contractsDb?.escrow?.escrowType;
 
-  const { transactionList, txListLoading } = useDepositRewardsStore(
+  const { transactionList, txListLoading, isSuccess } = useDepositRewardsStore(
     (state) => state,
   );
 
@@ -45,11 +49,10 @@ export default function EscrowTransactionsTable() {
   );
 
   useEffect(() => {
-    //TODO - refetch on deposit success
     if (isConnected && address) {
       fetchTransactionsList();
     }
-  }, [isConnected, address]);
+  }, [isConnected, address, isSuccess]);
 
   const fetchTransactionsList = async (): Promise<void> => {
     if (escrowType === "ERC20") await fetchAllERC20Transactions();
@@ -59,6 +62,45 @@ export default function EscrowTransactionsTable() {
     if (escrowType === "ERC1155") {
       //TODO fetch ERC1155
     }
+  };
+
+  const sortByTime = (
+    transactions: TransactionsListItem[],
+    ascending: boolean,
+  ): TransactionsListItem[] => {
+    const sortedByTime = transactions.sort((a, b) =>
+      ascending
+        ? b.time.getTime() - a.time.getTime()
+        : a.time.getTime() - b.time.getTime(),
+    );
+    return sortedByTime;
+  };
+
+  const sortByAmount = (
+    transactions: TransactionsListItem[],
+    ascending: boolean,
+    tokenType: string,
+  ): TransactionsListItem[] => {
+    if (tokenType === "ERC20") {
+      //TODO handle possible bigint conversions from string?
+      return transactions;
+    } else {
+      const nftDepositAmountsSorted = transactions.sort((a, b) => {
+        const aToNum = Number(a);
+        const bToNum = Number(b);
+        if (ascending) return bToNum - aToNum;
+        else return aToNum - bToNum;
+      });
+      return nftDepositAmountsSorted;
+    }
+  };
+
+  const filterByDepositType = (
+    transactions: TransactionsListItem[],
+    type: TransactionItemType,
+  ): TransactionsListItem[] => {
+    const filteredByType = transactions.filter((tx) => tx.type === type);
+    return filteredByType;
   };
 
   return (

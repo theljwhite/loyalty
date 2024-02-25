@@ -10,7 +10,6 @@ import {
   dismissToast,
   toastError,
   toastLoading,
-  toastSuccess,
 } from "~/components/UI/Toast/Toast";
 import useDepositRewards from "./useDepositRewards";
 
@@ -28,7 +27,6 @@ export default function useDepositNFTRewards(
     setDepositReceipt,
     setIsDepositReceiptOpen,
     setTransactionList,
-    setTxListSuccess,
     setTxListLoading,
     setTxListError,
   } = useDepositRewardsStore((state) => state);
@@ -154,16 +152,14 @@ export default function useDepositNFTRewards(
             blockNumber: transfer.block_number,
           }));
 
-        const transfersWithTransfersGroupedByBlock: TransactionsListItem[] =
+        const transfersAndTransfersGroupedByBlock: TransactionsListItem[] =
           Object.values(
             formattedTransfers.reduce(
               (prev, curr) => {
                 const blockNumber =
                   curr.blockNumber as keyof TransactionsListItem;
 
-                if (!prev[blockNumber]) {
-                  prev[blockNumber] = [];
-                }
+                if (!prev[blockNumber]) prev[blockNumber] = [];
 
                 prev[blockNumber]!.push(curr);
                 return prev;
@@ -191,7 +187,7 @@ export default function useDepositNFTRewards(
             return transactions;
           });
 
-        return transfersWithTransfersGroupedByBlock;
+        return transfersAndTransfersGroupedByBlock;
       }
     } catch (error) {
       console.error("Error from getNftDepositTransfers", error);
@@ -208,7 +204,7 @@ export default function useDepositNFTRewards(
       const combinedTransactions: TransactionsListItem[] = [
         ...nftTransfers,
         ...walletTransactions,
-      ];
+      ].sort((a, b) => b.time.getTime() - a.time.getTime());
 
       setTransactionList(combinedTransactions);
       setTxListLoading(false);
