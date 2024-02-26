@@ -5,6 +5,7 @@ import { erc721ABI as standardERC721Abi } from "wagmi";
 import { waitForTransaction, writeContract, readContract } from "wagmi/actions";
 import { encodeBytes32String } from "ethers";
 import Moralis from "moralis";
+import StandardERC1155Abi from "~/contractsAndAbis/ERC1155Utilites/StandardERC1155Abi.json";
 import { type TransactionsListItem, type TransactionItemType } from "./store";
 import {
   dismissToast,
@@ -39,7 +40,7 @@ export default function useDepositNFTRewards(
     deployedChainId,
   );
 
-  const handleDepositContractWrite = async (
+  const handleERC721DepositContractWrite = async (
     tokenIds: string[],
     depositKeyBytes: string,
   ): Promise<void> => {
@@ -95,7 +96,7 @@ export default function useDepositNFTRewards(
       });
 
       if (isApprovedForAll) {
-        await handleDepositContractWrite(tokenIds, depositKeyBytes32);
+        await handleERC721DepositContractWrite(tokenIds, depositKeyBytes32);
       } else {
         const setApprovalForAll = await writeContract({
           address: rewardAddress as `0x${string}`,
@@ -109,7 +110,92 @@ export default function useDepositNFTRewards(
         });
 
         if (setApprovalForAllReceipt.status === "success") {
-          await handleDepositContractWrite(tokenIds, depositKeyBytes32);
+          await handleERC721DepositContractWrite(tokenIds, depositKeyBytes32);
+        }
+      }
+    } catch (error) {
+      handleDepositErrors(error as Error);
+    }
+  };
+
+  const handleERC1155DepositContractWrite = async (
+    tokenIds: string[],
+    tokenAmounts: string[],
+    depositKey: string,
+  ): Promise<void> => {
+    try {
+      const depositTx = await writeContract({
+        address: rewardAddress as `0x${string}`,
+        abi: StandardERC1155Abi,
+        functionName: "safeBatchTransferFrom",
+        args: [
+          userConnectedAddress,
+          escrowAddress,
+          tokenIds,
+          tokenAmounts,
+          depositKey,
+        ],
+      });
+
+      const depositReceipt = await waitForTransaction({ hash: depositTx.hash });
+
+      if (depositReceipt.status === "success") {
+        //TODO
+      }
+
+      if (depositReceipt.status === "reverted") {
+        //TODO
+      }
+    } catch (error) {
+      handleDepositErrors(error as Error);
+    }
+  };
+
+  const depositERC1155 = async (
+    tokenIds: string[],
+    tokenAmounts: string[],
+    depositKey: string,
+  ): Promise<void> => {
+    try {
+      setIsLoading(true);
+      toastLoading("Deposit request sent to wallet", true);
+
+      const depositKeyBytes32 = encodeBytes32String(depositKey);
+
+      const isApprovedForAll = await readContract({
+        address: rewardAddress as `0x${string}`,
+        abi: StandardERC1155Abi,
+        functionName: "isApprovedForAll",
+        args: [
+          userConnectedAddress as `0x${string}`,
+          escrowAddress as `0x${string}`,
+        ],
+      });
+
+      if (isApprovedForAll) {
+        await handleERC1155DepositContractWrite(
+          tokenIds,
+          tokenAmounts,
+          depositKey,
+        );
+      } else {
+        const setApprovalForAll = await writeContract({
+          address: rewardAddress as `0x${string}`,
+          abi: StandardERC1155Abi,
+          functionName: "setApprovalForAll",
+          args: [escrowAddress as `0x${string}`, true],
+        });
+
+        const setApprovalForAllReceipt = await waitForTransaction({
+          hash: setApprovalForAll.hash,
+        });
+
+        if (setApprovalForAllReceipt.status === "success") {
+          await handleERC1155DepositContractWrite(
+            tokenIds,
+            tokenAmounts,
+            depositKeyBytes32,
+          );
         }
       }
     } catch (error) {

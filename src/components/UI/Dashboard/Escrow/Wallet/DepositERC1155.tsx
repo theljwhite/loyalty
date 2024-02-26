@@ -14,12 +14,19 @@ import DashboardInput from "../../DashboardInput";
 import { CoinsOne, ClipboardOne, InfoIcon } from "../../Icons";
 import { WalletNFT } from "~/customHooks/useTokenBalances/types";
 import { findIfMoralisEvmChain } from "~/configs/moralis";
+import { toastError } from "~/components/UI/Toast/Toast";
+
+//TODO - may need better input handling and handling of amounts for possible massive numbers lol's
 
 export default function DepositERC1155() {
   const [rewardsNftBalance, setRewardsNftBalance] = useState<WalletNFT[]>([]);
   const [tokenIdsEntry, setTokenIdsEntry] = useState<string>("");
   const [tokenAmountsEntry, setTokenAmountsEntry] = useState<string>("");
-  const [entryError, setEntryError] = useState<string>("");
+  const [tokensToCopy, setTokensToCopy] = useState<string>("");
+  const [entryError, setEntryError] = useState<{
+    id: boolean;
+    amount: boolean;
+  }>({ id: false, amount: false });
   const [isDepositModalOpen, setIsDepositModalOpen] = useState<boolean>(false);
 
   const router = useRouter();
@@ -46,8 +53,10 @@ export default function DepositERC1155() {
   );
 
   useEffect(() => {
-    fetchUserRewardContractERC1155Bal();
-  }, []);
+    if (isConnected && userConnectedAddress) {
+      fetchUserRewardContractERC1155Bal();
+    }
+  }, [isConnected, userConnectedAddress]);
 
   const fetchUserRewardContractERC1155Bal = async (): Promise<void> => {
     try {
@@ -61,6 +70,12 @@ export default function DepositERC1155() {
         );
         if (rewardContractNfts && rewardContractNfts.length > 0) {
           setRewardsNftBalance(rewardContractNfts);
+
+          const allTokenIdsToCopy: string = rewardContractNfts
+            .map((nft) => Number(nft.tokenId))
+            .sort((a, b) => a - b)
+            .join();
+          setTokensToCopy(allTokenIdsToCopy);
         }
       }
     } catch (error) {
@@ -71,37 +86,81 @@ export default function DepositERC1155() {
   };
 
   const onDepositClick = (): void => {
-    const tokenIdsArr = tokenIdsEntry.split(",");
-    const tokenAmountsArr = tokenAmountsEntry.split(",");
-    if (tokenIdsArr.length !== tokenAmountsArr.length) {
-      //TODO error handle
-    } else {
-      //TODO validate balance
-    }
+    const isValid = validateIdsAndAmounts();
+    console.log("is valid", isValid);
   };
 
-  const validateTokenEntries = (entryStr: string): string => {
-    const tokenIdsNoSpaces = entryStr.replace(/\s/g, "");
-    if (!NUMBERS_SEPARATED_BY_COMMAS_REGEX.test(tokenIdsNoSpaces)) {
-      setEntryError("Invalid entry. Separate token ids by commas.");
-    } else {
-      setEntryError("");
+  const validateIdsAndAmounts = (): boolean => {
+    const tokenIdsEntryArr = tokenIdsEntry.split(",");
+    const tokenAmountsEntryArr = tokenAmountsEntry.split(",");
+
+    if (tokenIdsEntryArr.length !== tokenAmountsEntryArr.length) {
+      toastError(
+        "Token ids and amounts must be the same length, separated by commas",
+      );
+      setEntryError({ id: true, amount: true });
+      return false;
     }
-    return "";
+    const areAmountsValid = tokenAmountsEntryArr.every(
+      (amount) => !isNaN(Number(amount.trim())),
+    );
+
+    if (!areAmountsValid) {
+      toastError("Amounts must be numbers");
+      setEntryError((prev) => ({ ...prev, amount: true }));
+      return false;
+    }
+
+    const allTokenIdsExistInBal = tokenIdsEntryArr.every((tokenId) =>
+      rewardsNftBalance.some((nft) => nft.tokenId === tokenId),
+    );
+
+    if (!allTokenIdsExistInBal) {
+      toastError("You entered a token id that you do not own in your wallet");
+      setEntryError((prev) => ({ ...prev, id: true }));
+      return false;
+    }
+    const amountsAreSufficient = tokenIdsEntryArr.every((tokenId, index) => {
+      const correspondingToken = rewardsNftBalance.find(
+        (nft) => nft.tokenId === tokenId,
+      );
+      return (
+        correspondingToken &&
+        correspondingToken.amount &&
+        Number(tokenAmountsEntryArr[index]) <= correspondingToken.amount
+      );
+    });
+
+    if (!amountsAreSufficient) {
+      toastError("Insufficient amount for an entered token id");
+      setEntryError({ id: true, amount: true });
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateTokenInputs = (entryStr: string): void => {
+    const noSpaces = entryStr.replace(/\s/g, "");
+    if (!NUMBERS_SEPARATED_BY_COMMAS_REGEX.test(noSpaces)) {
+      setEntryError((prev) => ({ ...prev, id: true }));
+    } else {
+      setEntryError({ id: false, amount: false });
+    }
   };
 
   const onTokenIdEntryChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ): void => {
     setTokenIdsEntry(e.target.value);
-    validateTokenEntries(e.target.value);
+    validateTokenInputs(e.target.value);
   };
 
   const onTokenAmountEntryChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ): void => {
     setTokenAmountsEntry(e.target.value);
-    validateTokenEntries(e.target.value);
+    validateTokenInputs(e.target.value);
   };
 
   return (
@@ -167,7 +226,7 @@ export default function DepositERC1155() {
                                 <button
                                   onClick={() =>
                                     copyTextToClipboard(
-                                      "TODO",
+                                      tokensToCopy,
                                       "Copied all owned token ids",
                                     )
                                   }
@@ -201,7 +260,7 @@ export default function DepositERC1155() {
                                           <span key={nft.id}>
                                             Token Id {nft.tokenId}:{" "}
                                             <span className="text-orange-400">
-                                              {nft.amount}
+                                              {nft.amount?.toLocaleString()}
                                             </span>
                                             <br />
                                           </span>
@@ -242,7 +301,7 @@ export default function DepositERC1155() {
                             id="token-id-entry"
                             stateVar={tokenIdsEntry}
                             placeholder="ie 1,2,3,4"
-                            isValid={Boolean(entryError)}
+                            isValid={entryError.id}
                             disableCondition={false}
                             onChange={onTokenIdEntryChange}
                           />
@@ -275,7 +334,7 @@ export default function DepositERC1155() {
                             id="token-amount-entry"
                             stateVar={tokenAmountsEntry}
                             placeholder="ie 100, 200, 300, 1000"
-                            isValid={Boolean(entryError)}
+                            isValid={entryError.amount}
                             disableCondition={false}
                             onChange={onTokenAmountEntryChange}
                           />
