@@ -238,7 +238,6 @@ export function useTokenBalances() {
           description: metadata?.description ?? "",
           image: metadata?.image ?? "",
         };
-
         const token = {
           id: index,
           chain: item.chain.name ?? "",
@@ -246,6 +245,7 @@ export function useTokenBalances() {
           collectionName: item.name ?? "",
           tokenId: item.tokenId,
           metadata: formattedMetadata,
+          amount: item.contractType === "ERC1155" ? item.amount : undefined,
         };
         return token;
       });

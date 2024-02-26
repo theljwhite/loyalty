@@ -1,4 +1,5 @@
 interface DashboardInputProps {
+  id?: string;
   stateVar: any;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder: string;
@@ -7,6 +8,7 @@ interface DashboardInputProps {
   disableCorrection?: boolean;
 }
 export default function DashboardInput({
+  id,
   stateVar,
   onChange,
   placeholder,
@@ -17,7 +19,7 @@ export default function DashboardInput({
   return (
     <input
       disabled={disableCondition}
-      id={`${stateVar}-input`}
+      {...(id && { id: id })}
       value={stateVar}
       onChange={onChange}
       placeholder={placeholder}

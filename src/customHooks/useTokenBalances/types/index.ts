@@ -59,4 +59,5 @@ export type WalletNFT = {
   collectionName: string;
   tokenId: string | number;
   metadata?: MoralisDataObjectValue;
+  amount?: number;
 };

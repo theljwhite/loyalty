@@ -12,12 +12,12 @@ import { EvmChain } from "moralis/common-evm-utils";
 import { WalletNFT } from "~/customHooks/useTokenBalances/types";
 import { ROUTE_DOCS_MAIN } from "~/configs/routes";
 import { copyTextToClipboard } from "~/helpers/copyTextToClipboard";
+import { findIfMoralisEvmChain } from "~/configs/moralis";
 import { NUMBERS_SEPARATED_BY_COMMAS_REGEX } from "~/constants/regularExpressions";
 import DashboardModalWrapper from "../../DashboardModalWrapper";
 import DashboardModalStatus from "../../DashboardModalStatus";
 import DashboardSummaryTable from "../../DashboardSummaryTable";
 import { ClipboardOne, CoinsOne, InfoIcon } from "../../Icons";
-import { findIfMoralisEvmChain } from "~/configs/moralis";
 
 export default function DepositERC721() {
   const [rewardsNftBalance, setRewardsNftBalance] = useState<WalletNFT[]>([]);
@@ -71,7 +71,7 @@ export default function DepositERC721() {
     if (evmChain) {
       const rewardContractNfts = await getNFTsByContract(
         contractsDb?.escrow?.rewardAddress ?? "",
-        EvmChain.MUMBAI,
+        evmChain,
       );
       if (rewardContractNfts && rewardContractNfts.length > 0) {
         //for now, since Moralis api is delayed, it could still show tokens for user
@@ -140,8 +140,7 @@ export default function DepositERC721() {
   const onTokenIdsInputChange = (
     e: React.ChangeEvent<HTMLTextAreaElement>,
   ): void => {
-    const { value } = e.target;
-    setTokenIdsEntry(value);
+    setTokenIdsEntry(e.target.value);
   };
 
   const validateTokenIdEntry = (tokenIdsStr: string): void => {
