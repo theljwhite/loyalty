@@ -14,6 +14,7 @@ import BeginDepositPeriod from "~/components/UI/Dashboard/Escrow/Wallet/BeginDep
 import EscrowTransactionsTable from "~/components/UI/Dashboard/Escrow/Wallet/EscrowTransactionsTable";
 import ERC20EscrowStats from "~/components/UI/Dashboard/Escrow/Wallet/ERC20EscrowStats";
 import ERC721EscrowStats from "~/components/UI/Dashboard/Escrow/Wallet/ERC721EscrowStats";
+import ERC1155EscrowStats from "~/components/UI/Dashboard/Escrow/Wallet/ERC1155EscrowStats";
 
 export const getServerSideProps: GetServerSideProps = async (
   ctx: GetServerSidePropsContext,
@@ -103,7 +104,7 @@ const EscrowWallet: NextPage = () => {
             <ERC721EscrowStats />
           ) : (
             contractsDb.escrow.escrowType === "ERC1155" && (
-              <div>TODO ERC1155 escrow states</div>
+              <ERC1155EscrowStats />
             )
           )}
 

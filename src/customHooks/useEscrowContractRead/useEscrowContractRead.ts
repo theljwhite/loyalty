@@ -170,8 +170,12 @@ export function useEscrowContractRead(
   };
 
   //ERC1155 escrow specific calls
-  const getEscrowTokenDetails = async (): Promise<
-    | { totalTokenIds: number; collectionAddress: string; tokens: string[] }
+  const getERC1155EscrowTokenDetails = async (): Promise<
+    | {
+        totalTokenIds: number;
+        collectionAddress: string;
+        tokens: { id: string; value: string }[];
+      }
     | undefined
   > => {
     try {
@@ -179,11 +183,26 @@ export function useEscrowContractRead(
         ...escrowContractConfig,
         functionName: "getEscrowTokenDetails",
       })) as any[];
-      const totalTokenIds = escrowDetails[0];
+      const totalTokenIds = Number(escrowDetails[0]);
       const collectionAddress = escrowDetails[1];
       const tokens = escrowDetails[2];
 
       return { totalTokenIds, collectionAddress, tokens };
+    } catch (error) {
+      setReadContractError(JSON.stringify(error).slice(0, 50));
+    }
+  };
+
+  const lookupERC1155EscrowTokenAmount = async (
+    tokenId: string,
+  ): Promise<bigint | undefined> => {
+    try {
+      const amount = (await readContract({
+        ...escrowContractConfig,
+        functionName: "getEscrowTokenBalance",
+        args: [tokenId],
+      })) as bigint;
+      return amount;
     } catch (error) {
       setReadContractError(JSON.stringify(error).slice(0, 50));
     }
@@ -198,7 +217,8 @@ export function useEscrowContractRead(
     getERC20EscrowBalance,
     getERC721EscrowTokenIds,
     getRewardsRelatedEscrowStateVars,
-    getEscrowTokenDetails,
+    getERC1155EscrowTokenDetails,
+    lookupERC1155EscrowTokenAmount,
     readContractError,
   };
 }

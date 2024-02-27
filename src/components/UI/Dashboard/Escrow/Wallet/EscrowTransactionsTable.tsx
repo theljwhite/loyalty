@@ -18,8 +18,14 @@ import DepositERC1155 from "./DepositERC1155";
 import { EthIcon, SortIcon } from "../../Icons";
 import { DashboardLoadingSpinner } from "~/components/UI/Misc/Spinners";
 
+//TODO 2/27 finish sort/filtering tx's
+
+type SortByType = "TIME" | "AMOUNT" | "TX_TYPE";
+
 export default function EscrowTransactionsTable() {
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState<boolean>(false);
+  const [activeSortId, setActiveSortId] = useState<number>(0);
+
   const { isConnected, address } = useAccount();
   const router = useRouter();
   const { address: loyaltyAddress } = router.query;
@@ -43,7 +49,7 @@ export default function EscrowTransactionsTable() {
     escrowAddress,
     deployedChainId,
   );
-  const { fetchAllERC721Transactions } = useDepositNFTRewards(
+  const { fetchAllNftTransactions } = useDepositNFTRewards(
     rewardAddress,
     escrowAddress,
     deployedChainId,
@@ -58,10 +64,8 @@ export default function EscrowTransactionsTable() {
   const fetchTransactionsList = async (): Promise<void> => {
     if (escrowType === "ERC20") await fetchAllERC20Transactions();
 
-    if (escrowType === "ERC721") await fetchAllERC721Transactions();
-
-    if (escrowType === "ERC1155") {
-      //TODO fetch ERC1155
+    if (escrowType === "ERC721" || escrowType === "ERC1155") {
+      await fetchAllNftTransactions();
     }
   };
 
@@ -136,16 +140,18 @@ export default function EscrowTransactionsTable() {
             <div className="flex flex-1">
               <div className="w-full max-w-72">
                 <div className="relative isolate flex w-full">
-                  <div className="absolute left-0 top-0 flex h-8 w-8 items-center justify-center text-[13px]">
-                    <EthIcon size={20} color="currentColor" />
+                  <div className="flex h-8 w-8 items-center justify-center text-[13px]">
+                    <SortIcon size={18} color="currentColor" />
                   </div>
-                  <DashboardInput
-                    stateVar={"TODO"}
-                    onChange={(e) => console.log("e")}
-                    placeholder="Eth address here"
-                    disableCondition={false}
-                    isValid={true}
-                  />
+                  <div className="flex items-center justify-center">
+                    <span className="mb-0 text-sm font-normal leading-5 text-dashboard-neutral">
+                      Showing most recent of{" "}
+                      <span className="text-primary-1">
+                        {transactionList.length}
+                      </span>{" "}
+                      transactions
+                    </span>
+                  </div>
                 </div>
               </div>
               <div className="ml-auto flex gap-2">

@@ -2,11 +2,6 @@ import { create } from "zustand";
 
 //this store is temporary for now, as this flow may not necessarily need it
 
-type ERC1155Deposit = {
-  tokenId: string;
-  value: number;
-};
-
 type DepositReceipt = {
   hash: string;
   gasUsed: bigint;
@@ -37,9 +32,8 @@ export interface DepositRewardsState {
   error: string;
   erc20DepositAmount: string;
   erc721DepositAmount: number;
-  erc1155DepositAmount: number;
   erc721Deposit: string[];
-  erc1155Deposit: ERC1155Deposit[];
+  erc1155IdsDeposit: string[];
   depositReceipt: DepositReceipt;
   transactionList: TransactionsListItem[];
   txListLoading: boolean;
@@ -51,9 +45,8 @@ export interface DepositRewardsState {
   setError: (error: string) => void;
   setERC20DepositAmount: (erc20DepositAmount: string) => void;
   setERC721DepositAmount: (erc721DepositAmount: number) => void;
-  setERC1155DepositAmount: (erc1155DepositAmount: number) => void;
   setERC721Deposit: (erc721Deposit: string[]) => void;
-  setERC1155Deposit: (erc1155Deposit: ERC1155Deposit[]) => void;
+  setERC1155IdsDeposit: (erc1155IdsDeposit: string[]) => void;
   setDepositReceipt: (depositReceipt: DepositReceipt) => void;
   setTransactionList: (transactionList: TransactionsListItem[]) => void;
   setTxListLoading: (txListLoading: boolean) => void;
@@ -69,9 +62,8 @@ export const useDepositRewardsStore = create<DepositRewardsState>((set) => {
     error: "",
     erc20DepositAmount: "",
     erc721DepositAmount: 0,
-    erc1155DepositAmount: 0,
     erc721Deposit: [],
-    erc1155Deposit: [],
+    erc1155IdsDeposit: [],
     depositReceipt: {
       hash: "",
       gasUsed: BigInt(0),
@@ -93,11 +85,9 @@ export const useDepositRewardsStore = create<DepositRewardsState>((set) => {
       set({ erc20DepositAmount }),
     setERC721DepositAmount: (erc721DepositAmount: number) =>
       set({ erc721DepositAmount }),
-    setERC1155DepositAmount: (erc1155DepositAmount) =>
-      set({ erc1155DepositAmount }),
     setERC721Deposit: (erc721Deposit: string[]) => set({ erc721Deposit }),
-    setERC1155Deposit: (erc1155Deposit: ERC1155Deposit[]) =>
-      set({ erc1155Deposit }),
+    setERC1155IdsDeposit: (erc1155IdsDeposit: string[]) =>
+      set({ erc1155IdsDeposit }),
     setDepositReceipt: (depositReceipt: DepositReceipt) =>
       set({ depositReceipt }),
     setTransactionList: (transactionList: TransactionsListItem[]) =>

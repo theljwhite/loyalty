@@ -140,11 +140,20 @@ export default function useDepositNFTRewards(
       const depositReceipt = await waitForTransaction({ hash: depositTx.hash });
 
       if (depositReceipt.status === "success") {
-        //TODO
+        dismissToast();
+        setIsLoading(false);
+        setIsSuccess(true);
+        setDepositReceipt({
+          hash: depositReceipt.blockHash,
+          gasUsed: depositReceipt.gasUsed,
+          gasPrice: depositReceipt.effectiveGasPrice,
+        });
+        setIsDepositReceiptOpen(true);
       }
 
       if (depositReceipt.status === "reverted") {
-        //TODO
+        setIsLoading(false);
+        setError("Transaction reverted. Try again later.");
       }
     } catch (error) {
       handleDepositErrors(error as Error);
@@ -176,7 +185,7 @@ export default function useDepositNFTRewards(
         await handleERC1155DepositContractWrite(
           tokenIds,
           tokenAmounts,
-          depositKey,
+          depositKeyBytes32,
         );
       } else {
         const setApprovalForAll = await writeContract({
@@ -281,7 +290,7 @@ export default function useDepositNFTRewards(
     }
   };
 
-  const fetchAllERC721Transactions = async (): Promise<void> => {
+  const fetchAllNftTransactions = async (): Promise<void> => {
     setTxListLoading(true);
     const walletTransactions = await getWalletTransactionsVerbose();
     const nftTransfers = await getNftDepositTransfers();
@@ -313,5 +322,5 @@ export default function useDepositNFTRewards(
     );
   };
 
-  return { depositERC721, fetchAllERC721Transactions };
+  return { depositERC721, depositERC1155, fetchAllNftTransactions };
 }

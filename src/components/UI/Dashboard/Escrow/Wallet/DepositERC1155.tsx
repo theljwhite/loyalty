@@ -6,15 +6,19 @@ import { useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useTokenBalances } from "~/customHooks/useTokenBalances/useTokenBalances";
 import { useDepositRewardsStore } from "~/customHooks/useDepositRewards/store";
+import useDepositNFTRewards from "~/customHooks/useDepositRewards/useDepositNFTRewards";
 import { copyTextToClipboard } from "~/helpers/copyTextToClipboard";
 import { ROUTE_DOCS_MAIN } from "~/configs/routes";
 import { NUMBERS_SEPARATED_BY_COMMAS_REGEX } from "~/constants/regularExpressions";
 import DashboardModalWrapper from "../../DashboardModalWrapper";
 import DashboardInput from "../../DashboardInput";
+import DashboardModalStatus from "../../DashboardModalStatus";
+import DashboardSummaryTable from "../../DashboardSummaryTable";
 import { CoinsOne, ClipboardOne, InfoIcon } from "../../Icons";
-import { WalletNFT } from "~/customHooks/useTokenBalances/types";
+import { type WalletNFT } from "~/customHooks/useTokenBalances/types";
 import { findIfMoralisEvmChain } from "~/configs/moralis";
 import { toastError } from "~/components/UI/Toast/Toast";
+import { MAX_DIFF_TOKEN_IDS_ERC1155 } from "~/constants/loyaltyConstants";
 
 //TODO - may need better input handling and handling of amounts for possible massive numbers lol's
 
@@ -36,12 +40,12 @@ export default function DepositERC1155() {
 
   const { getNFTsByContract } = useTokenBalances();
   const {
-    erc1155DepositAmount,
+    erc1155IdsDeposit,
     depositReceipt,
     isDepositReceiptOpen,
     isSuccess,
     setIsDepositReceiptOpen,
-    setERC1155DepositAmount,
+    setERC1155IdsDeposit,
     setTxListError,
   } = useDepositRewardsStore((state) => state);
 
@@ -51,12 +55,22 @@ export default function DepositERC1155() {
     },
     { refetchOnWindowFocus: false },
   );
+  const rewardsAddress = contractsDb?.escrow?.rewardAddress ?? "";
+  const escrowAddress = contractsDb?.escrow?.address ?? "";
+  const deployedChainId = contractsDb?.loyaltyProgram?.chainId ?? 0;
+  const depositKey = contractsDb?.escrow?.depositKey ?? "";
+
+  const { depositERC1155 } = useDepositNFTRewards(
+    rewardsAddress,
+    escrowAddress,
+    deployedChainId,
+  );
 
   useEffect(() => {
     if (isConnected && userConnectedAddress) {
       fetchUserRewardContractERC1155Bal();
     }
-  }, [isConnected, userConnectedAddress]);
+  }, [isConnected, userConnectedAddress, isSuccess]);
 
   const fetchUserRewardContractERC1155Bal = async (): Promise<void> => {
     try {
@@ -86,48 +100,61 @@ export default function DepositERC1155() {
   };
 
   const onDepositClick = (): void => {
-    const isValid = validateIdsAndAmounts();
-    console.log("is valid", isValid);
-  };
-
-  const validateIdsAndAmounts = (): boolean => {
     const tokenIdsEntryArr = tokenIdsEntry.split(",");
     const tokenAmountsEntryArr = tokenAmountsEntry.split(",");
 
-    if (tokenIdsEntryArr.length !== tokenAmountsEntryArr.length) {
+    const isValid = validateIdsAndAmounts(
+      tokenIdsEntryArr,
+      tokenAmountsEntryArr,
+    );
+    setERC1155IdsDeposit(tokenIdsEntryArr);
+    if (isValid) {
+      depositERC1155(tokenIdsEntryArr, tokenAmountsEntryArr, depositKey);
+      setIsDepositModalOpen(false);
+    }
+  };
+
+  const validateIdsAndAmounts = (ids: string[], amounts: string[]): boolean => {
+    if (ids.length > MAX_DIFF_TOKEN_IDS_ERC1155) {
+      toastError("You can only deposit 5 or less different token ids");
+      setEntryError({ id: true, amount: true });
+      return false;
+    }
+
+    if (ids.length !== amounts.length) {
       toastError(
         "Token ids and amounts must be the same length, separated by commas",
       );
       setEntryError({ id: true, amount: true });
       return false;
     }
-    const areAmountsValid = tokenAmountsEntryArr.every(
+    const areAmountsValid = amounts.every(
       (amount) => !isNaN(Number(amount.trim())),
     );
 
     if (!areAmountsValid) {
       toastError("Amounts must be numbers");
-      setEntryError((prev) => ({ ...prev, amount: true }));
+      setEntryError({ id: false, amount: true });
       return false;
     }
 
-    const allTokenIdsExistInBal = tokenIdsEntryArr.every((tokenId) =>
+    const allTokenIdsExistInBal = ids.every((tokenId) =>
       rewardsNftBalance.some((nft) => nft.tokenId === tokenId),
     );
 
     if (!allTokenIdsExistInBal) {
       toastError("You entered a token id that you do not own in your wallet");
-      setEntryError((prev) => ({ ...prev, id: true }));
+      setEntryError({ id: true, amount: false });
       return false;
     }
-    const amountsAreSufficient = tokenIdsEntryArr.every((tokenId, index) => {
+    const amountsAreSufficient = ids.every((tokenId, index) => {
       const correspondingToken = rewardsNftBalance.find(
         (nft) => nft.tokenId === tokenId,
       );
       return (
         correspondingToken &&
         correspondingToken.amount &&
-        Number(tokenAmountsEntryArr[index]) <= correspondingToken.amount
+        Number(amounts[index]) <= correspondingToken.amount
       );
     });
 
@@ -140,10 +167,10 @@ export default function DepositERC1155() {
     return true;
   };
 
-  const validateTokenInputs = (entryStr: string): void => {
+  const validateTokenInputs = (entryStr: string, inputId: string): void => {
     const noSpaces = entryStr.replace(/\s/g, "");
     if (!NUMBERS_SEPARATED_BY_COMMAS_REGEX.test(noSpaces)) {
-      setEntryError((prev) => ({ ...prev, id: true }));
+      setEntryError({ id: true, amount: true });
     } else {
       setEntryError({ id: false, amount: false });
     }
@@ -153,18 +180,37 @@ export default function DepositERC1155() {
     e: React.ChangeEvent<HTMLInputElement>,
   ): void => {
     setTokenIdsEntry(e.target.value);
-    validateTokenInputs(e.target.value);
+    validateTokenInputs(e.target.value, e.target.id);
   };
 
   const onTokenAmountEntryChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ): void => {
     setTokenAmountsEntry(e.target.value);
-    validateTokenInputs(e.target.value);
+    validateTokenInputs(e.target.value, e.target.id);
   };
 
   return (
     <>
+      {isDepositReceiptOpen && (
+        <DashboardModalStatus
+          title="Deposit successful"
+          description="Your ERC721 deposit into escrow contract was successful."
+          status="success"
+          setIsModalOpen={setIsDepositReceiptOpen}
+          additionalStyling={
+            <DashboardSummaryTable
+              title="Transaction details"
+              dataObj={{
+                hash: depositReceipt.hash,
+                gasCost: depositReceipt.gasPrice.toString(),
+                gasUsed: depositReceipt.gasUsed.toString(),
+                depositedAmount: `${erc1155IdsDeposit.length} tokens`,
+              }}
+            />
+          }
+        />
+      )}
       {isConnected && userConnectedAddress ? (
         <button
           type="button"
@@ -298,10 +344,10 @@ export default function DepositERC1155() {
                       <div className="relative isolate flex w-full">
                         <div className="flex w-full flex-row items-center">
                           <DashboardInput
-                            id="token-id-entry"
+                            id="tokenIdsEntry"
                             stateVar={tokenIdsEntry}
                             placeholder="ie 1,2,3,4"
-                            isValid={entryError.id}
+                            isValid={!entryError.id}
                             disableCondition={false}
                             onChange={onTokenIdEntryChange}
                           />
@@ -331,10 +377,10 @@ export default function DepositERC1155() {
                       <div className="relative isolate flex w-full">
                         <div className="flex w-full flex-row items-center">
                           <DashboardInput
-                            id="token-amount-entry"
+                            id="tokenAmountsEntry"
                             stateVar={tokenAmountsEntry}
                             placeholder="ie 100, 200, 300, 1000"
-                            isValid={entryError.amount}
+                            isValid={!entryError.amount}
                             disableCondition={false}
                             onChange={onTokenAmountEntryChange}
                           />

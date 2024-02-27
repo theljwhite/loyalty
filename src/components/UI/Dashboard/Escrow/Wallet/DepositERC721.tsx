@@ -8,7 +8,6 @@ import { useTokenBalances } from "~/customHooks/useTokenBalances/useTokenBalance
 import useDepositNFTRewards from "~/customHooks/useDepositRewards/useDepositNFTRewards";
 import { useDepositRewardsStore } from "~/customHooks/useDepositRewards/store";
 import { useEscrowContractRead } from "~/customHooks/useEscrowContractRead/useEscrowContractRead";
-import { EvmChain } from "moralis/common-evm-utils";
 import { WalletNFT } from "~/customHooks/useTokenBalances/types";
 import { ROUTE_DOCS_MAIN } from "~/configs/routes";
 import { copyTextToClipboard } from "~/helpers/copyTextToClipboard";
