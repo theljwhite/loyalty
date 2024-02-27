@@ -11,20 +11,48 @@ import {
 } from "~/customHooks/useDepositRewards/store";
 import shortenEthereumAddress from "~/helpers/shortenEthAddress";
 import { getElapsedTime } from "~/constants/timeAndDate";
-import DashboardInput from "../../DashboardInput";
 import DepositERC20 from "./DepositERC20";
 import DepositERC721 from "./DepositERC721";
 import DepositERC1155 from "./DepositERC1155";
-import { EthIcon, SortIcon } from "../../Icons";
+import { SelectedCheck, SortIcon } from "../../Icons";
 import { DashboardLoadingSpinner } from "~/components/UI/Misc/Spinners";
 
-//TODO 2/27 finish sort/filtering tx's
+//TODO 2/27 refactor and finish sorting/fitering transactions
 
-type SortByType = "TIME" | "AMOUNT" | "TX_TYPE";
+type SortBy = "AGE" | "AMOUNT" | "TX_TYPE";
+type FilterBy = "Oldest" | "Newest";
+
+type SortOption = {
+  title: string;
+  sortBy: SortBy;
+  selected: boolean;
+};
+
+type FilterOption = {
+  title: string;
+  filterBy: FilterBy;
+  selected: boolean;
+};
+
+const sortOptionsInitial: SortOption[] = [
+  { title: "Time/Age", sortBy: "AGE", selected: true },
+  { title: "Amount", sortBy: "AMOUNT", selected: false },
+  { title: "Transaction Type", sortBy: "TX_TYPE", selected: false },
+];
+
+const filterOptionsInitial: FilterOption[] = [
+  { title: "Oldest on top", filterBy: "Oldest", selected: false },
+  { title: "Newest on top", filterBy: "Newest", selected: true },
+];
+
+const tableColumnNames = ["Type", "Age", "From", "To", "Amount"];
 
 export default function EscrowTransactionsTable() {
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState<boolean>(false);
-  const [activeSortId, setActiveSortId] = useState<number>(0);
+  const [sortOptions, setSortOptions] =
+    useState<SortOption[]>(sortOptionsInitial);
+  const [filterOptions, setFilterOptions] =
+    useState<FilterOption[]>(filterOptionsInitial);
 
   const { isConnected, address } = useAccount();
   const router = useRouter();
@@ -154,7 +182,7 @@ export default function EscrowTransactionsTable() {
                   </div>
                 </div>
               </div>
-              <div className="ml-auto flex gap-2">
+              <div className="relative ml-auto flex gap-2">
                 <button
                   onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
                   className="relative inline-flex h-8 min-w-10 appearance-none items-center justify-center whitespace-nowrap rounded-lg border border-dashboard-border1 py-4 pe-3 ps-3 align-middle text-sm font-semibold leading-5 text-dashboard-darkGray outline-none"
@@ -164,7 +192,84 @@ export default function EscrowTransactionsTable() {
                   </span>
                   Sort
                 </button>
-                {/* TODO sort dropdown here */}
+                <div
+                  className={`${
+                    isSortDropdownOpen ? "visible" : "invisible"
+                  } absolute right-0 top-10 min-w-max`}
+                >
+                  <div
+                    className={`${
+                      isSortDropdownOpen
+                        ? "visible opacity-100"
+                        : "invisible opacity-0"
+                    } min-w-56 rounded-lg border border-dashboard-border1 bg-white outline-none [box-shadow:0px_24px_48px_rgba(0,_0,_0,_0.16)]`}
+                  >
+                    <div>
+                      <div>
+                        <p className="me-4 ms-4 py-3 pe-4 ps-4 text-sm font-semibold leading-3 text-dashboard-darkGray">
+                          Sort by
+                        </p>
+                        {sortOptions.map((option, index) => {
+                          return (
+                            <button
+                              key={index}
+                              type="button"
+                              className="flex w-full items-center bg-white py-[2px] pe-4 ps-4 text-start text-sm font-medium text-dashboard-lightGray outline-none hover:bg-neutral-2"
+                            >
+                              <span
+                                className={`${
+                                  option.selected ? "opacity-100" : "opacity-0"
+                                } me-3 inline-flex shrink-0 items-center justify-center text-[0.8em]`}
+                              >
+                                <span className="inline-block h-5 w-5 text-primary-1">
+                                  <SelectedCheck
+                                    size={20}
+                                    color="currentColor"
+                                  />
+                                </span>
+                              </span>
+                              <span className="flex-1">
+                                <p className="flex py-2 capitalize">
+                                  {option.title}
+                                </p>
+                              </span>
+                            </button>
+                          );
+                        })}
+                        <hr className="mt-4 w-full border-solid border-[0px_0px_1px] border-dashboard-divider opacity-60" />
+                      </div>
+                    </div>
+                    <div className="pb-1">
+                      <p className="me-4 ms-4 py-3 pe-4 ps-4 text-sm font-semibold leading-3 text-dashboard-darkGray">
+                        Sort Order
+                      </p>
+                      {filterOptions.map((option, index) => {
+                        return (
+                          <button
+                            key={index}
+                            type="button"
+                            className="flex w-full items-center bg-white py-[2px] pe-4 ps-4 text-start text-sm font-medium text-dashboard-lightGray outline-none"
+                          >
+                            <span
+                              className={`${
+                                option.selected ? "opacity-100" : "opacity-0"
+                              } me-3 inline-flex shrink-0 items-center justify-center text-[0.8em]`}
+                            >
+                              <span className="inline-block h-5 w-5 text-primary-1">
+                                <SelectedCheck size={20} color="currentColor" />
+                              </span>
+                            </span>
+                            <span className="flex-1">
+                              <p className="flex py-2 capitalize">
+                                {option.title}
+                              </p>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -174,21 +279,16 @@ export default function EscrowTransactionsTable() {
           <table className="table w-full border-collapse">
             <thead className="table-header-group align-middle">
               <tr className="table-row overflow-hidden">
-                <th className="table-cell border-b border-dashboard-border1 py-3 pe-6 ps-6 text-start text-xs capitalize leading-4">
-                  Type
-                </th>
-                <th className="table-cell border-b border-dashboard-border1 py-3 pe-6 ps-6 text-start text-xs capitalize leading-4">
-                  Age
-                </th>
-                <th className="table-cell border-b border-dashboard-border1 py-3 pe-6 ps-6 text-start text-xs capitalize leading-4">
-                  From
-                </th>
-                <th className="table-cell border-b border-dashboard-border1 py-3 pe-6 ps-6 text-start text-xs capitalize leading-4">
-                  To
-                </th>
-                <th className="table-cell border-b border-dashboard-border1 py-3 pe-6 ps-6 text-start text-xs capitalize leading-4">
-                  Amount
-                </th>
+                {tableColumnNames.map((name, index) => {
+                  return (
+                    <th
+                      key={index}
+                      className="table-cell border-b border-dashboard-border1 py-3 pe-6 ps-6 text-start text-xs capitalize leading-4"
+                    >
+                      {name}
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             {isConnected && address ? (
