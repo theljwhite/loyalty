@@ -22,6 +22,8 @@ export const getElapsedTime = (startDate: Date, endDate: Date): string => {
   if (totalHoursAsString === "00") {
     return `${minutesAsString} min ago`;
   } else {
+    if (days === 0) return `${hours} hrs ago`;
+    if (hours === 0) return `${days} days ago`;
     return `${days} days ${hours} hr ago `;
   }
 };

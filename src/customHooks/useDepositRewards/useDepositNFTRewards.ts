@@ -285,7 +285,6 @@ export default function useDepositNFTRewards(
         return transfersAndTransfersGroupedByBlock;
       }
     } catch (error) {
-      console.error("Error from getNftDepositTransfers", error);
       setTxListError("Error fetching NFT transfers - try again later.");
     }
   };
@@ -307,8 +306,8 @@ export default function useDepositNFTRewards(
   };
 
   const handleDepositErrors = (error: Error): void => {
-    console.log("error from handle deposit errors -->", error);
     const errorMessage = error.message.toLowerCase();
+    const errorCause = String(error.cause);
     let toastErrorMessage: string = "";
     if (errorMessage.includes("user rejected the request")) {
       toastErrorMessage = "You rejected the wallet request";
@@ -316,6 +315,10 @@ export default function useDepositNFTRewards(
     if (errorMessage.includes("transfer from incorrect owner")) {
       toastErrorMessage =
         "You do not own a token you tried to deposit. Did you already deposit this token?";
+    }
+    if (errorCause.includes("DepositsAreLocked()")) {
+      toastErrorMessage =
+        "Deposit period has already ended for your escrow contract";
     }
     toastError(
       toastErrorMessage ?? "Error depositing. Please try again later.",
