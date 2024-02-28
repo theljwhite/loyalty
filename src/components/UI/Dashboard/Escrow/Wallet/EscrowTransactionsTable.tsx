@@ -17,15 +17,29 @@ import DepositERC1155 from "./DepositERC1155";
 import { SelectedCheck, SortIcon } from "../../Icons";
 import { DashboardLoadingSpinner } from "~/components/UI/Misc/Spinners";
 
-//TODO 2/27 refactor and finish sorting/fitering transactions
+//TODO extra -
+//not entirely worried about the sorting/filtering yet until the actual meat and potatoes of this app...
+//...is finished. It should work for now, although can def be cleaned up later. Been awhile since I've done one of these lol.
+//will also add pagination to the transactions table at a later date.
+
+//also the term "Filter" doesnt really make that much sense here, it should be "SortOrder".
+//but works for now. this IS NOT an important feature of the app yet.
 
 type SortBy = "AGE" | "AMOUNT" | "TX_TYPE";
-type FilterBy = "Oldest" | "Newest";
+type FilterBy =
+  | "Oldest"
+  | "Newest"
+  | "LargeToLeast"
+  | "LeastToLarge"
+  | TransactionTypeFilterChoices;
+
+type TransactionTypeFilterChoices = "All" | TransactionItemType;
 
 type SortOption = {
   title: string;
   sortBy: SortBy;
   selected: boolean;
+  filterOptionIds: number[];
 };
 
 type FilterOption = {
@@ -35,14 +49,43 @@ type FilterOption = {
 };
 
 const sortOptionsInitial: SortOption[] = [
-  { title: "Time/Age", sortBy: "AGE", selected: true },
-  { title: "Amount", sortBy: "AMOUNT", selected: false },
-  { title: "Transaction Type", sortBy: "TX_TYPE", selected: false },
+  {
+    title: "Time/Age",
+    sortBy: "AGE",
+    selected: true,
+    filterOptionIds: [0, 2],
+  },
+  {
+    title: "Amount",
+    sortBy: "AMOUNT",
+    selected: false,
+    filterOptionIds: [2, 4],
+  },
+  {
+    title: "Transaction Type",
+    sortBy: "TX_TYPE",
+    selected: false,
+    filterOptionIds: [4, 8],
+  },
 ];
 
 const filterOptionsInitial: FilterOption[] = [
   { title: "Oldest on top", filterBy: "Oldest", selected: false },
   { title: "Newest on top", filterBy: "Newest", selected: true },
+  {
+    title: "Largest to least",
+    filterBy: "LargeToLeast",
+    selected: false,
+  },
+  {
+    title: "Least to largest",
+    filterBy: "LeastToLarge",
+    selected: false,
+  },
+  { title: "All Types", filterBy: "All", selected: false },
+  { title: "Deposits", filterBy: "DEPOSIT", selected: false },
+  { title: "Batch Deposits", filterBy: "BATCH_DEPOSIT", selected: false },
+  { title: "Contract Calls", filterBy: "CONTRACT_CALL", selected: false },
 ];
 
 const tableColumnNames = ["Type", "Age", "From", "To", "Amount"];
@@ -53,6 +96,7 @@ export default function EscrowTransactionsTable() {
     useState<SortOption[]>(sortOptionsInitial);
   const [filterOptions, setFilterOptions] =
     useState<FilterOption[]>(filterOptionsInitial);
+  const [activeFilter, setActiveFilter] = useState<number[]>([0, 2]);
 
   const { isConnected, address } = useAccount();
   const router = useRouter();
@@ -68,9 +112,8 @@ export default function EscrowTransactionsTable() {
   const deployedChainId = contractsDb?.loyaltyProgram?.chainId ?? 0;
   const escrowType = contractsDb?.escrow?.escrowType;
 
-  const { transactionList, txListLoading, isSuccess } = useDepositRewardsStore(
-    (state) => state,
-  );
+  const { transactionList, txListLoading, isSuccess, setTransactionList } =
+    useDepositRewardsStore((state) => state);
 
   const { fetchAllERC20Transactions } = useDepositRewards(
     rewardAddress,
@@ -97,6 +140,25 @@ export default function EscrowTransactionsTable() {
     }
   };
 
+  const applySortAndFilters = (sortBy: SortBy, filterBy: FilterBy): void => {
+    const transactionsCopy = [...transactionList];
+    let updatedTransactions = [...transactionsCopy];
+    if (sortBy === "AGE") {
+      const isAscending = filterBy === "Newest" ? true : false;
+      updatedTransactions = sortByTime(transactionsCopy, isAscending);
+    }
+
+    if (sortBy === "AMOUNT") {
+      const isAscending = filterBy === "LeastToLarge" ? true : false;
+      updatedTransactions = sortByAmount(transactionsCopy, isAscending);
+    }
+
+    if (sortBy === "TX_TYPE") {
+      //TODO - later
+    }
+    setTransactionList(updatedTransactions);
+  };
+
   const sortByTime = (
     transactions: TransactionsListItem[],
     ascending: boolean,
@@ -112,28 +174,56 @@ export default function EscrowTransactionsTable() {
   const sortByAmount = (
     transactions: TransactionsListItem[],
     ascending: boolean,
-    tokenType: string,
   ): TransactionsListItem[] => {
-    if (tokenType === "ERC20") {
-      //TODO handle possible bigint conversions from string?
-      return transactions;
-    } else {
-      const nftDepositAmountsSorted = transactions.sort((a, b) => {
-        const aToNum = Number(a);
-        const bToNum = Number(b);
-        if (ascending) return bToNum - aToNum;
-        else return aToNum - bToNum;
-      });
-      return nftDepositAmountsSorted;
+    //TODO extra - handle possible bigint conversions from string?
+    const amountsSorted = transactions.sort((a, b) =>
+      ascending
+        ? Number(a.amount) - Number(b.amount)
+        : Number(b.amount) - Number(a.amount),
+    );
+    return amountsSorted;
+  };
+
+  const selectSort = (sortBy: SortBy): void => {
+    const [selectedSort] = sortOptions.filter(
+      (option) => option.sortBy === sortBy,
+    );
+    const sortSelection = sortOptions.map((option) =>
+      option.sortBy === sortBy
+        ? { ...option, selected: true }
+        : { ...option, selected: false },
+    );
+    if (selectedSort) {
+      setSortOptions(sortSelection);
+      setActiveFilter(selectedSort?.filterOptionIds);
+
+      const selectDefaultFilterOption = filterOptions.map((option, index) => ({
+        ...option,
+        selected: index === selectedSort.filterOptionIds[0],
+      }));
+      const [filterOption] = selectDefaultFilterOption.filter(
+        (option) => option.selected,
+      );
+
+      if (filterOption) {
+        setFilterOptions(selectDefaultFilterOption);
+        applySortAndFilters(sortBy, filterOption?.filterBy);
+      }
     }
   };
 
-  const filterByDepositType = (
-    transactions: TransactionsListItem[],
-    type: TransactionItemType,
-  ): TransactionsListItem[] => {
-    const filteredByType = transactions.filter((tx) => tx.type === type);
-    return filteredByType;
+  const selectFilter = (filterBy: FilterBy): void => {
+    const filterSelection = filterOptions.map((option) =>
+      option.filterBy === filterBy
+        ? { ...option, selected: true }
+        : { ...option, selected: false },
+    );
+    const [sortSelection] = sortOptions.filter((option) => option.selected);
+
+    if (filterSelection && sortSelection) {
+      setFilterOptions(filterSelection);
+      applySortAndFilters(sortSelection?.sortBy, filterBy);
+    }
   };
 
   return (
@@ -214,6 +304,7 @@ export default function EscrowTransactionsTable() {
                             <button
                               key={index}
                               type="button"
+                              onClick={() => selectSort(option.sortBy)}
                               className="flex w-full items-center bg-white py-[2px] pe-4 ps-4 text-start text-sm font-medium text-dashboard-lightGray outline-none hover:bg-neutral-2"
                             >
                               <span
@@ -243,30 +334,36 @@ export default function EscrowTransactionsTable() {
                       <p className="me-4 ms-4 py-3 pe-4 ps-4 text-sm font-semibold leading-3 text-dashboard-darkGray">
                         Sort Order
                       </p>
-                      {filterOptions.map((option, index) => {
-                        return (
-                          <button
-                            key={index}
-                            type="button"
-                            className="flex w-full items-center bg-white py-[2px] pe-4 ps-4 text-start text-sm font-medium text-dashboard-lightGray outline-none"
-                          >
-                            <span
-                              className={`${
-                                option.selected ? "opacity-100" : "opacity-0"
-                              } me-3 inline-flex shrink-0 items-center justify-center text-[0.8em]`}
+                      {filterOptions
+                        .slice(activeFilter[0], activeFilter[1])
+                        .map((option, index) => {
+                          return (
+                            <button
+                              key={index}
+                              type="button"
+                              onClick={() => selectFilter(option.filterBy)}
+                              className="flex w-full items-center bg-white py-[2px] pe-4 ps-4 text-start text-sm font-medium text-dashboard-lightGray outline-none"
                             >
-                              <span className="inline-block h-5 w-5 text-primary-1">
-                                <SelectedCheck size={20} color="currentColor" />
+                              <span
+                                className={`${
+                                  option.selected ? "opacity-100" : "opacity-0"
+                                } me-3 inline-flex shrink-0 items-center justify-center text-[0.8em]`}
+                              >
+                                <span className="inline-block h-5 w-5 text-primary-1">
+                                  <SelectedCheck
+                                    size={20}
+                                    color="currentColor"
+                                  />
+                                </span>
                               </span>
-                            </span>
-                            <span className="flex-1">
-                              <p className="flex py-2 capitalize">
-                                {option.title}
-                              </p>
-                            </span>
-                          </button>
-                        );
-                      })}
+                              <span className="flex-1">
+                                <p className="flex py-2 capitalize">
+                                  {option.title}
+                                </p>
+                              </span>
+                            </button>
+                          );
+                        })}
                     </div>
                   </div>
                 </div>
