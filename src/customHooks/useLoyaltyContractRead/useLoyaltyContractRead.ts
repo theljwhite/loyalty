@@ -184,6 +184,19 @@ export function useLoyaltyContractRead(loyaltyAddress: string) {
     }
   };
 
+  const getTotalPointsPossible = async (): Promise<number | undefined> => {
+    try {
+      const totalPointsPossible = (await readContract({
+        ...loyaltyContractConfig,
+        functionName: "totalPointsPossible",
+      })) as bigint;
+      const totalPointsToNum = Number(totalPointsPossible);
+      return totalPointsToNum;
+    } catch (error) {
+      setError(error);
+    }
+  };
+
   const convertObjectivesBytesToString = (
     objectives: LoyaltySettingsObjective[],
   ): FormattedContractObjective[] => {
@@ -223,6 +236,7 @@ export function useLoyaltyContractRead(loyaltyAddress: string) {
     getProgramDetails,
     getLoyaltyProgramSettings,
     getObjectivesOnly,
+    getTotalPointsPossible,
     readContractError,
   };
 }

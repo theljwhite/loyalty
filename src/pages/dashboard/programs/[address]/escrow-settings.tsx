@@ -41,6 +41,7 @@ const EscrowSettings: NextPage = () => {
 
   if (contractDbLoading) return <DashboardPageLoading />;
   if (contractsDbErr) return <DashboardPageError />;
+  
   return (
     <div className="space-y-8">
       <DashboardHeader

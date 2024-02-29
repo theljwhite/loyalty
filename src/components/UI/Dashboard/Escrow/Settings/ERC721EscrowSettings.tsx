@@ -6,12 +6,17 @@ import {
   ERC721RewardOrder,
 } from "~/customHooks/useEscrowSettings/types";
 import { useEscrowSettingsStore } from "~/customHooks/useEscrowSettings/store";
+import { useLoyaltyContractRead } from "~/customHooks/useLoyaltyContractRead/useLoyaltyContractRead";
 import {
   erc721RewardConditionDescriptors,
   erc721RewardOrderDescriptors,
 } from "~/constants/contractsInfoHelp";
+import {
+  MAX_OBJECTIVES_LENGTH,
+  MAX_OBJECTIVE_POINTS_VALUE,
+} from "~/constants/loyaltyConstants";
 import DashboardSelectBox from "../../DashboardSelectBox";
-import DashboardSingleInputBox from "../../DashboardSingleInputBox";
+import RewardGoalSelect from "./RewardGoalSelect";
 import { InfoIcon } from "../../Icons";
 
 const rewardConditionOptions = [
@@ -60,35 +65,38 @@ export default function ERC721EscrowSettings() {
   const {
     erc721RewardCondition,
     rewardGoal,
-    isRewardGoalValid,
     setERC721RewardCondition,
     setERC721RewardOrder,
-    setRewardGoal,
-    setIsRewardGoalValid,
   } = useEscrowSettingsStore((state) => state);
 
   const router = useRouter();
   const { address: loyaltyAddress } = router.query;
 
-  const { data: contractsDb } =
-    api.loyaltyPrograms.getAllLoyaltyProgramData.useQuery(
-      {
-        contractAddress: String(loyaltyAddress),
-      },
-      { refetchOnWindowFocus: false },
-    );
+  const { getTotalPointsPossible } = useLoyaltyContractRead(
+    String(loyaltyAddress),
+  );
+  const { data } = api.loyaltyPrograms.getOnlyObjectivesAndTiers.useQuery(
+    {
+      loyaltyAddress: String(loyaltyAddress),
+    },
+    { refetchOnWindowFocus: false },
+  );
 
-  const validateRewardGoal = (): boolean => {
+  const validateRewardGoal = async (): Promise<boolean> => {
     if (erc721RewardCondition === ERC721RewardCondition.ObjectiveCompleted) {
-      const objectivesLength = contractsDb?.objectives.length ?? 0;
+      const objectivesLength = data?.objectives.length ?? 0;
       if (rewardGoal >= objectivesLength) return false;
     }
     if (erc721RewardCondition === ERC721RewardCondition.TierReached) {
-      const tiersLength = contractsDb?.tiers?.length ?? 0;
+      const tiersLength = data?.tiers?.length ?? 0;
       if (rewardGoal === 0 || rewardGoal >= tiersLength) return false;
     }
     if (erc721RewardCondition === ERC721RewardCondition.PointsTotal) {
-      //TODO - do total points possible call to contract
+      const totalPointsPossible =
+        (await getTotalPointsPossible()) ??
+        MAX_OBJECTIVES_LENGTH * MAX_OBJECTIVE_POINTS_VALUE;
+      console.log("total points possible -->", totalPointsPossible);
+      if (rewardGoal === 0 || rewardGoal > totalPointsPossible) return false;
     }
 
     return true;
@@ -98,13 +106,11 @@ export default function ERC721EscrowSettings() {
     e: React.ChangeEvent<HTMLSelectElement>,
   ): void => {
     const rewardConditionEnumVal = Number(e.target.value);
-
     const [conditionInfo] = erc721RewardConditionDescriptors.filter(
       (desc) => desc.erc721RewardCondition === rewardConditionEnumVal,
     );
 
     if (conditionInfo) setRewardConditionInfo(conditionInfo.info);
-
     setERC721RewardCondition(rewardConditionEnumVal);
   };
 
@@ -112,26 +118,19 @@ export default function ERC721EscrowSettings() {
     e: React.ChangeEvent<HTMLSelectElement>,
   ): void => {
     const rewardOrderEnumVal = Number(e.target.value);
-
     const [orderInfo] = erc721RewardOrderDescriptors.filter(
       (desc) => desc.erc721RewardOrder === rewardOrderEnumVal,
     );
 
     if (orderInfo) setRewardOrderInfo(orderInfo.info);
-
     setERC721RewardOrder(rewardOrderEnumVal);
-    console.log("selected -->", rewardOrderEnumVal);
-  };
-
-  const onRewardGoalChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    //TODO
   };
 
   return (
     <div className="space-y-8">
       <DashboardSelectBox
         title="ERC721 Reward Condition"
-        description="The condition that will reward users as they progress throughout your loyalty program. This allows you to customize your escrow contract."
+        description="The condition that will reward users as they progress throughout your loyalty program."
         descriptionTwo="Do you want to reward a specific objective, tier, or points total? Once written to your escrow contract, this setting cannot be reversed."
         selections={[]}
         isRequiredField
@@ -231,14 +230,7 @@ export default function ERC721EscrowSettings() {
           </div>
         }
       />
-      <DashboardSingleInputBox
-        title="Choose a reward goal"
-        description={`Which `}
-        stateVar={String(rewardGoal)}
-        isValid={isRewardGoalValid}
-        disableCondition={false}
-        onChange={onRewardGoalChange}
-      />
+      <RewardGoalSelect escrowType="ERC721" />
     </div>
   );
 }
