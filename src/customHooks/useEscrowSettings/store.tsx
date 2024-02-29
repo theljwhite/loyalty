@@ -22,6 +22,7 @@ export interface EscrowSettingsState {
   rewardTokenIds: number[];
   areTokensValid: boolean;
   areAmountsValid: boolean;
+  isRewardGoalValid: boolean;
   setIsLoading: (isLoading: boolean) => void;
   setIsSuccess: (isSuccess: boolean) => void;
   setIsConfirmModalOpen: (isConfirmModalOpen: boolean) => void;
@@ -41,6 +42,7 @@ export interface EscrowSettingsState {
   setRewardTokenIds: (rewardTokenIds: number[]) => void;
   setAreTokensValid: (areTokensValid: boolean) => void;
   setAreAmountsValid: (areAmountsValid: boolean) => void;
+  setIsRewardGoalValid: (isRewardGoalValid: boolean) => void;
 }
 
 export const useEscrowSettingsStore = create<EscrowSettingsState>((set) => {
@@ -60,6 +62,7 @@ export const useEscrowSettingsStore = create<EscrowSettingsState>((set) => {
     rewardTokenIds: [],
     areTokensValid: false,
     areAmountsValid: false,
+    isRewardGoalValid: false,
   };
 
   return {
@@ -85,5 +88,7 @@ export const useEscrowSettingsStore = create<EscrowSettingsState>((set) => {
     setRewardTokenIds: (rewardTokenIds: number[]) => set({ rewardTokenIds }),
     setAreTokensValid: (areTokensValid: boolean) => set({ areTokensValid }),
     setAreAmountsValid: (areAmountsValid: boolean) => set({ areAmountsValid }),
+    setIsRewardGoalValid: (isRewardGoalValid: boolean) =>
+      set({ isRewardGoalValid }),
   };
 });

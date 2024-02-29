@@ -17,6 +17,7 @@ type Selection = {
 interface DashboardSelectBoxProps {
   title: string;
   description: string;
+  descriptionTwo?: string;
   selections: Selection[];
   warning?: string;
   customSelect?: JSX.Element;
@@ -25,6 +26,7 @@ interface DashboardSelectBoxProps {
 export default function DashboardSelectBox({
   title,
   description,
+  descriptionTwo,
   selections,
   warning,
   customSelect,
@@ -43,9 +45,14 @@ export default function DashboardSelectBox({
             )}
           </p>
         </div>
-        <p className="mb-4 text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
+        <p className="mb-4 text-[13px] font-normal leading-[1.125rem] text-dashboard-lightGray">
           {description}
         </p>
+        {descriptionTwo && (
+          <p className="mb-4 text-[13px] font-normal leading-[1.125rem] text-dashboard-lightGray">
+            {descriptionTwo}
+          </p>
+        )}
         {warning && <DashboardInfoBanner infoType="warn" info={warning} />}
       </div>
       <div className="ms-6 flex-1">
@@ -56,12 +63,12 @@ export default function DashboardSelectBox({
             selections.map((sel, index) => {
               return (
                 <div key={index} className="flex w-full flex-col">
-                  <div className="mb-0.5 flex flex-row items-center justify-between">
-                    <label className="mb-0 text-sm font-semibold leading-5">
+                  <div className="mb-1 flex flex-row items-center justify-between">
+                    <label className="mb-1 text-sm font-semibold leading-5">
                       {sel.label}
                     </label>
                   </div>
-                  <p className="text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
+                  <p className="mb-4 text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
                     {sel.info}
                   </p>
 
