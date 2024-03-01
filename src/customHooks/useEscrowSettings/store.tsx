@@ -5,6 +5,9 @@ import {
   ERC1155RewardCondition,
   ERC721RewardOrder,
 } from "./types";
+import { type Objective } from "@prisma/client";
+
+type ObjectiveChoice = Objective & { checked: boolean };
 
 export interface EscrowSettingsState {
   isLoading: boolean;
@@ -15,14 +18,15 @@ export interface EscrowSettingsState {
   erc721RewardCondition: ERC721RewardCondition;
   erc1155RewardCondition: ERC1155RewardCondition;
   erc721RewardOrder: ERC721RewardOrder;
-  rewardGoal: number;
-  rewardTokenId: number;
+  rewardGoal: string;
+  rewardTokenId: string;
   payoutAmount: number;
   payoutAmounts: number[];
-  rewardTokenIds: number[];
+  rewardTokenIds: string[];
   areTokensValid: boolean;
   areAmountsValid: boolean;
   isRewardGoalValid: boolean;
+  objectivesChoices: ObjectiveChoice[];
   setIsLoading: (isLoading: boolean) => void;
   setIsSuccess: (isSuccess: boolean) => void;
   setIsConfirmModalOpen: (isConfirmModalOpen: boolean) => void;
@@ -35,14 +39,15 @@ export interface EscrowSettingsState {
     erc1155RewardCondition: ERC1155RewardCondition,
   ) => void;
   setERC721RewardOrder: (erc721RewardOrder: ERC721RewardOrder) => void;
-  setRewardGoal: (rewardGoal: number) => void;
-  setRewardTokenId: (rewardTokenId: number) => void;
+  setRewardGoal: (rewardGoal: string) => void;
+  setRewardTokenId: (rewardTokenId: string) => void;
   setPayoutAmount: (payoutAmount: number) => void;
   setPayoutAmounts: (payoutAmounts: number[]) => void;
-  setRewardTokenIds: (rewardTokenIds: number[]) => void;
+  setRewardTokenIds: (rewardTokenIds: string[]) => void;
   setAreTokensValid: (areTokensValid: boolean) => void;
   setAreAmountsValid: (areAmountsValid: boolean) => void;
   setIsRewardGoalValid: (isRewardGoalValid: boolean) => void;
+  setObjectivesChoices: (objectivesChoices: ObjectiveChoice[]) => void;
 }
 
 export const useEscrowSettingsStore = create<EscrowSettingsState>((set) => {
@@ -55,14 +60,15 @@ export const useEscrowSettingsStore = create<EscrowSettingsState>((set) => {
     erc721RewardCondition: ERC721RewardCondition.NotSet,
     erc1155RewardCondition: ERC1155RewardCondition.NotSet,
     erc721RewardOrder: ERC721RewardOrder.NotSet,
-    rewardGoal: 0,
-    rewardTokenId: 0,
+    rewardGoal: "",
+    rewardTokenId: "",
     payoutAmount: 0,
     payoutAmounts: [],
     rewardTokenIds: [],
     areTokensValid: false,
     areAmountsValid: false,
     isRewardGoalValid: false,
+    objectivesChoices: [],
   };
 
   return {
@@ -81,14 +87,16 @@ export const useEscrowSettingsStore = create<EscrowSettingsState>((set) => {
     ) => set({ erc1155RewardCondition }),
     setERC721RewardOrder: (erc721RewardOrder: ERC721RewardOrder) =>
       set({ erc721RewardOrder }),
-    setRewardGoal: (rewardGoal: number) => set({ rewardGoal }),
-    setRewardTokenId: (rewardTokenId: number) => set({ rewardTokenId }),
+    setRewardGoal: (rewardGoal: string) => set({ rewardGoal }),
+    setRewardTokenId: (rewardTokenId: string) => set({ rewardTokenId }),
     setPayoutAmount: (payoutAmount: number) => set({ payoutAmount }),
     setPayoutAmounts: (payoutAmounts: number[]) => set({ payoutAmounts }),
-    setRewardTokenIds: (rewardTokenIds: number[]) => set({ rewardTokenIds }),
+    setRewardTokenIds: (rewardTokenIds: string[]) => set({ rewardTokenIds }),
     setAreTokensValid: (areTokensValid: boolean) => set({ areTokensValid }),
     setAreAmountsValid: (areAmountsValid: boolean) => set({ areAmountsValid }),
     setIsRewardGoalValid: (isRewardGoalValid: boolean) =>
       set({ isRewardGoalValid }),
+    setObjectivesChoices: (objectivesChoices: ObjectiveChoice[]) =>
+      set({ objectivesChoices }),
   };
 });

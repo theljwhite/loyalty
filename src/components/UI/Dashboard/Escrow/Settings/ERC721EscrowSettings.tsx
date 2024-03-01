@@ -17,7 +17,7 @@ import {
 } from "~/constants/loyaltyConstants";
 import DashboardSelectBox from "../../DashboardSelectBox";
 import RewardGoalSelect from "./RewardGoalSelect";
-import { InfoIcon } from "../../Icons";
+import { DownChevron, InfoIcon } from "../../Icons";
 
 const rewardConditionOptions = [
   {
@@ -83,20 +83,22 @@ export default function ERC721EscrowSettings() {
   );
 
   const validateRewardGoal = async (): Promise<boolean> => {
+    const rewardGoalNum = Number(rewardGoal);
     if (erc721RewardCondition === ERC721RewardCondition.ObjectiveCompleted) {
       const objectivesLength = data?.objectives.length ?? 0;
-      if (rewardGoal >= objectivesLength) return false;
+      if (rewardGoalNum >= objectivesLength) return false;
     }
     if (erc721RewardCondition === ERC721RewardCondition.TierReached) {
       const tiersLength = data?.tiers?.length ?? 0;
-      if (rewardGoal === 0 || rewardGoal >= tiersLength) return false;
+      if (rewardGoalNum === 0 || rewardGoalNum >= tiersLength) return false;
     }
     if (erc721RewardCondition === ERC721RewardCondition.PointsTotal) {
       const totalPointsPossible =
         (await getTotalPointsPossible()) ??
         MAX_OBJECTIVES_LENGTH * MAX_OBJECTIVE_POINTS_VALUE;
-      console.log("total points possible -->", totalPointsPossible);
-      if (rewardGoal === 0 || rewardGoal > totalPointsPossible) return false;
+
+      if (rewardGoalNum === 0 || rewardGoalNum > totalPointsPossible)
+        return false;
     }
 
     return true;
@@ -164,6 +166,11 @@ export default function ERC721EscrowSettings() {
                     );
                   })}
                 </select>
+                <div className="pointer-none top-half absolute right-0.5 inline-flex h-full w-6 translate-y-[-2/4] items-center justify-center text-xl text-dashboard-lightGray">
+                  <div className="h-[1em] w-[1em]">
+                    <DownChevron size={20} color="currentColor" />
+                  </div>
+                </div>
               </div>
               <div className="flex flex-col">
                 <div className="mt-4 text-[13px] leading-normal text-dashboard-lightGray">
@@ -215,6 +222,11 @@ export default function ERC721EscrowSettings() {
                     );
                   })}
                 </select>
+                <div className="pointer-none top-half absolute right-0.5 inline-flex h-full w-6 translate-y-[-2/4] items-center justify-center text-xl text-dashboard-lightGray">
+                  <div className="h-[1em] w-[1em]">
+                    <DownChevron size={20} color="currentColor" />
+                  </div>
+                </div>
               </div>
               <div className="flex flex-col">
                 <div className="mt-4 text-[13px] leading-normal text-dashboard-lightGray">
