@@ -19,6 +19,7 @@ import { DownChevron, ReadIcon } from "../../Icons";
 //ERC20, ERC721, ERC1155 reward goal handling can prob be broken into 3 components for cleaner code.
 //but for the first pass, this should work for now.
 
+//TODO - still unfinished for other escrow types (Erc20, erc1155)
 interface RewardGoalSelectProps {
   escrowType: EscrowType;
 }
@@ -161,7 +162,10 @@ export default function RewardGoalSelect({
           <div className="min-w-0 flex-1">
             <div className="mb-1 flex items-center justify-between break-words">
               <p className="text-md font-semibold leading-6">
-                Select Reward Goal
+                Select Reward Goal{" "}
+                <code className="ml-1 inline-flex items-center gap-1 whitespace-nowrap bg-dashboard-badge py-0.5 pe-1.5 ps-1.5 align-middle text-xs font-normal leading-[1.4] text-dashboard-required">
+                  Required
+                </code>
               </p>
             </div>
             <p className="mb-4 text-sm font-normal leading-[1.125rem] text-dashboard-lightGray">
@@ -199,15 +203,15 @@ export default function RewardGoalSelect({
                   ? "Select an Objective"
                   : showTiersChoices
                     ? "Select a Tier"
-                    : "Points"}
+                    : "Enter Points Goal"}
               </p>
               <p className="mb-4 text-[13px] font-normal leading-[1.125rem] text-dashboard-lightGray">
-                Select the{" "}
+                Specify the{" "}
                 {showObjectivesChoices
                   ? "objective"
                   : showTiersChoices
                     ? "tier"
-                    : "points total"}{" "}
+                    : "points total value"}{" "}
                 that will reward a token once completed
               </p>
               <div>
@@ -245,7 +249,7 @@ export default function RewardGoalSelect({
                         onChange={handleRewardGoalSelect}
                         className="relative h-8 w-full min-w-0 appearance-none rounded-md border border-dashboard-border1 ps-3 text-[13px] font-normal leading-normal text-dashboard-lightGray outline-none"
                       >
-                        {data?.tiers.map((tier, index) => {
+                        {data?.tiers.slice(1).map((tier, index) => {
                           return (
                             <option
                               key={index}
@@ -275,6 +279,7 @@ export default function RewardGoalSelect({
                       placeholder="Enter reward goal"
                       isValid={isRewardGoalValid}
                       disableCondition={false}
+                      disableCorrection
                     />
                   )}
                 <div></div>

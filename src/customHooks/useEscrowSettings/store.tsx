@@ -7,8 +7,6 @@ import {
 } from "./types";
 import { type Objective } from "@prisma/client";
 
-type ObjectiveChoice = Objective & { checked: boolean };
-
 export interface EscrowSettingsState {
   isLoading: boolean;
   isSuccess: boolean;
@@ -26,7 +24,6 @@ export interface EscrowSettingsState {
   areTokensValid: boolean;
   areAmountsValid: boolean;
   isRewardGoalValid: boolean;
-  objectivesChoices: ObjectiveChoice[];
   setIsLoading: (isLoading: boolean) => void;
   setIsSuccess: (isSuccess: boolean) => void;
   setIsConfirmModalOpen: (isConfirmModalOpen: boolean) => void;
@@ -47,7 +44,6 @@ export interface EscrowSettingsState {
   setAreTokensValid: (areTokensValid: boolean) => void;
   setAreAmountsValid: (areAmountsValid: boolean) => void;
   setIsRewardGoalValid: (isRewardGoalValid: boolean) => void;
-  setObjectivesChoices: (objectivesChoices: ObjectiveChoice[]) => void;
 }
 
 export const useEscrowSettingsStore = create<EscrowSettingsState>((set) => {
@@ -68,7 +64,6 @@ export const useEscrowSettingsStore = create<EscrowSettingsState>((set) => {
     areTokensValid: false,
     areAmountsValid: false,
     isRewardGoalValid: false,
-    objectivesChoices: [],
   };
 
   return {
@@ -96,7 +91,5 @@ export const useEscrowSettingsStore = create<EscrowSettingsState>((set) => {
     setAreAmountsValid: (areAmountsValid: boolean) => set({ areAmountsValid }),
     setIsRewardGoalValid: (isRewardGoalValid: boolean) =>
       set({ isRewardGoalValid }),
-    setObjectivesChoices: (objectivesChoices: ObjectiveChoice[]) =>
-      set({ objectivesChoices }),
   };
 });

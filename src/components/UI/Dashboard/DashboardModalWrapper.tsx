@@ -1,16 +1,21 @@
 interface ModalWrapperProps {
   children: React.ReactNode;
-  setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsModalOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsOpenFunc?: (isOpen: boolean) => void;
 }
 
 export default function DashboardModalWrapper({
   children,
   setIsModalOpen,
+  setIsOpenFunc,
 }: ModalWrapperProps) {
   const closeModalOnOverlayClick = (
     e: React.MouseEvent<HTMLDivElement>,
   ): void => {
-    if (e.target === e.currentTarget) setIsModalOpen(false);
+    if (e.target === e.currentTarget) {
+      setIsModalOpen && setIsModalOpen(false);
+      setIsOpenFunc && setIsOpenFunc(false);
+    }
   };
 
   return (
