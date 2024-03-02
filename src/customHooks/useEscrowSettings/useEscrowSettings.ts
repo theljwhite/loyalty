@@ -19,6 +19,7 @@ import {
   toastSuccess,
   dismissToast,
 } from "~/components/UI/Toast/Toast";
+import { useEscrowContractRead } from "../useEscrowContractRead/useEscrowContractRead";
 
 export default function useEscrowSettings(
   escrowAddress: string,
@@ -28,6 +29,12 @@ export default function useEscrowSettings(
     rewardGoal,
     erc721RewardOrder,
     erc721RewardCondition,
+    erc20RewardCondition,
+    erc1155RewardCondition,
+    rewardTokenId,
+    rewardTokenIds,
+    payoutAmount,
+    payoutAmounts,
     setIsLoading,
     setIsSuccess,
     setError,
@@ -39,11 +46,44 @@ export default function useEscrowSettings(
   const { abi: erc1155EscrowAbi } = useEscrowAbi("ERC1155");
 
   const { getTotalPointsPossible } = useLoyaltyContractRead(loyaltyAddress);
+  const { getERC20EscrowBalance } = useEscrowContractRead(
+    escrowAddress,
+    "ERC20",
+  );
+
+  const setERC20EscrowSettingsBasic = async (): Promise<void> => {
+    handleSetLoadingState();
+    try {
+      const setSettingsBasic = await writeContract({
+        abi: erc20EscrowAbi,
+        address: escrowAddress as `0x${string}`,
+        functionName: "setEscrowSettingsBasic",
+        args: [erc20RewardCondition, rewardGoal, payoutAmount],
+      });
+
+      if (setSettingsBasic.hash) handleSetSuccessState;
+    } catch (error) {
+      handleSettingsErrors(error as Error);
+    }
+  };
+
+  const setERC20EscrowSettingsAdvanced = async (): Promise<void> => {
+    handleSetLoadingState();
+    try {
+      const setSettingsAdvanced = await writeContract({
+        abi: erc20EscrowAbi,
+        address: escrowAddress as `0x${string}`,
+        functionName: "setEscrowSettingsAdvanced",
+        args: [erc20RewardCondition, payoutAmounts],
+      });
+      if (setSettingsAdvanced.hash) handleSetSuccessState();
+    } catch (error) {
+      handleSettingsErrors(error as Error);
+    }
+  };
 
   const setERC721EscrowSettings = async (): Promise<void> => {
-    setIsConfirmModalOpen(false);
-    setIsLoading(true);
-    toastLoading("Request sent to wallet", true);
+    handleSetLoadingState();
     try {
       const setERC721Settings = await writeContract({
         abi: erc721EscrowAbi,
@@ -52,14 +92,20 @@ export default function useEscrowSettings(
         args: [erc721RewardOrder, erc721RewardCondition, rewardGoal],
       });
 
-      if (setERC721Settings.hash) {
-        dismissToast();
-        setIsSuccess(true);
-        toastSuccess("Successfully set escrow settings");
-        setIsLoading(false);
-      }
+      if (setERC721Settings.hash) handleSetSuccessState();
     } catch (error) {
       handleSettingsErrors(error as Error);
+    }
+  };
+
+  const validateERC20PayoutsAndBalance = async (): Promise<boolean> => {
+    try {
+      const escrowBalance = await getERC20EscrowBalance();
+      //TODO
+      return false;
+    } catch (error) {
+      handleSettingsErrors(error as Error);
+      return false;
     }
   };
 
@@ -122,10 +168,40 @@ export default function useEscrowSettings(
     return rewardOrderValid && rewardConditionValid;
   };
 
+  const validERC1155RewardCondition = (): boolean => {
+    let isValid: boolean = false;
+    if (
+      erc1155RewardCondition in ERC1155RewardCondition &&
+      erc1155RewardCondition !== ERC1155RewardCondition.NotSet
+    ) {
+      isValid = true;
+    }
+    return isValid;
+  };
+
+  const handleSetLoadingState = (): void => {
+    setIsConfirmModalOpen(false);
+    setIsLoading(true);
+    toastLoading("Request sent to wallet", true);
+  };
+
+  const handleSetSuccessState = (): void => {
+    dismissToast();
+    setIsSuccess(true);
+    toastSuccess("Successfully set escrow settings");
+    setIsLoading(false);
+  };
+
   const handleSettingsErrors = (error: Error): void => {
     console.log("error from handle settings errors", error);
     setError(JSON.stringify(error).slice(0, 50));
   };
 
-  return { setERC721EscrowSettings, validateERC721Settings };
+  return {
+    setERC20EscrowSettingsBasic,
+    setERC20EscrowSettingsAdvanced,
+    validateERC20PayoutsAndBalance,
+    setERC721EscrowSettings,
+    validateERC721Settings,
+  };
 }

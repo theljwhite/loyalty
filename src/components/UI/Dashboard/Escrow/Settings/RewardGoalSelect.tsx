@@ -54,8 +54,6 @@ export default function RewardGoalSelect({
   );
 
   const showObjectivesERC20 =
-    erc20RewardCondition === ERC20RewardCondition.AllObjectivesComplete ||
-    erc20RewardCondition === ERC20RewardCondition.RewardPerObjective ||
     erc20RewardCondition === ERC20RewardCondition.SingleObjective;
 
   const showObjectivesERC721 =
@@ -66,8 +64,6 @@ export default function RewardGoalSelect({
     erc1155RewardCondition === ERC1155RewardCondition.SingleObjective;
 
   const showTiersERC20 =
-    erc20RewardCondition === ERC20RewardCondition.AllTiersComplete ||
-    erc20RewardCondition === ERC20RewardCondition.RewardPerTier ||
     erc20RewardCondition === ERC20RewardCondition.SingleTier;
 
   const showTiersERC721 =
@@ -269,19 +265,17 @@ export default function RewardGoalSelect({
                     </div>
                   </div>
                 )}
-                {escrowType === "ERC721" &&
-                  !showObjectivesChoices &&
-                  !showTiersChoices && (
-                    <DashboardInput
-                      id="single-reward-goal-entry"
-                      stateVar={rewardGoal}
-                      onChange={(e) => handleSingleRewardGoalInput(e)}
-                      placeholder="Enter reward goal"
-                      isValid={isRewardGoalValid}
-                      disableCondition={false}
-                      disableCorrection
-                    />
-                  )}
+                {!showObjectivesChoices && !showTiersChoices && (
+                  <DashboardInput
+                    id="single-reward-goal-entry"
+                    stateVar={rewardGoal}
+                    onChange={(e) => handleSingleRewardGoalInput(e)}
+                    placeholder="Enter reward goal"
+                    isValid={isRewardGoalValid}
+                    disableCondition={false}
+                    disableCorrection
+                  />
+                )}
                 <div></div>
                 <label></label>
               </div>
