@@ -48,7 +48,10 @@ Escrow Wallet (Unfinished):
 ![Escrow Wallet Unfinished](https://i.ibb.co/yVDR4S7/escrow-Wallet1.png)
 
 Depositing Rewards (Unfinished):
-![Depositing Rewards Ufinished](https://i.ibb.co/Kmdz9zf/erc721-Deposit.png)
+![Depositing Rewards Unfinished](https://i.ibb.co/Kmdz9zf/erc721-Deposit.png)
+
+Escrow Settings (Unfinished):
+![Escrow Settings Unfinished](https://i.ibb.co/ygW6k60/escrow-Settings-ERC721.png)
 
 ...etc (will update with more screenshots)
 
