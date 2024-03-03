@@ -15,8 +15,8 @@ import ConfirmERC20EscrowSettings from "./ConfirmERC20EscrowSettings";
 import { DownChevron, InfoIcon } from "../../Icons";
 import DashboardSingleInputBox from "../../DashboardSingleInputBox";
 import {
-  NUMBERS_ONLY_REGEX,
-  NUMBERS_SEPARATED_BY_COMMAS_REGEX,
+  NUMBERS_OR_FLOATS_ONLY_REGEX,
+  NUMBERS_OR_FLOATS_SEPARATED_BY_COMMAS_REGEX,
 } from "~/constants/regularExpressions";
 
 const rewardConditionOptions = [
@@ -49,6 +49,7 @@ export default function ERC20EscrowSettings() {
     isConfirmModalOpen,
     setERC20RewardCondition,
     payoutAmount,
+    payoutAmounts,
     areAmountsValid,
     setPayoutAmount,
     setPayoutAmounts,
@@ -95,14 +96,24 @@ export default function ERC20EscrowSettings() {
   };
 
   const validateSettingsAndOpenConfirm = async (): Promise<void> => {
-    //TODO
+    let isValid: boolean = false;
+    if (
+      erc20RewardCondition === ERC20RewardCondition.RewardPerObjective ||
+      erc20RewardCondition === ERC20RewardCondition.RewardPerTier
+    ) {
+      isValid = await validateERC20PayoutsAndRunEstimate(tiers, objectives);
+    } else {
+      isValid = await validateERC20SinglePayoutAndEstimate();
+    }
+
+    if (isValid) setIsConfirmModalOpen(true);
   };
 
   const handlePayoutAmountsChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ): void => {
     const payoutsString = e.target.value;
-    setPayoutAmount(payoutsString);
+    setPayoutAmounts(payoutsString);
     validatePayoutAmountsInput(payoutsString);
   };
 
@@ -114,7 +125,7 @@ export default function ERC20EscrowSettings() {
   };
 
   const validatePayoutAmountsInput = (payoutsString: string): void => {
-    if (!NUMBERS_SEPARATED_BY_COMMAS_REGEX.test(payoutsString)) {
+    if (!NUMBERS_OR_FLOATS_SEPARATED_BY_COMMAS_REGEX.test(payoutsString)) {
       setAreAmountsValid(false);
     } else {
       setAreAmountsValid(true);
@@ -122,7 +133,7 @@ export default function ERC20EscrowSettings() {
   };
 
   const validatePayoutAmountInput = (payoutString: string): void => {
-    if (!NUMBERS_ONLY_REGEX.test(payoutString)) {
+    if (!NUMBERS_OR_FLOATS_ONLY_REGEX.test(payoutString)) {
       setAreAmountsValid(false);
     } else {
       setAreAmountsValid(true);
@@ -216,13 +227,17 @@ export default function ERC20EscrowSettings() {
           erc20RewardCondition === ERC20RewardCondition.RewardPerTier) && (
           <DashboardSingleInputBox
             title="ERC20 Amounts to Reward"
-            description={`For each tier, enter the desired ERC20 amounts you would like to payout per user reaching the tier. Separate amounts by commas. Since your program has ${tiers.length} tiers, you should have ${tiers.length} amounts.`}
-            stateVar={payoutAmount}
+            description={
+              erc20RewardCondition === ERC20RewardCondition.RewardPerTier
+                ? `For each tier, enter the desired ERC20 amounts you would like to payout per user reaching the tier. Separate amounts by commas. Since your program has ${tiers.length} tiers, you should have ${tiers.length} amounts.`
+                : `Enter the amount that each user should be rewarded per each objective being completed. Separate amounts by commas. Since your program has ${objectives.length} objectives, you should have ${objectives.length} amounts.`
+            }
+            stateVar={payoutAmounts}
             isValid={areAmountsValid}
             disableCondition={false}
             onChange={handlePayoutAmountsChange}
             isRequiredField
-            placeholder="ie: 0.5,1,2,4.0"
+            placeholder="ie: 0.5,1.0,2.0,4.0"
           />
         )}
         {(erc20RewardCondition === ERC20RewardCondition.AllObjectivesComplete ||
@@ -259,6 +274,7 @@ export default function ERC20EscrowSettings() {
                 ? validateSettingsAndOpenConfirm
                 : openConnectModal
             }
+            disableCondition={isConnected && address ? !areAmountsValid : false}
           />
         </div>
       </div>

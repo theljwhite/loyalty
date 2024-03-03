@@ -16,3 +16,4 @@ export const MIN_TIER_NAME_LENGTH = 1;
 export const MAX_TIER_NAME_LENGTH = 30;
 
 export const MAX_DIFF_TOKEN_IDS_ERC1155 = 5;
+export const ERC20_PAYOUT_BUFFER = 5;

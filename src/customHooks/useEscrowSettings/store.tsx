@@ -19,7 +19,7 @@ export interface EscrowSettingsState {
   rewardGoal: string;
   rewardTokenId: string;
   payoutAmount: string;
-  payoutAmounts: number[];
+  payoutAmounts: string;
   payoutEstimate: string;
   rewardTokenIds: string[];
   areTokensValid: boolean;
@@ -40,7 +40,7 @@ export interface EscrowSettingsState {
   setRewardGoal: (rewardGoal: string) => void;
   setRewardTokenId: (rewardTokenId: string) => void;
   setPayoutAmount: (payoutAmount: string) => void;
-  setPayoutAmounts: (payoutAmounts: number[]) => void;
+  setPayoutAmounts: (payoutAmounts: string) => void;
   setPayoutEstimate: (payoutEstimate: string) => void;
   setRewardTokenIds: (rewardTokenIds: string[]) => void;
   setAreTokensValid: (areTokensValid: boolean) => void;
@@ -61,7 +61,7 @@ export const useEscrowSettingsStore = create<EscrowSettingsState>((set) => {
     rewardGoal: "",
     rewardTokenId: "",
     payoutAmount: "",
-    payoutAmounts: [],
+    payoutAmounts: "",
     payoutEstimate: "",
     rewardTokenIds: [],
     areTokensValid: false,
@@ -88,7 +88,7 @@ export const useEscrowSettingsStore = create<EscrowSettingsState>((set) => {
     setRewardGoal: (rewardGoal: string) => set({ rewardGoal }),
     setRewardTokenId: (rewardTokenId: string) => set({ rewardTokenId }),
     setPayoutAmount: (payoutAmount: string) => set({ payoutAmount }),
-    setPayoutAmounts: (payoutAmounts: number[]) => set({ payoutAmounts }),
+    setPayoutAmounts: (payoutAmounts: string) => set({ payoutAmounts }),
     setPayoutEstimate: (payoutEstimate: string) => set({ payoutEstimate }),
     setRewardTokenIds: (rewardTokenIds: string[]) => set({ rewardTokenIds }),
     setAreTokensValid: (areTokensValid: boolean) => set({ areTokensValid }),

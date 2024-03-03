@@ -12,6 +12,7 @@ import { type Objective, type Tier } from "@prisma/client";
 import {
   MAX_OBJECTIVES_LENGTH,
   MAX_OBJECTIVE_POINTS_VALUE,
+  ERC20_PAYOUT_BUFFER,
 } from "~/constants/loyaltyConstants";
 import {
   toastLoading,
@@ -62,7 +63,7 @@ export default function useEscrowSettings(
         args: [erc20RewardCondition, rewardGoal, payoutAmount],
       });
 
-      if (setSettingsBasic.hash) handleSetSuccessState;
+      if (setSettingsBasic.hash) handleSetSuccessState();
     } catch (error) {
       handleSettingsErrors(error as Error);
     }
@@ -104,16 +105,33 @@ export default function useEscrowSettings(
     objectives: Objective[],
   ): Promise<boolean> => {
     const escrowBalance = parseFloat(await getERC20EscrowBalance());
-    const payoutAmounts = payoutAmount.split(",");
+    const payouts = payoutAmounts.split(",");
+    const payoutsToNum = payouts.map((amount) => parseFloat(amount));
+
+    if (!validERC20Enums()) {
+      toastError("You forgot to choose a reward condition.");
+      return false;
+    }
+
+    for (const amount of payoutsToNum) {
+      if (amount * ERC20_PAYOUT_BUFFER >= escrowBalance) {
+        toastError(
+          "Insufficient balance to use these amounts. Lower your amounts.",
+        );
+        return false;
+      }
+    }
 
     if (erc20RewardCondition === ERC20RewardCondition.RewardPerObjective) {
-      if (objectives.length !== payoutAmounts.length) {
-        toastError("Payouts length must match amount of objectives");
+      if (objectives.length !== payouts.length) {
+        toastError(
+          `Payouts length must match amount of objectives: ${objectives.length}`,
+        );
         return false;
       }
       const usersEstimate = estimateWorstCaseTotalUsersToReward(
         escrowBalance,
-        payoutAmounts,
+        payouts,
       );
       setPayoutEstimate(
         `With these payouts, in worst case, ${usersEstimate} different users could be rewarded`,
@@ -121,14 +139,16 @@ export default function useEscrowSettings(
     }
 
     if (erc20RewardCondition === ERC20RewardCondition.RewardPerTier) {
-      if (tiers.length !== payoutAmounts.length) {
-        toastError("Payouts length must match amount of tiers");
+      if (tiers.length !== payouts.length) {
+        toastError(
+          `Payouts length must match amount of tiers: ${tiers.length}`,
+        );
         return false;
       }
 
       const usersEstimate = estimateAllTiersUsersToReward(
         escrowBalance,
-        payoutAmounts,
+        payouts,
       );
       setPayoutEstimate(
         `With these payouts, ${usersEstimate} different users could be rewarded for reaching furthest tier`,
@@ -140,8 +160,16 @@ export default function useEscrowSettings(
   const validateERC20SinglePayoutAndEstimate = async (): Promise<boolean> => {
     const escrowBalance = parseFloat(await getERC20EscrowBalance());
     const payout = parseFloat(payoutAmount);
-    if (escrowBalance >= payout) {
-      toastError("Insufficient balance to reward this amount");
+
+    if (!validERC20Enums()) {
+      toastError("You forgot to choose a reward condition");
+      return false;
+    }
+
+    if (payout * ERC20_PAYOUT_BUFFER >= escrowBalance) {
+      toastError(
+        "Insufficient balance to reward this amount. Use a lower amount.",
+      );
       return false;
     }
     const maxUsersToReward = escrowBalance / payout;
@@ -214,6 +242,16 @@ export default function useEscrowSettings(
     }
 
     return true;
+  };
+
+  const validERC20Enums = (): boolean => {
+    if (
+      erc20RewardCondition in ERC20RewardCondition &&
+      erc20RewardCondition !== ERC20RewardCondition.NotSet
+    ) {
+      return true;
+    }
+    return false;
   };
 
   const validERC721Enums = (): boolean => {

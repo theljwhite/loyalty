@@ -6,6 +6,7 @@ interface DashboardActionButtonProps {
   onClick?: React.MouseEventHandler;
   isPrimary: boolean;
   linkPath?: string;
+  disableCondition?: boolean;
 }
 
 export default function DashboardActionButton({
@@ -14,13 +15,15 @@ export default function DashboardActionButton({
   onClick,
   isPrimary,
   linkPath,
+  disableCondition,
 }: DashboardActionButtonProps) {
   if (isPrimary) {
     return (
       <button
         type={btnType}
         onClick={onClick}
-        className="relative ms-4 inline-flex h-10 w-auto min-w-10 select-none appearance-none items-center justify-center whitespace-nowrap rounded-md bg-primary-1 pe-4 ps-4 align-middle align-middle font-semibold leading-[1.2] text-white"
+        className="relative ms-4 inline-flex h-10 w-auto min-w-10 select-none appearance-none items-center justify-center whitespace-nowrap rounded-md bg-primary-1 pe-4 ps-4 align-middle align-middle font-semibold leading-[1.2] text-white disabled:bg-stone-200 disabled:text-gray-400"
+        {...(disableCondition && { disabled: disableCondition })}
       >
         {btnText}
       </button>
