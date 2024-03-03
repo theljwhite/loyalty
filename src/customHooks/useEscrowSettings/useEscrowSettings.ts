@@ -39,6 +39,7 @@ export default function useEscrowSettings(
     setIsSuccess,
     setError,
     setIsConfirmModalOpen,
+    setPayoutEstimate,
   } = useEscrowSettingsStore((state) => state);
 
   const { abi: erc20EscrowAbi } = useEscrowAbi("ERC20");
@@ -98,15 +99,80 @@ export default function useEscrowSettings(
     }
   };
 
-  const validateERC20PayoutsAndBalance = async (): Promise<boolean> => {
-    try {
-      const escrowBalance = await getERC20EscrowBalance();
-      //TODO
-      return false;
-    } catch (error) {
-      handleSettingsErrors(error as Error);
+  const validateERC20PayoutsAndRunEstimate = async (
+    tiers: Tier[],
+    objectives: Objective[],
+  ): Promise<boolean> => {
+    const escrowBalance = parseFloat(await getERC20EscrowBalance());
+    const payoutAmounts = payoutAmount.split(",");
+
+    if (erc20RewardCondition === ERC20RewardCondition.RewardPerObjective) {
+      if (objectives.length !== payoutAmounts.length) {
+        toastError("Payouts length must match amount of objectives");
+        return false;
+      }
+      const usersEstimate = estimateWorstCaseTotalUsersToReward(
+        escrowBalance,
+        payoutAmounts,
+      );
+      setPayoutEstimate(
+        `With these payouts, in worst case, ${usersEstimate} different users could be rewarded`,
+      );
+    }
+
+    if (erc20RewardCondition === ERC20RewardCondition.RewardPerTier) {
+      if (tiers.length !== payoutAmounts.length) {
+        toastError("Payouts length must match amount of tiers");
+        return false;
+      }
+
+      const usersEstimate = estimateAllTiersUsersToReward(
+        escrowBalance,
+        payoutAmounts,
+      );
+      setPayoutEstimate(
+        `With these payouts, ${usersEstimate} different users could be rewarded for reaching furthest tier`,
+      );
+    }
+    return true;
+  };
+
+  const validateERC20SinglePayoutAndEstimate = async (): Promise<boolean> => {
+    const escrowBalance = parseFloat(await getERC20EscrowBalance());
+    const payout = parseFloat(payoutAmount);
+    if (escrowBalance >= payout) {
+      toastError("Insufficient balance to reward this amount");
       return false;
     }
+    const maxUsersToReward = escrowBalance / payout;
+    setPayoutEstimate(
+      `With this payout, you could reward ${maxUsersToReward} for completion`,
+    );
+
+    return true;
+  };
+
+  const estimateWorstCaseTotalUsersToReward = (
+    escrowBalance: number,
+    payoutAmounts: string[],
+  ): number => {
+    const usersPerIndex = payoutAmounts.map((amount) =>
+      Math.floor(escrowBalance / parseFloat(amount)),
+    );
+    const weakestIndexUsers = Math.min(...usersPerIndex);
+    return weakestIndexUsers;
+  };
+
+  const estimateAllTiersUsersToReward = (
+    escrowBalance: number,
+    payoutAmounts: string[],
+  ): number => {
+    const totalPayouts = payoutAmounts.reduce(
+      (total, payout) => total + parseFloat(payout),
+      0,
+    );
+    const estimatedUsers = Math.floor(escrowBalance / totalPayouts);
+    return estimatedUsers;
   };
 
   const validateERC721Settings = async (
@@ -200,7 +266,8 @@ export default function useEscrowSettings(
   return {
     setERC20EscrowSettingsBasic,
     setERC20EscrowSettingsAdvanced,
-    validateERC20PayoutsAndBalance,
+    validateERC20PayoutsAndRunEstimate,
+    validateERC20SinglePayoutAndEstimate,
     setERC721EscrowSettings,
     validateERC721Settings,
   };

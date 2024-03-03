@@ -13,6 +13,11 @@ import DashboardActionButton from "../../DashboardActionButton";
 import RewardGoalSelect from "./RewardGoalSelect";
 import ConfirmERC20EscrowSettings from "./ConfirmERC20EscrowSettings";
 import { DownChevron, InfoIcon } from "../../Icons";
+import DashboardSingleInputBox from "../../DashboardSingleInputBox";
+import {
+  NUMBERS_ONLY_REGEX,
+  NUMBERS_SEPARATED_BY_COMMAS_REGEX,
+} from "~/constants/regularExpressions";
 
 const rewardConditionOptions = [
   { title: "Choose a reward condition", value: ERC20RewardCondition.NotSet },
@@ -43,6 +48,11 @@ export default function ERC20EscrowSettings() {
     erc20RewardCondition,
     isConfirmModalOpen,
     setERC20RewardCondition,
+    payoutAmount,
+    areAmountsValid,
+    setPayoutAmount,
+    setPayoutAmounts,
+    setAreAmountsValid,
     setIsConfirmModalOpen,
   } = useEscrowSettingsStore((state) => state);
 
@@ -66,8 +76,12 @@ export default function ERC20EscrowSettings() {
   const {
     setERC20EscrowSettingsBasic,
     setERC20EscrowSettingsAdvanced,
-    validateERC20PayoutsAndBalance,
+    validateERC20PayoutsAndRunEstimate,
+    validateERC20SinglePayoutAndEstimate,
   } = useEscrowSettings(escrowAddress ?? "", String(loyaltyAddress));
+
+  const objectives = data?.objectives ?? [];
+  const tiers = data?.tiers ?? [];
 
   const handleSetERC20EscrowSettings = async (): Promise<void> => {
     if (
@@ -82,11 +96,36 @@ export default function ERC20EscrowSettings() {
 
   const validateSettingsAndOpenConfirm = async (): Promise<void> => {
     //TODO
-    if (
-      erc20RewardCondition === ERC20RewardCondition.RewardPerObjective ||
-      erc20RewardCondition === ERC20RewardCondition.RewardPerTier
-    ) {
-      const isValid = await validateERC20PayoutsAndBalance();
+  };
+
+  const handlePayoutAmountsChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ): void => {
+    const payoutsString = e.target.value;
+    setPayoutAmount(payoutsString);
+    validatePayoutAmountsInput(payoutsString);
+  };
+
+  const handleSinglePayoutAmountChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ): void => {
+    setPayoutAmount(e.target.value);
+    validatePayoutAmountInput(e.target.value);
+  };
+
+  const validatePayoutAmountsInput = (payoutsString: string): void => {
+    if (!NUMBERS_SEPARATED_BY_COMMAS_REGEX.test(payoutsString)) {
+      setAreAmountsValid(false);
+    } else {
+      setAreAmountsValid(true);
+    }
+  };
+
+  const validatePayoutAmountInput = (payoutString: string): void => {
+    if (!NUMBERS_ONLY_REGEX.test(payoutString)) {
+      setAreAmountsValid(false);
+    } else {
+      setAreAmountsValid(true);
     }
   };
 
@@ -106,8 +145,8 @@ export default function ERC20EscrowSettings() {
     <>
       {isConfirmModalOpen && (
         <ConfirmERC20EscrowSettings
-          objectives={data?.objectives ?? []}
-          tiers={data?.tiers ?? []}
+          objectives={objectives}
+          tiers={tiers}
           setERC20EscrowSettings={handleSetERC20EscrowSettings}
         />
       )}
@@ -171,7 +210,36 @@ export default function ERC20EscrowSettings() {
         {(erc20RewardCondition === ERC20RewardCondition.SingleObjective ||
           erc20RewardCondition === ERC20RewardCondition.SingleTier ||
           erc20RewardCondition === ERC20RewardCondition.PointsTotal) && (
-          <RewardGoalSelect escrowType="ERC20" />
+          <RewardGoalSelect />
+        )}
+        {(erc20RewardCondition === ERC20RewardCondition.RewardPerObjective ||
+          erc20RewardCondition === ERC20RewardCondition.RewardPerTier) && (
+          <DashboardSingleInputBox
+            title="ERC20 Amounts to Reward"
+            description={`For each tier, enter the desired ERC20 amounts you would like to payout per user reaching the tier. Separate amounts by commas. Since your program has ${tiers.length} tiers, you should have ${tiers.length} amounts.`}
+            stateVar={payoutAmount}
+            isValid={areAmountsValid}
+            disableCondition={false}
+            onChange={handlePayoutAmountsChange}
+            isRequiredField
+            placeholder="ie: 0.5,1,2,4.0"
+          />
+        )}
+        {(erc20RewardCondition === ERC20RewardCondition.AllObjectivesComplete ||
+          erc20RewardCondition === ERC20RewardCondition.AllTiersComplete ||
+          erc20RewardCondition === ERC20RewardCondition.SingleObjective ||
+          erc20RewardCondition === ERC20RewardCondition.SingleTier ||
+          erc20RewardCondition === ERC20RewardCondition.PointsTotal) && (
+          <DashboardSingleInputBox
+            title="ERC20 Amount to Reward"
+            description="Enter ERC20 amount to reward each user who satisfies the reward condition"
+            stateVar={payoutAmount}
+            isValid={areAmountsValid}
+            disableCondition={false}
+            onChange={handleSinglePayoutAmountChange}
+            isRequiredField
+            placeholder="ie: 0.5"
+          />
         )}
         <div className="mt-6 flex flex-row items-center justify-between">
           <DashboardActionButton

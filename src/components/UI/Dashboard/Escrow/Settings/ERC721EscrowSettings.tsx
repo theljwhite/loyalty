@@ -246,7 +246,7 @@ export default function ERC721EscrowSettings() {
             </div>
           }
         />
-        <RewardGoalSelect escrowType="ERC721" />
+        <RewardGoalSelect />
         <div className="mt-6 flex flex-row items-center justify-between">
           <DashboardActionButton
             btnText="Learn more first"

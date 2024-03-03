@@ -18,8 +18,9 @@ export interface EscrowSettingsState {
   erc721RewardOrder: ERC721RewardOrder;
   rewardGoal: string;
   rewardTokenId: string;
-  payoutAmount: number;
+  payoutAmount: string;
   payoutAmounts: number[];
+  payoutEstimate: string;
   rewardTokenIds: string[];
   areTokensValid: boolean;
   areAmountsValid: boolean;
@@ -38,8 +39,9 @@ export interface EscrowSettingsState {
   setERC721RewardOrder: (erc721RewardOrder: ERC721RewardOrder) => void;
   setRewardGoal: (rewardGoal: string) => void;
   setRewardTokenId: (rewardTokenId: string) => void;
-  setPayoutAmount: (payoutAmount: number) => void;
+  setPayoutAmount: (payoutAmount: string) => void;
   setPayoutAmounts: (payoutAmounts: number[]) => void;
+  setPayoutEstimate: (payoutEstimate: string) => void;
   setRewardTokenIds: (rewardTokenIds: string[]) => void;
   setAreTokensValid: (areTokensValid: boolean) => void;
   setAreAmountsValid: (areAmountsValid: boolean) => void;
@@ -58,8 +60,9 @@ export const useEscrowSettingsStore = create<EscrowSettingsState>((set) => {
     erc721RewardOrder: ERC721RewardOrder.NotSet,
     rewardGoal: "",
     rewardTokenId: "",
-    payoutAmount: 0,
+    payoutAmount: "",
     payoutAmounts: [],
+    payoutEstimate: "",
     rewardTokenIds: [],
     areTokensValid: false,
     areAmountsValid: false,
@@ -84,8 +87,9 @@ export const useEscrowSettingsStore = create<EscrowSettingsState>((set) => {
       set({ erc721RewardOrder }),
     setRewardGoal: (rewardGoal: string) => set({ rewardGoal }),
     setRewardTokenId: (rewardTokenId: string) => set({ rewardTokenId }),
-    setPayoutAmount: (payoutAmount: number) => set({ payoutAmount }),
+    setPayoutAmount: (payoutAmount: string) => set({ payoutAmount }),
     setPayoutAmounts: (payoutAmounts: number[]) => set({ payoutAmounts }),
+    setPayoutEstimate: (payoutEstimate: string) => set({ payoutEstimate }),
     setRewardTokenIds: (rewardTokenIds: string[]) => set({ rewardTokenIds }),
     setAreTokensValid: (areTokensValid: boolean) => set({ areTokensValid }),
     setAreAmountsValid: (areAmountsValid: boolean) => set({ areAmountsValid }),

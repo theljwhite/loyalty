@@ -20,13 +20,8 @@ import { DownChevron, ReadIcon } from "../../Icons";
 //but for the first pass, this should work for now.
 
 //TODO - still unfinished for other escrow types (Erc20, erc1155)
-interface RewardGoalSelectProps {
-  escrowType: EscrowType;
-}
 
-export default function RewardGoalSelect({
-  escrowType,
-}: RewardGoalSelectProps) {
+export default function RewardGoalSelect() {
   const [isShowObjectivesOpen, setIsShowObjectivesOpen] =
     useState<boolean>(false);
   const [isShowTiersOpen, setIsShowTiersOpen] = useState<boolean>(false);
@@ -70,7 +65,6 @@ export default function RewardGoalSelect({
     erc721RewardCondition === ERC721RewardCondition.TierReached;
 
   const showTiersERC1155 =
-    erc1155RewardCondition === ERC1155RewardCondition.EachTier ||
     erc1155RewardCondition === ERC1155RewardCondition.SingleTier;
 
   const showObjectivesChoices =
