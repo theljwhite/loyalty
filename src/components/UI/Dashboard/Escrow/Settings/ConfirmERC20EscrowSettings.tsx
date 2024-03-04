@@ -72,7 +72,7 @@ export default function ConfirmERC20EscrowSettings({
         </div>
         {(erc20RewardCondition === ERC20RewardCondition.RewardPerObjective ||
           erc20RewardCondition === ERC20RewardCondition.RewardPerTier) && (
-          <div className="mb-4 flex w-full">
+          <div className="flex-1 py-0 pe-6 ps-6">
             {erc20RewardCondition ===
             ERC20RewardCondition.RewardPerObjective ? (
               <DashboardSummaryTable

@@ -60,7 +60,7 @@ export default function useEscrowSettings(
         abi: erc20EscrowAbi,
         address: escrowAddress as `0x${string}`,
         functionName: "setEscrowSettingsBasic",
-        args: [erc20RewardCondition, rewardGoal, payoutAmount],
+        args: [erc20RewardCondition, rewardGoal, parseFloat(payoutAmount)],
       });
 
       if (setSettingsBasic.hash) handleSetSuccessState();
@@ -72,11 +72,15 @@ export default function useEscrowSettings(
   const setERC20EscrowSettingsAdvanced = async (): Promise<void> => {
     handleSetLoadingState();
     try {
+      const payouts = payoutAmounts
+        .split(",")
+        .map((amount) => parseFloat(amount));
+      console.log("payouts -->", payouts);
       const setSettingsAdvanced = await writeContract({
         abi: erc20EscrowAbi,
         address: escrowAddress as `0x${string}`,
         functionName: "setEscrowSettingsAdvanced",
-        args: [erc20RewardCondition, payoutAmounts],
+        args: [erc20RewardCondition, payouts],
       });
       if (setSettingsAdvanced.hash) handleSetSuccessState();
     } catch (error) {
