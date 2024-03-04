@@ -2,6 +2,7 @@ import {
   ERC20RewardCondition,
   ERC721RewardCondition,
   ERC721RewardOrder,
+  ERC1155RewardCondition,
 } from "~/customHooks/useEscrowSettings/types";
 
 export type ERC20RewardConditionDescriptor = {
@@ -16,6 +17,11 @@ export type ERC721RewardConditionDescriptor = {
 
 export type ERC721RewardOrderDescriptor = {
   erc721RewardOrder: ERC721RewardOrder;
+  info: string;
+};
+
+export type ERC1155RewardConditionDescriptor = {
+  erc1155RewardCondition: ERC1155RewardCondition;
   info: string;
 };
 
@@ -93,3 +99,31 @@ export const erc721RewardOrderDescriptors: ERC721RewardOrderDescriptor[] = [
     info: "As various users complete objectives and tiers, tokens will be be awarded in a random order",
   },
 ];
+
+export const erc1155RewardConditionDescriptors: ERC1155RewardConditionDescriptor[] =
+  [
+    {
+      erc1155RewardCondition: ERC1155RewardCondition.NotSet,
+      info: "Select a reward condition to learn more",
+    },
+    {
+      erc1155RewardCondition: ERC1155RewardCondition.EachObjective,
+      info: "Reward tokens for each objective completed by a user",
+    },
+    {
+      erc1155RewardCondition: ERC1155RewardCondition.SingleObjective,
+      info: "Specify a single objective that will reward tokens once completed by a user",
+    },
+    {
+      erc1155RewardCondition: ERC1155RewardCondition.EachTier,
+      info: "Reward tokens for each tier reached and passed by a user",
+    },
+    {
+      erc1155RewardCondition: ERC1155RewardCondition.SingleTier,
+      info: "Specify a single tier that will reward tokens once reached by a user",
+    },
+    {
+      erc1155RewardCondition: ERC1155RewardCondition.PointsTotal,
+      info: "Specify a points total that will reward tokens once reached by a user",
+    },
+  ];

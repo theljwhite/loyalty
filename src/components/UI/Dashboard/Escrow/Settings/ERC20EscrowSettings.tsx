@@ -8,16 +8,16 @@ import { useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { erc20RewardConditionDescriptors } from "~/constants/contractsInfoHelp";
 import { ROUTE_DOCS_MAIN } from "~/configs/routes";
-import DashboardSelectBox from "../../DashboardSelectBox";
-import DashboardActionButton from "../../DashboardActionButton";
-import RewardGoalSelect from "./RewardGoalSelect";
-import ConfirmERC20EscrowSettings from "./ConfirmERC20EscrowSettings";
-import { DownChevron, InfoIcon } from "../../Icons";
-import DashboardSingleInputBox from "../../DashboardSingleInputBox";
 import {
   NUMBERS_OR_FLOATS_ONLY_REGEX,
   NUMBERS_OR_FLOATS_SEPARATED_BY_COMMAS_REGEX,
 } from "~/constants/regularExpressions";
+import DashboardSelectBox from "../../DashboardSelectBox";
+import DashboardActionButton from "../../DashboardActionButton";
+import DashboardSingleInputBox from "../../DashboardSingleInputBox";
+import RewardGoalSelect from "./RewardGoalSelect";
+import ConfirmERC20EscrowSettings from "./ConfirmERC20EscrowSettings";
+import { DownChevron, InfoIcon } from "../../Icons";
 
 const rewardConditionOptions = [
   { title: "Choose a reward condition", value: ERC20RewardCondition.NotSet },
@@ -46,11 +46,11 @@ export default function ERC20EscrowSettings() {
 
   const {
     erc20RewardCondition,
-    isConfirmModalOpen,
-    setERC20RewardCondition,
     payoutAmount,
     payoutAmounts,
     areAmountsValid,
+    isConfirmModalOpen,
+    setERC20RewardCondition,
     setPayoutAmount,
     setPayoutAmounts,
     setAreAmountsValid,
@@ -74,15 +74,15 @@ export default function ERC20EscrowSettings() {
       { refetchOnWindowFocus: false },
     );
 
+  const objectives = data?.objectives ?? [];
+  const tiers = data?.tiers ?? [];
+
   const {
     setERC20EscrowSettingsBasic,
     setERC20EscrowSettingsAdvanced,
     validateERC20PayoutsAndRunEstimate,
     validateERC20SinglePayoutAndEstimate,
   } = useEscrowSettings(escrowAddress ?? "", String(loyaltyAddress));
-
-  const objectives = data?.objectives ?? [];
-  const tiers = data?.tiers ?? [];
 
   const handleSetERC20EscrowSettings = async (): Promise<void> => {
     if (
@@ -165,7 +165,7 @@ export default function ERC20EscrowSettings() {
         <DashboardSelectBox
           title="ERC20 Reward Condition"
           description="The condition that will reward users as they progress throughout your loyalty program."
-          descriptionTwo="Do you want to reward a specific objective, tier, or points total? Once written to your escrow contract, this setting cannot be reversed."
+          descriptionTwo="Do you want to reward a specific objective, tier, or points total? Every objective or tier? Once written to your escrow contract, this setting cannot be reversed."
           selections={[]}
           isRequiredField
           customSelect={

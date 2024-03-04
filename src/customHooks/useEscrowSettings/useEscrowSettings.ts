@@ -52,6 +52,10 @@ export default function useEscrowSettings(
     escrowAddress,
     "ERC20",
   );
+  const { getERC1155EscrowTokenDetails } = useEscrowContractRead(
+    escrowAddress,
+    "ERC1155",
+  );
 
   const setERC20EscrowSettingsBasic = async (): Promise<void> => {
     handleSetLoadingState();
@@ -104,6 +108,38 @@ export default function useEscrowSettings(
     }
   };
 
+  const setERC1155EscrowSettingsBasic = async (): Promise<void> => {
+    handleSetLoadingState();
+    try {
+      const setERC1155Settings = await writeContract({
+        abi: erc1155EscrowAbi,
+        address: escrowAddress as `0x${string}`,
+        functionName: "setEscrowSettingsBasic",
+        args: [erc1155RewardCondition, rewardTokenId, payoutAmount, rewardGoal],
+      });
+      if (setERC1155Settings.hash) handleSetSuccessState();
+    } catch (error) {
+      handleSettingsErrors(error as Error);
+    }
+  };
+
+  const setERC1155EscrowSettingsAdvanced = async (): Promise<void> => {
+    handleSetLoadingState();
+    const tokenIds = rewardTokenIds.split(",");
+    const payouts = payoutAmounts.split(",");
+    try {
+      const setSettingsAdvanced = await writeContract({
+        abi: erc1155EscrowAbi,
+        address: escrowAddress as `0x${string}`,
+        functionName: "setEscrowSettingsAdvanced",
+        args: [erc1155RewardCondition, tokenIds, payouts],
+      });
+      if (setSettingsAdvanced.hash) handleSetSuccessState();
+    } catch (error) {
+      handleSettingsErrors(error as Error);
+    }
+  };
+
   const validateERC20PayoutsAndRunEstimate = async (
     tiers: Tier[],
     objectives: Objective[],
@@ -112,7 +148,7 @@ export default function useEscrowSettings(
     const payouts = payoutAmounts.split(",");
     const payoutsToNum = payouts.map((amount) => parseFloat(amount));
 
-    if (!validERC20Enums()) {
+    if (!validERC20RewardCondition()) {
       toastError("You forgot to choose a reward condition.");
       return false;
     }
@@ -165,7 +201,7 @@ export default function useEscrowSettings(
     const escrowBalance = parseFloat(await getERC20EscrowBalance());
     const payout = parseFloat(payoutAmount);
 
-    if (!validERC20Enums()) {
+    if (!validERC20RewardCondition()) {
       toastError("You forgot to choose a reward condition");
       return false;
     }
@@ -213,7 +249,7 @@ export default function useEscrowSettings(
   ): Promise<boolean> => {
     const rewardGoalNum = Number(rewardGoal);
 
-    if (!validERC721Enums()) {
+    if (!validERC721RewardCondition()) {
       toastError("You forgot to choose a reward order or condition");
       return false;
     }
@@ -248,7 +284,24 @@ export default function useEscrowSettings(
     return true;
   };
 
-  const validERC20Enums = (): boolean => {
+  const validateERC1155PayoutsAndRunEstimate = async (
+    objectives: Objective[],
+    tiers: Tier[],
+  ): Promise<boolean> => {
+    if (!validERC1155RewardCondition()) {
+      toastError("You forgot to choose a reward condition");
+      return false;
+    }
+
+    const erc1155EscrowDetails = await getERC1155EscrowTokenDetails();
+    const payouts = payoutAmounts.split(",").map((amount) => Number(amount));
+
+    //TODO
+
+    return true;
+  };
+
+  const validERC20RewardCondition = (): boolean => {
     if (
       erc20RewardCondition in ERC20RewardCondition &&
       erc20RewardCondition !== ERC20RewardCondition.NotSet
@@ -258,7 +311,7 @@ export default function useEscrowSettings(
     return false;
   };
 
-  const validERC721Enums = (): boolean => {
+  const validERC721RewardCondition = (): boolean => {
     let rewardOrderValid: boolean = false;
     let rewardConditionValid: boolean = false;
     if (
@@ -308,9 +361,11 @@ export default function useEscrowSettings(
   return {
     setERC20EscrowSettingsBasic,
     setERC20EscrowSettingsAdvanced,
+    setERC721EscrowSettings,
+    setERC1155EscrowSettingsBasic,
+    setERC1155EscrowSettingsAdvanced,
     validateERC20PayoutsAndRunEstimate,
     validateERC20SinglePayoutAndEstimate,
-    setERC721EscrowSettings,
     validateERC721Settings,
   };
 }
