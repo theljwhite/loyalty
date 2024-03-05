@@ -13,6 +13,7 @@ import {
   MAX_OBJECTIVES_LENGTH,
   MAX_OBJECTIVE_POINTS_VALUE,
   ERC20_PAYOUT_BUFFER,
+  ERC1155_PAYOUT_BUFFER,
 } from "~/constants/loyaltyConstants";
 import {
   toastLoading,
@@ -284,7 +285,7 @@ export default function useEscrowSettings(
     return true;
   };
 
-  const validateERC1155PayoutsAndRunEstimate = async (
+  const validateERC1155Advanced = async (
     objectives: Objective[],
     tiers: Tier[],
   ): Promise<boolean> => {
@@ -294,9 +295,116 @@ export default function useEscrowSettings(
     }
 
     const erc1155EscrowDetails = await getERC1155EscrowTokenDetails();
+    const escrowBalance = erc1155EscrowDetails?.tokens.map((tkn) => ({
+      id: Number(tkn.id),
+      value: Number(tkn.value),
+    }));
+
+    const tokenIdsEntry = rewardTokenIds.split(",");
+    const tokenIdsEntryNum = tokenIdsEntry.map((tkn) => Number(tkn));
     const payouts = payoutAmounts.split(",").map((amount) => Number(amount));
 
-    //TODO
+    if (tokenIdsEntry.length !== payouts.length) {
+      toastError("Token ids and amounts must be the same length");
+      return false;
+    }
+
+    if (
+      erc1155RewardCondition === ERC1155RewardCondition.EachObjective &&
+      objectives.length !== payouts.length
+    ) {
+      toastError(
+        `Token ids and amounts should correspond to each of your ${objectives.length} objectives`,
+      );
+      return false;
+    }
+
+    if (
+      erc1155RewardCondition === ERC1155RewardCondition.EachTier &&
+      tiers.length !== payouts.length
+    ) {
+      toastError(
+        `Token ids and amounts should correspond to each of your ${tiers.length} tiers.`,
+      );
+      return false;
+    }
+
+    const validPayouts = validateERC1155PayoutsWithBalance(
+      tokenIdsEntryNum,
+      payouts,
+      escrowBalance ?? [],
+    );
+
+    if (!validPayouts) return false;
+
+    return true;
+  };
+
+  const validateERC1155Basic = async (): Promise<boolean> => {
+    if (!validERC1155RewardCondition()) {
+      toastError("You forgot to choose a reward condition");
+      return false;
+    }
+
+    const erc1155EscrowDetails = await getERC1155EscrowTokenDetails();
+    const escrowBalance = erc1155EscrowDetails?.tokens.map((tkn) => ({
+      id: Number(tkn.id),
+      value: Number(tkn.value),
+    }));
+
+    validateERC1155PayoutsWithBalance(
+      [Number(rewardTokenId)],
+      [Number(payoutAmount)],
+      escrowBalance ?? [],
+    );
+
+    return true;
+  };
+
+  const validateERC1155PayoutsWithBalance = (
+    tokenIdsEntry: number[],
+    payouts: number[],
+    escrowBalance: { id: number; value: number }[],
+  ): boolean => {
+    const tokenIdAmounts: Record<string, number> = {};
+
+    const isValidTokenIds = tokenIdsEntry.every(
+      (tokenId) => escrowBalance?.some((bal) => bal.id === tokenId),
+    );
+
+    if (!isValidTokenIds) {
+      toastError("You entered a token id that is not in your escrow balance");
+      return false;
+    }
+
+    const payoutContainsZero = payouts.some((amount) => amount === 0);
+
+    if (payoutContainsZero) {
+      toastError("Payout amounts must all be greater than 0");
+      return false;
+    }
+
+    tokenIdsEntry.forEach((tokenId, index) => {
+      tokenIdAmounts[String(tokenId)] =
+        (tokenIdAmounts[String(tokenId)] ?? 0) + payouts[index]!;
+    });
+
+    for (const tokenId in tokenIdAmounts) {
+      const totalPayout = tokenIdAmounts[tokenId]!;
+      const escrowBalanceForToken = escrowBalance.find(
+        (bal) => bal.id === Number(tokenId),
+      );
+
+      if (
+        !escrowBalanceForToken ||
+        totalPayout * ERC1155_PAYOUT_BUFFER > escrowBalanceForToken.value
+      ) {
+        toastError(
+          `Insufficient balance for a token, id # ${tokenId}. Escrow balance is ${escrowBalanceForToken?.value} and you are attempting to reward ${totalPayout} overall. Lower the amounts for this token so that the total rewarded is ${ERC1155_PAYOUT_BUFFER} times less than the escrow balance so that multiple users can be rewarded.`,
+        );
+        return false;
+      }
+    }
 
     return true;
   };
@@ -367,5 +475,7 @@ export default function useEscrowSettings(
     validateERC20PayoutsAndRunEstimate,
     validateERC20SinglePayoutAndEstimate,
     validateERC721Settings,
+    validateERC1155Basic,
+    validateERC1155Advanced,
   };
 }

@@ -4,7 +4,7 @@ import { ERC20RewardCondition } from "~/customHooks/useEscrowSettings/types";
 import DashboardModalWrapper from "../../DashboardModalWrapper";
 import DashboardSummaryTable from "../../DashboardSummaryTable";
 
-//TODO 3-3 unfinished
+//TODO 3-4 unfinished
 
 interface ConfirmERC20SettingsProps {
   objectives: Objective[];

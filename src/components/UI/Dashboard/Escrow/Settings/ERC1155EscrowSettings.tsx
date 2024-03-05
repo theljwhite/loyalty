@@ -81,23 +81,29 @@ export default function ERC1155EscrowSettings() {
   const objectives = data?.objectives ?? [];
   const tiers = data?.tiers ?? [];
 
-  const { setERC1155EscrowSettingsBasic, setERC1155EscrowSettingsAdvanced } =
-    useEscrowSettings(escrowAddress ?? "", String(loyaltyAddress));
+  const {
+    setERC1155EscrowSettingsBasic,
+    setERC1155EscrowSettingsAdvanced,
+    validateERC1155Basic,
+    validateERC1155Advanced,
+  } = useEscrowSettings(escrowAddress ?? "", String(loyaltyAddress));
+
+  const isSingleGoalCondition =
+    erc1155RewardCondition === ERC1155RewardCondition.SingleObjective ||
+    erc1155RewardCondition === ERC1155RewardCondition.SingleTier ||
+    erc1155RewardCondition === ERC1155RewardCondition.PointsTotal;
 
   const validateSettingsAndOpenConfirm = async (): Promise<void> => {
-    //TODO
+    let isValid: boolean = false;
+    if (isSingleGoalCondition) isValid = await validateERC1155Basic();
+    else isValid = await validateERC1155Advanced(objectives, tiers);
+
+    if (isValid) setIsConfirmModalOpen(true);
   };
 
   const handleSetERC1155EscrowSettings = async (): Promise<void> => {
-    if (
-      erc1155RewardCondition === ERC1155RewardCondition.SingleObjective ||
-      erc1155RewardCondition === ERC1155RewardCondition.SingleTier ||
-      erc1155RewardCondition === ERC1155RewardCondition.PointsTotal
-    ) {
-      await setERC1155EscrowSettingsBasic();
-    } else {
-      await setERC1155EscrowSettingsAdvanced();
-    }
+    if (isSingleGoalCondition) await setERC1155EscrowSettingsBasic();
+    else await setERC1155EscrowSettingsAdvanced();
   };
 
   const handlePayoutAmountsChange = (
@@ -236,9 +242,7 @@ export default function ERC1155EscrowSettings() {
             </div>
           }
         />
-        {(erc1155RewardCondition === ERC1155RewardCondition.SingleObjective ||
-          erc1155RewardCondition === ERC1155RewardCondition.SingleTier ||
-          erc1155RewardCondition === ERC1155RewardCondition.PointsTotal) && (
+        {isSingleGoalCondition && (
           <>
             <RewardGoalSelect />
             <DashboardSingleInputBox
@@ -271,15 +275,15 @@ export default function ERC1155EscrowSettings() {
               title="Token Ids to Reward"
               description={
                 erc1155RewardCondition === ERC1155RewardCondition.EachTier
-                  ? `Enter the token ids that you would like to reward for each tier. Since your program has ${tiers.length} tiers, you should have ${tiers.length} token id entries.`
-                  : `Enter the token ids that you would like to reward for each objective. Since your program has ${objectives.length} objectives, you should have ${objectives.length} token id entries.`
+                  ? `Enter the token ids that you would like to reward for each tier. Since your program has ${tiers.length} tiers, you should have ${tiers.length} token id entries. You can reward amounts of the same token id for multiple tiers if you want.`
+                  : `Enter the token ids that you would like to reward for each objective. Since your program has ${objectives.length} objectives, you should have ${objectives.length} token id entries. You can reward amounts of the same token id for multiple objectives if you want.`
               }
               stateVar={rewardTokenIds}
               isValid={areTokensValid}
               disableCondition={false}
               onChange={handleMultiTokenIdChange}
               isRequiredField
-              placeholder="ie: 1034,1035,900,100"
+              placeholder="ie: 1034,1035,1034,100"
             />
             <DashboardSingleInputBox
               title="Amount of Tokens to Reward"
