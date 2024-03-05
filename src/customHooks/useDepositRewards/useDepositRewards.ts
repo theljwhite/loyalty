@@ -298,6 +298,7 @@ export default function useDepositRewards(
   };
 
   const handleDepositErrors = (error: Error): void => {
+    dismissToast();
     const errorMessage = error.message.toLowerCase();
     const errorName = error.name;
     const errorCause = error.cause;

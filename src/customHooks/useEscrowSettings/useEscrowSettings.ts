@@ -1,7 +1,8 @@
 import { useEscrowAbi } from "../useContractAbi/useContractAbi";
 import { useEscrowSettingsStore } from "./store";
 import { useLoyaltyContractRead } from "../useLoyaltyContractRead/useLoyaltyContractRead";
-import { writeContract } from "wagmi/actions";
+import { useEscrowContractRead } from "../useEscrowContractRead/useEscrowContractRead";
+import { waitForTransaction, writeContract } from "wagmi/actions";
 import {
   ERC20RewardCondition,
   ERC721RewardCondition,
@@ -21,7 +22,6 @@ import {
   toastSuccess,
   dismissToast,
 } from "~/components/UI/Toast/Toast";
-import { useEscrowContractRead } from "../useEscrowContractRead/useEscrowContractRead";
 
 export default function useEscrowSettings(
   escrowAddress: string,
@@ -68,7 +68,11 @@ export default function useEscrowSettings(
         args: [erc20RewardCondition, rewardGoal, parseFloat(payoutAmount)],
       });
 
-      if (setSettingsBasic.hash) handleSetSuccessState();
+      const setSettingsReceipt = await waitForTransaction({
+        hash: setSettingsBasic.hash,
+      });
+
+      if (setSettingsReceipt.status === "success") handleSetSuccessState();
     } catch (error) {
       handleSettingsErrors(error as Error);
     }
@@ -80,14 +84,19 @@ export default function useEscrowSettings(
       const payouts = payoutAmounts
         .split(",")
         .map((amount) => parseFloat(amount));
-      console.log("payouts -->", payouts);
+
       const setSettingsAdvanced = await writeContract({
         abi: erc20EscrowAbi,
         address: escrowAddress as `0x${string}`,
         functionName: "setEscrowSettingsAdvanced",
         args: [erc20RewardCondition, payouts],
       });
-      if (setSettingsAdvanced.hash) handleSetSuccessState();
+
+      const setSettingsReceipt = await waitForTransaction({
+        hash: setSettingsAdvanced.hash,
+      });
+
+      if (setSettingsReceipt.status === "success") handleSetSuccessState();
     } catch (error) {
       handleSettingsErrors(error as Error);
     }
@@ -352,11 +361,13 @@ export default function useEscrowSettings(
       value: Number(tkn.value),
     }));
 
-    validateERC1155PayoutsWithBalance(
+    const validPayouts = validateERC1155PayoutsWithBalance(
       [Number(rewardTokenId)],
       [Number(payoutAmount)],
       escrowBalance ?? [],
     );
+
+    if (!validPayouts) return false;
 
     return true;
   };
@@ -462,8 +473,16 @@ export default function useEscrowSettings(
   };
 
   const handleSettingsErrors = (error: Error): void => {
-    console.log("error from handle settings errors", error);
+    //TODO - error handle escrow settings
+    let toastErrorMessage: string = "";
+    const errorMessage = error.message.toLowerCase();
+    dismissToast();
+    setIsLoading(false);
+    if (errorMessage.includes("user rejected the request")) {
+      toastErrorMessage = "You rejected the wallet request";
+    }
     setError(JSON.stringify(error).slice(0, 50));
+    toastError(toastErrorMessage);
   };
 
   return {

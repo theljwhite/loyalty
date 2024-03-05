@@ -2,9 +2,6 @@ import { type Objective, type Tier } from "@prisma/client";
 import { useEscrowSettingsStore } from "~/customHooks/useEscrowSettings/store";
 import { ERC1155RewardCondition } from "~/customHooks/useEscrowSettings/types";
 import DashboardModalWrapper from "../../DashboardModalWrapper";
-import DashboardSummaryTable from "../../DashboardSummaryTable";
-
-//TODO 3/4 unfinished
 
 interface ConfirmERC1155EscrowProps {
   objectives: Objective[];
@@ -31,20 +28,21 @@ export default function ConfirmERC1155EscrowSettings({
     erc1155RewardCondition === ERC1155RewardCondition.SingleObjective ||
     erc1155RewardCondition === ERC1155RewardCondition.SingleTier ||
     erc1155RewardCondition === ERC1155RewardCondition.PointsTotal;
+  const singleObjCondition =
+    erc1155RewardCondition === ERC1155RewardCondition.SingleObjective;
+  const singleTierCondition =
+    erc1155RewardCondition === ERC1155RewardCondition.SingleTier;
 
   const payoutAmountsArr = payoutAmounts.split(",");
   const rewardTokenIdsArr = rewardTokenIds.split(",");
 
   const objectivesWithPayouts = objectives.map((obj, index) => ({
     ...obj,
-    amount: `${payoutAmountsArr[index]} token id #${rewardTokenIdsArr[index]}`,
+    amount: `${payoutAmountsArr[index]} Token Id #${rewardTokenIdsArr[index]}`,
   }));
   const tiersWithPayouts = tiers.map((tier, index) => ({
     ...tier,
-    amount:
-      index === 0
-        ? "N/A"
-        : `${payoutAmountsArr[index]} token id #${rewardTokenIdsArr[index]}`,
+    amount: `${payoutAmountsArr[index]} Token Id #${rewardTokenIdsArr[index]}`,
   }));
 
   return (
@@ -62,78 +60,90 @@ export default function ConfirmERC1155EscrowSettings({
         </header>
 
         <div className="flex-1 py-0 pe-6 ps-6">
-          {isSingleGoalCondition ? (
-            <div className="relative isolate flex w-full">
-              <div className="flex w-full flex-row items-center">
-                <div className="flex w-full flex-col gap-2 overflow-hidden rounded-md bg-dashboard-codeBox p-4">
-                  <div className="flex w-full justify-between">
-                    <div className="flex">
-                      <p className="overflow-hidden truncate text-sm font-semibold capitalize leading-5 text-white">
-                        {ERC1155RewardCondition[erc1155RewardCondition]} Reward
-                        Condition
-                      </p>
-                    </div>
-                    <div className="ml-auto flex gap-1"></div>
+          <div className="relative isolate flex w-full">
+            <div className="flex w-full flex-row items-center">
+              <div className="flex w-full flex-col gap-2 overflow-hidden rounded-md bg-dashboard-codeBox p-4">
+                <div className="flex w-full justify-between">
+                  <div className="flex">
+                    <p className="overflow-hidden truncate text-sm font-semibold capitalize leading-5 text-white">
+                      Rewarding tokens with{" "}
+                      {ERC1155RewardCondition[erc1155RewardCondition]} Reward
+                      Condition
+                    </p>
                   </div>
-                  <div className="relative flex">
+                  <div className="ml-auto flex gap-1"></div>
+                </div>
+                <div className="relative flex">
+                  {isSingleGoalCondition ? (
                     <section className="relative flex w-full flex-col">
                       <div className="flex max-h-[300px] w-full flex-row text-start">
                         <span className="pr-3" />
                         <span className="text-md text-dashboard-codeLightBlue">
-                          {erc1155RewardCondition ===
-                          ERC1155RewardCondition.SingleObjective
-                            ? `"${objectives[Number(rewardGoal)]?.title}"`
-                            : erc1155RewardCondition ===
-                                ERC1155RewardCondition.SingleTier
-                              ? `${tiers[Number(rewardGoal)]?.name}`
-                              : `${rewardGoal} points total`}
+                          {payoutAmount} Token Id #{rewardTokenId}:{" "}
+                          <span className="text-orange-400">
+                            {singleObjCondition
+                              ? `${objectives[Number(rewardGoal)]?.title.slice(
+                                  0,
+                                  75,
+                                )}`
+                              : singleTierCondition
+                                ? `${tiers[Number(rewardGoal)]?.name}`
+                                : `${rewardGoal} points total`}
+                          </span>
                         </span>
                       </div>
                     </section>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="relative isolate flex w-full">
-              <div className="flex w-full flex-row items-center">
-                <div className="flex w-full flex-col gap-2 overflow-hidden rounded-md bg-dashboard-codeBox p-4">
-                  <div className="flex w-full justify-between">
-                    <div className="flex">
-                      <p className="overflow-hidden truncate text-sm font-semibold capitalize leading-5 text-white">
-                        Rewarding tokens with{" "}
-                        {ERC1155RewardCondition[erc1155RewardCondition]} Reward
-                        Condition
-                      </p>
-                    </div>
-                    <div className="ml-auto flex gap-1"></div>
-                  </div>
-                  <div className="relative flex">
+                  ) : (
                     <section className="relative flex w-full flex-col">
-                      <div className="flex-1 py-0 pe-6 ps-6">
+                      <div className="flex max-h-[300px] w-full flex-row text-start">
+                        <span className="pr-3" />
                         {erc1155RewardCondition ===
                         ERC1155RewardCondition.EachObjective ? (
-                          <DashboardSummaryTable
-                            title="Objectives with Payout Amounts"
-                            dataArr={objectivesWithPayouts}
-                            arrProperty1={(obj) => obj.title}
-                            arrProperty2={(obj) => String(obj.amount)}
-                          />
+                          <div>
+                            {objectivesWithPayouts.map((obj) => {
+                              return (
+                                <>
+                                  <span
+                                    key={obj.id}
+                                    className="text-md text-dashboard-codeLightBlue"
+                                  >
+                                    {obj.amount} per user:{" "}
+                                    <span className="text-orange-400">
+                                      {obj.title.slice(0, 75)}{" "}
+                                    </span>
+                                  </span>
+                                  <br />
+                                </>
+                              );
+                            })}
+                          </div>
                         ) : (
-                          <DashboardSummaryTable
-                            title="Tiers with Payout Amounts"
-                            dataArr={tiersWithPayouts}
-                            arrProperty1={(tier) => tier.name}
-                            arrProperty2={(tier) => tier.amount}
-                          />
+                          <div>
+                            {tiersWithPayouts.map((tier) => {
+                              return (
+                                <>
+                                  <span
+                                    key={tier.id}
+                                    className="text-md text-dashboard-codeLightBlue"
+                                  >
+                                    {tier.amount} per user:{" "}
+                                    <span className="text-orange-400">
+                                      {tier.name}{" "}
+                                    </span>
+                                  </span>
+                                  <br />
+                                </>
+                              );
+                            })}
+                          </div>
                         )}
                       </div>
                     </section>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
 
         <footer className="mt-8 flex items-center justify-between py-0 pe-6 ps-6">

@@ -275,7 +275,7 @@ export default function ERC1155EscrowSettings() {
               title="Token Ids to Reward"
               description={
                 erc1155RewardCondition === ERC1155RewardCondition.EachTier
-                  ? `Enter the token ids that you would like to reward for each tier. Since your program has ${tiers.length} tiers, you should have ${tiers.length} token id entries. You can reward amounts of the same token id for multiple tiers if you want.`
+                  ? `Enter the token ids that you would like to reward for each tier. Since your program has ${tiers.length} tiers, you should have ${tiers.length} token id entries. You can reward amounts of the same token id for multiple tiers if you want. Separate token ids by commas.`
                   : `Enter the token ids that you would like to reward for each objective. Since your program has ${objectives.length} objectives, you should have ${objectives.length} token id entries. You can reward amounts of the same token id for multiple objectives if you want.`
               }
               stateVar={rewardTokenIds}
