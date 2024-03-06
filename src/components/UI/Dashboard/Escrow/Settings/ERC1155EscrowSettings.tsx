@@ -7,7 +7,6 @@ import useEscrowSettings from "~/customHooks/useEscrowSettings/useEscrowSettings
 import { useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { erc1155RewardConditionDescriptors } from "~/constants/contractsInfoHelp";
-import { ROUTE_DOCS_MAIN } from "~/configs/routes";
 import {
   NUMBERS_ONLY_REGEX,
   NUMBERS_SEPARATED_BY_COMMAS_REGEX,
@@ -17,6 +16,8 @@ import DashboardActionButton from "../../DashboardActionButton";
 import DashboardSingleInputBox from "../../DashboardSingleInputBox";
 import RewardGoalSelect from "./RewardGoalSelect";
 import ConfirmERC1155EscrowSettings from "./ConfirmERC1155EscrowSettings";
+import ObjectivesAndTiersPreview from "./ObjectivesAndTiersPreview";
+import ReviewBalances from "./ReviewBalances";
 import { DownChevron, InfoIcon } from "../../Icons";
 
 const rewardConditionOptions = [
@@ -41,6 +42,10 @@ export default function ERC1155EscrowSettings() {
   const [rewardConditionInfo, setRewardConditionInfo] = useState<string>(
     "Select a reward condition to learn more",
   );
+  const [isReviewObjectivesOpen, setIsReviewObjectivesOpen] =
+    useState<boolean>(false);
+  const [isReviewBalancesOpen, setIsReviewBalancesOpen] =
+    useState<boolean>(false);
 
   const {
     erc1155RewardCondition,
@@ -303,12 +308,18 @@ export default function ERC1155EscrowSettings() {
         )}
 
         <div className="mt-6 flex flex-row items-center justify-between">
-          <DashboardActionButton
-            btnText="Learn more first"
-            linkPath={ROUTE_DOCS_MAIN}
-            isPrimary={false}
-          />
-
+          <div className="flex flex-row gap-2">
+            <DashboardActionButton
+              btnText="Review Objectives/Tiers"
+              onClick={() => setIsReviewObjectivesOpen(true)}
+              isPrimary={false}
+            />
+            <DashboardActionButton
+              btnText="Review Balances"
+              onClick={() => setIsReviewBalancesOpen(true)}
+              isPrimary={false}
+            />
+          </div>
           <DashboardActionButton
             btnText={
               isConnected && address ? "Finalize Settings" : "Connect wallet"
@@ -324,6 +335,20 @@ export default function ERC1155EscrowSettings() {
           />
         </div>
       </div>
+      {isReviewObjectivesOpen && (
+        <ObjectivesAndTiersPreview
+          objectives={objectives}
+          tiers={tiers}
+          setIsOpen={setIsReviewObjectivesOpen}
+        />
+      )}
+      {isReviewBalancesOpen && (
+        <ReviewBalances
+          setIsOpen={setIsReviewBalancesOpen}
+          escrowAddress={escrowAddress ?? ""}
+          escrowType="ERC1155"
+        />
+      )}
     </>
   );
 }

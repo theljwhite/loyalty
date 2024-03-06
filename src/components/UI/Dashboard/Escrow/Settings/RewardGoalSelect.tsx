@@ -22,10 +22,6 @@ import { DownChevron, ReadIcon } from "../../Icons";
 //TODO - still unfinished for other escrow types (Erc20, erc1155)
 
 export default function RewardGoalSelect() {
-  const [isShowObjectivesOpen, setIsShowObjectivesOpen] =
-    useState<boolean>(false);
-  const [isShowTiersOpen, setIsShowTiersOpen] = useState<boolean>(false);
-
   const {
     erc20RewardCondition,
     erc721RewardCondition,
@@ -93,60 +89,6 @@ export default function RewardGoalSelect() {
 
   return (
     <>
-      {(isShowObjectivesOpen || isShowTiersOpen) && (
-        <DashboardModalWrapper
-          setIsModalOpen={
-            isShowObjectivesOpen ? setIsShowObjectivesOpen : setIsShowTiersOpen
-          }
-        >
-          <header className="mb-6 flex-1 py-0 pe-6 ps-6 text-xl font-semibold">
-            <div className="flex items-center justify-between text-dashboard-activeTab">
-              View your {isShowObjectivesOpen ? "Objectives" : "Tiers"}
-            </div>
-            <p className="mt-1 text-sm font-normal leading-5 text-dashboard-lightGray">
-              Review your {isShowObjectivesOpen ? "objectives" : "tiers"} to
-              help you decide your reward goal(s).
-            </p>
-          </header>
-          <div className="flex-1 py-0 pe-6 ps-6">
-            {isShowObjectivesOpen ? (
-              <DashboardSummaryTable
-                title="Loyalty Program Objectives"
-                dataArr={data?.objectives}
-                arrProperty1={(obj) => obj.title}
-                arrProperty2={(obj) => String(obj.reward)}
-              />
-            ) : (
-              <DashboardSummaryTable
-                title="Loyalty Program Tiers"
-                dataArr={data?.tiers}
-                arrProperty1={(tier) => tier.name}
-                arrProperty2={(tier) => String(tier.rewardsRequired)}
-              />
-            )}
-            <footer className="mt-8 flex items-center justify-between py-0 pe-6 ps-6">
-              <div className="flex w-full justify-between">
-                <DashboardActionButton
-                  isPrimary={false}
-                  btnText="Close"
-                  onClick={() => {
-                    setIsShowObjectivesOpen(false);
-                    setIsShowTiersOpen(false);
-                  }}
-                />
-                <DashboardActionButton
-                  isPrimary
-                  btnText="Continue"
-                  onClick={() => {
-                    setIsShowObjectivesOpen(false);
-                    setIsShowTiersOpen(false);
-                  }}
-                />
-              </div>
-            </footer>
-          </div>
-        </DashboardModalWrapper>
-      )}
       <div className="relative flex flex-1 flex-col rounded-2xl border border-dashboard-border1 py-8 pe-6 ps-6">
         <div className="flex flex-row items-start">
           <div className="min-w-0 flex-1">
@@ -162,30 +104,7 @@ export default function RewardGoalSelect() {
               Select a reward goal based on the reward condition in which you
               have applied.
             </p>
-            <div className="mb-8 flex items-start gap-[0.5rem] rounded-md bg-neutral-2 p-3 text-sm font-[0.8125rem] leading-[1.125rem] text-dashboard-lightGray">
-              <span className="text-neutral-3">
-                <ReadIcon size={14} color="currentColor" />
-              </span>
-              <div className="break-word inline-block">
-                Need a reminder of your loyalty program objectives or tiers?
-                Click below to open your objectives or tiers.
-                <span
-                  onClick={() => setIsShowObjectivesOpen(true)}
-                  className="cursor-pointer text-primary-1"
-                >
-                  {" "}
-                  See my objectives
-                </span>{" "}
-                or
-                <span
-                  onClick={() => setIsShowTiersOpen(true)}
-                  className="cursor-pointer text-primary-1"
-                >
-                  {" "}
-                  See my tiers
-                </span>
-              </div>
-            </div>
+
             <div>
               <div className="my-6 h-px w-full bg-black opacity-15" />
               <p className="mb-2 text-sm font-semibold leading-5">
