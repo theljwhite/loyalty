@@ -3,6 +3,7 @@ import { useEscrowSettingsStore } from "./store";
 import { useLoyaltyContractRead } from "../useLoyaltyContractRead/useLoyaltyContractRead";
 import { useEscrowContractRead } from "../useEscrowContractRead/useEscrowContractRead";
 import { waitForTransaction, writeContract } from "wagmi/actions";
+import { api } from "~/utils/api";
 import {
   ERC20RewardCondition,
   ERC721RewardCondition,
@@ -57,6 +58,8 @@ export default function useEscrowSettings(
     escrowAddress,
     "ERC1155",
   );
+  const { mutate: updateEscrowStateDb } =
+    api.escrow.updateEscrowState.useMutation();
 
   const setERC20EscrowSettingsBasic = async (): Promise<void> => {
     handleSetLoadingState();
@@ -72,7 +75,10 @@ export default function useEscrowSettings(
         hash: setSettingsBasic.hash,
       });
 
-      if (setSettingsReceipt.status === "success") handleSetSuccessState();
+      if (setSettingsReceipt.status === "success") {
+        handleSetSuccessState();
+        updateEscrowStateDb({ escrowAddress, newEscrowState: "InIssuance" });
+      }
     } catch (error) {
       handleSettingsErrors(error as Error);
     }
@@ -96,7 +102,10 @@ export default function useEscrowSettings(
         hash: setSettingsAdvanced.hash,
       });
 
-      if (setSettingsReceipt.status === "success") handleSetSuccessState();
+      if (setSettingsReceipt.status === "success") {
+        handleSetSuccessState();
+        updateEscrowStateDb({ escrowAddress, newEscrowState: "InIssuance" });
+      }
     } catch (error) {
       handleSettingsErrors(error as Error);
     }
@@ -112,7 +121,10 @@ export default function useEscrowSettings(
         args: [erc721RewardOrder, erc721RewardCondition, rewardGoal],
       });
 
-      if (setERC721Settings.hash) handleSetSuccessState();
+      if (setERC721Settings.hash) {
+        handleSetSuccessState();
+        updateEscrowStateDb({ escrowAddress, newEscrowState: "InIssuance" });
+      }
     } catch (error) {
       handleSettingsErrors(error as Error);
     }
