@@ -488,10 +488,15 @@ export default function useEscrowSettings(
     //TODO - error handle escrow settings
     let toastErrorMessage: string = "";
     const errorMessage = error.message.toLowerCase();
+    const errorCause = String(error.cause);
     dismissToast();
     setIsLoading(false);
     if (errorMessage.includes("user rejected the request")) {
       toastErrorMessage = "You rejected the wallet request";
+    }
+    if (errorCause.includes("DepositPeriodMustBeFinished()")) {
+      toastErrorMessage =
+        "Cannot set escrow settings. Either your deposit period is still active, or you have already set escrow settings before.";
     }
     setError(JSON.stringify(error).slice(0, 50));
     toastError(toastErrorMessage);

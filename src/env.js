@@ -31,8 +31,14 @@ export const env = createEnv({
     DISCORD_CLIENT_ID: z.string(),
     DISCORD_CLIENT_SECRET: z.string(),
     MORALIS_API_KEY: z.string(),
-  },
 
+    OPEN_ZEPP_MUMBAI_RELAY_ADDRESS: z.string(),
+    OPEN_ZEPP_MUMBAI_API_KEY: z.string(),
+    OPEN_ZEPP_MUMBAI_SECRET_KEY: z.string(),
+    OPEN_ZEPP_GOERLI_RELAY_ADDRESS: z.string(),
+    OPEN_ZEPP_GOERLI_API_KEY: z.string(),
+    OPEN_ZEPP_GOERLI_SECRET_KEY: z.string(),
+  },
   /**
    * Specify your client-side environment variables schema here. This way you can ensure the app
    * isn't built with invalid env vars. To expose them to the client, prefix them with
@@ -61,6 +67,14 @@ export const env = createEnv({
     NEXT_PUBLIC_ALCHEMY_PROV: process.env.NEXT_PUBLIC_ALCHEMY_PROV,
     NEXT_PUBLIC_WALLET_CONNECT_ID: process.env.NEXT_PUBLIC_WALLET_CONNECT_ID,
     MORALIS_API_KEY: process.env.MORALIS_API_KEY,
+
+    OPEN_ZEPP_MUMBAI_RELAY_ADDRESS: process.env.OPEN_ZEPP_MUMBAI_RELAY_ADDRESS,
+    OPEN_ZEPP_MUMBAI_API_KEY: process.env.OPEN_ZEPP_MUMBAI_API_KEY,
+    OPEN_ZEPP_MUMBAI_SECRET_KEY: process.env.OPEN_ZEPP_MUMBAI_SECRET_KEY,
+    OPEN_ZEPP_GOERLI_RELAY_ADDRESS: process.env.OPEN_ZEPP_GOERLI_RELAY_ADDRESS,
+    OPEN_ZEPP_GOERLI_API_KEY: process.env.OPEN_ZEPP_GOERLI_API_KEY,
+    OPEN_ZEPP_GOERLI_SECRET_KEY: process.env.OPEN_ZEPP_GOERLI_SECRET_KEY,
+
     NEXT_PUBLIC_MORALIS_API_KEY: process.env.NEXT_PUBLIC_MORALIS_API_KEY,
     NEXT_PUBLIC_PROJECT_NAME: process.env.NEXT_PUBLIC_PROJECT_NAME,
     NEXT_PUBLIC_DOMAIN_URL: process.env.NEXT_PUBLIC_DOMAIN_URL,

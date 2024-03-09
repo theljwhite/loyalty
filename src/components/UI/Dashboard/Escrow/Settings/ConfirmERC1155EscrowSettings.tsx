@@ -102,18 +102,15 @@ export default function ConfirmERC1155EscrowSettings({
                           <div>
                             {objectivesWithPayouts.map((obj) => {
                               return (
-                                <>
-                                  <span
-                                    key={obj.id}
-                                    className="text-md text-dashboard-codeLightBlue"
-                                  >
+                                <div key={obj.id}>
+                                  <span className="text-md text-dashboard-codeLightBlue">
                                     {obj.amount} per user:{" "}
                                     <span className="text-orange-400">
                                       {obj.title.slice(0, 75)}{" "}
                                     </span>
                                   </span>
                                   <br />
-                                </>
+                                </div>
                               );
                             })}
                           </div>
@@ -121,18 +118,15 @@ export default function ConfirmERC1155EscrowSettings({
                           <div>
                             {tiersWithPayouts.map((tier) => {
                               return (
-                                <>
-                                  <span
-                                    key={tier.id}
-                                    className="text-md text-dashboard-codeLightBlue"
-                                  >
+                                <div key={tier.id}>
+                                  <span className="text-md text-dashboard-codeLightBlue">
                                     {tier.amount} per user:{" "}
                                     <span className="text-orange-400">
                                       {tier.name}{" "}
                                     </span>
                                   </span>
                                   <br />
-                                </>
+                                </div>
                               );
                             })}
                           </div>

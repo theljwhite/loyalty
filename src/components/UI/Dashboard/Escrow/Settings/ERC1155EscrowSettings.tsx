@@ -183,13 +183,15 @@ export default function ERC1155EscrowSettings() {
 
   return (
     <>
-      {isConfirmModalOpen && (
-        <ConfirmERC1155EscrowSettings
-          objectives={objectives}
-          tiers={tiers}
-          setERC1155EscrowSettings={handleSetERC1155EscrowSettings}
-        />
-      )}
+     
+        {isConfirmModalOpen && (
+          <ConfirmERC1155EscrowSettings
+            objectives={objectives}
+            tiers={tiers}
+            setERC1155EscrowSettings={handleSetERC1155EscrowSettings}
+          />
+        )}
+    
       <div className="space-y-8">
         <DashboardSelectBox
           title="ERC1155 Reward Condition"
