@@ -6,40 +6,49 @@ import { type TransactionReceipt } from "ethers";
 import { db } from "~/server/db";
 import { MAX_OBJECTIVES_LENGTH } from "~/constants/loyaltyConstants";
 import { relayChains } from "~/configs/openzeppelin";
+import { parseUUID } from "~/utils/parseUUID";
 
-//TODO 3-7: this is strictly for experimentation right now
+//TODO 3-17: this is strictly for experimentation right now
 
 const verifyLoyaltyAddressChain = async (
   loyaltyAddress: string,
   chainName: string,
-): Promise<number> => {
+): Promise<{ chain: number; id: string | null }> => {
   const [relayChain] = relayChains.filter((chain) => chain.name === chainName);
-  if (!relayChain) return 0;
+  if (!relayChain) return { chain: 0, id: null };
 
   const loyaltyProgram = await db.loyaltyProgram.findUnique({
     where: { address: loyaltyAddress },
-    select: { chainId: true },
+    select: { chainId: true, id: true },
   });
-  if (!loyaltyProgram || !loyaltyProgram.chainId) return 0;
-  else return loyaltyProgram.chainId;
+  if (!loyaltyProgram || !loyaltyProgram.chainId) return { chain: 0, id: null };
+  else return { chain: loyaltyProgram.chainId, id: loyaltyProgram.id };
 };
 
-const verifyCreatorAndApiKey = async (
-  creatorAddress: string,
-  apiKey: string,
-): Promise<boolean> => {
-  //TODO - update this with api key when database is updated.
+const generateEOA = async (
+  loyaltyAddress: string,
+  userUniqueId: string,
+): Promise<string | undefined> => {
+  try {
+    const response = await fetch(
+      "/api/wallet/create-externally-owned-account",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          loyaltyAddress,
+          userUniqueId,
+        }),
+      },
+    );
 
-  /* const creator = await db.user.findUnique({
-    where: {address: creatorAddress}, 
-    select: {apiKey: true}
-  })
+    if (!response) return "";
 
-  if (!creator || !creator.apiKey) return false; 
-  if (apiKey !== creator.apiKey) return false; 
-
-  */
-  return true;
+    const walletAddress = await response.json();
+    return walletAddress;
+  } catch (error) {
+    return "";
+  }
 };
 
 const createOpenZepRelayerClient = async (chainId: number): Promise<any> => {
@@ -100,56 +109,96 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  try {
-    const {
-      objectiveIndex,
-      userAddress,
-      loyaltyAddress,
-      creatorAddress,
-      apiKey,
-    } = req.body;
-    const { chain: chainName } = req.query;
+  const requestPath = new URL(req.url ?? "", `https://${req.headers.host}`)
+    .pathname;
 
-    const validObjectiveIndex = objectiveIndex < MAX_OBJECTIVES_LENGTH;
-    const verifiedChain = await verifyLoyaltyAddressChain(
-      loyaltyAddress,
+  const creatorApiKey = req.headers["x-loyalty-api-key"] ?? "";
+  const entitySecret = req.headers["x-loyalty-entity-secret"] ?? "";
+  const version = req.headers["x-loyalty-version"] ?? "";
+  const backendAdapter = req.headers["x-loyalty-be-adapter"] ?? "";
+  //TODO verify apiKey, entitySecret, version
+
+  if (!creatorApiKey || !entitySecret || !version || !backendAdapter) {
+    return res.status(400).json({ error: "Missing required headers" });
+  }
+
+  const { userAddress, userId, objectiveIndex, loyaltyContractAddress } =
+    req.body;
+  const { chain: chainName } = req.query;
+
+  if ((!userAddress && !userId) || (userAddress && userId)) {
+    return res.status(400).json({
+      error:
+        "User must be identified by wallet address or userId. Cannot use both",
+    });
+  }
+
+  if (!objectiveIndex || !loyaltyContractAddress) {
+    return res.status(400).json({ error: "Missing required body paramaters" });
+  }
+
+  const validObjectiveIndex = objectiveIndex < MAX_OBJECTIVES_LENGTH;
+
+  if (!validObjectiveIndex) {
+    return res.status(400).json({ error: "Invalid objective index" });
+  }
+
+  //TODO validateWhitelistedDomain(req.headers.host);
+
+  if (
+    backendAdapter !== "next" &&
+    backendAdapter !== "server-sdk" &&
+    backendAdapter !== "express"
+  ) {
+    return res.status(400).json({ error: "Invalid backend adapter" });
+  }
+
+  if (backendAdapter === "next") {
+    const expectedNextRouterPath = "/api/objectives-router";
+    if (requestPath !== expectedNextRouterPath) {
+      return res.status(400).json({
+        error: `Incorrect path. Expected: ${expectedNextRouterPath}, got ${requestPath}`,
+      });
+    }
+  }
+
+  try {
+    const verifiedProgram = await verifyLoyaltyAddressChain(
+      loyaltyContractAddress,
       String(chainName),
     );
-    const verifiedCreator = await verifyCreatorAndApiKey(
-      creatorAddress,
-      apiKey,
-    );
 
-    if (!validObjectiveIndex) {
-      res.statusMessage = "Invalid objective index";
-      return res.status(400).json({ error: "Invalid objective index" });
-    }
-
-    if (verifiedChain === 0) {
-      res.statusMessage = "Not a supported blockchain";
+    if (verifiedProgram.chain === 0) {
       return res.status(400).json({ error: "Not a supported blockchain" });
     }
 
-    if (!verifiedCreator) {
-      res.statusMessage = "Failed to verify creator address and api key";
-      return res
-        .status(401)
-        .json({ error: "Could not verify api key and creator" });
+    let completingObjectiveAddress: string = userAddress;
+
+    if (!userAddress && userId) {
+      const generatedWalletAddress = await generateEOA(
+        loyaltyContractAddress,
+        String(userId),
+      );
+
+      if (!generatedWalletAddress) {
+        return res.status(500).json({ error: "Failed to generate EOA" });
+      }
+      completingObjectiveAddress = generatedWalletAddress;
     }
 
-    const receipt = await relayerCompleteObjective(
+    const txReceipt = await relayerCompleteObjective(
       objectiveIndex,
-      userAddress,
-      loyaltyAddress,
-      verifiedChain,
+      completingObjectiveAddress,
+      loyaltyContractAddress,
+      verifiedProgram.chain,
     );
 
-    if (!receipt) {
+    if (!txReceipt) {
       res.statusMessage = "Transaction failed or reverted";
       return res.status(500).json({ error: "Transaction failed or reverted" });
     }
 
-    return res.status(200).json(receipt);
+    return res.status(200).json(txReceipt);
   } catch (error) {
     console.error("error from serv -->", error);
     return res.status(500).json({ error: "Internal Server Error" });

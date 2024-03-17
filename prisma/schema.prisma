@@ -32,6 +32,8 @@ model LoyaltyProgram {
     version       String       @default("0.01")
     createdAt     DateTime     @default(now())
     updatedAt     DateTime     @updatedAt
+    wallets       Wallet[]
+    walletSetId   String?      @unique
 }
 
 model Escrow {
@@ -71,6 +73,16 @@ model Tier {
     rewardsRequired  Int
     LoyaltyProgram   LoyaltyProgram? @relation(fields: [loyaltyProgramId], references: [id])
     loyaltyProgramId String?
+}
+
+model Wallet {
+    refId       String         @unique @default(uuid())
+    walletId    String         @unique
+    externalId  String         @unique
+    walletSetId String
+    walletSet   LoyaltyProgram @relation(fields: [walletSetId], references: [walletSetId])
+    address     String
+    isAssigned  Boolean
 }
 
 // Necessary for Next auth
@@ -113,6 +125,7 @@ model User {
     accounts        Account[]
     sessions        Session[]
     role            UserRole         @default(User)
+    apiKey          String?          @default(uuid()) //change this later
 }
 
 model VerificationToken {

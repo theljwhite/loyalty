@@ -38,6 +38,10 @@ export const env = createEnv({
     OPEN_ZEPP_GOERLI_RELAY_ADDRESS: z.string(),
     OPEN_ZEPP_GOERLI_API_KEY: z.string(),
     OPEN_ZEPP_GOERLI_SECRET_KEY: z.string(),
+    CIRCLE_API_KEY: z.string(),
+    CIRCLE_ENTITY_SECRET: z.string(),
+    CREATOR_JWT_SECRET: z.string(),
+    BASE_INTERNAL_API_URL: z.string(),
   },
   /**
    * Specify your client-side environment variables schema here. This way you can ensure the app
@@ -74,6 +78,10 @@ export const env = createEnv({
     OPEN_ZEPP_GOERLI_RELAY_ADDRESS: process.env.OPEN_ZEPP_GOERLI_RELAY_ADDRESS,
     OPEN_ZEPP_GOERLI_API_KEY: process.env.OPEN_ZEPP_GOERLI_API_KEY,
     OPEN_ZEPP_GOERLI_SECRET_KEY: process.env.OPEN_ZEPP_GOERLI_SECRET_KEY,
+    CIRCLE_API_KEY: process.env.CIRCLE_API_KEY,
+    CIRCLE_ENTITY_SECRET: process.env.CIRCLE_ENTITY_SECRET,
+    CREATOR_JWT_SECRET: process.env.CREATOR_JWT_SECRET,
+    BASE_INTERNAL_API_URL: process.env.BASE_INTERNAL_API_URL,
 
     NEXT_PUBLIC_MORALIS_API_KEY: process.env.NEXT_PUBLIC_MORALIS_API_KEY,
     NEXT_PUBLIC_PROJECT_NAME: process.env.NEXT_PUBLIC_PROJECT_NAME,

@@ -1,7 +1,6 @@
 import { type NextPage } from "next";
 import { getDashboardLayout } from "~/layouts/LayoutDashboard";
 import { useRouter } from "next/router";
-
 import { type GetServerSideProps, GetServerSidePropsContext } from "next";
 import { handleLoyaltyPathValidation } from "~/utils/handleServerAuth";
 import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
@@ -64,7 +63,7 @@ const Objectives: NextPage = () => {
           userAddress: testUserAddress,
           loyaltyAddress: String(loyaltyAddress),
           creatorAddress: "0xe63DC839fA2a6A418Af4B417cD45e257dD76f516",
-          apiKey: "TODO", 
+          apiKey: "TODO",
         }),
       });
 
@@ -74,16 +73,45 @@ const Objectives: NextPage = () => {
     }
   };
 
+  const testCreateWalletSet = async (): Promise<void> => {
+    try {
+      const response = await fetch("/api/wallet/create-wallet-set", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          loyaltyAddress: "0x2Df0edfaE35AA3c17203818440F8F63680274C48",
+          chainId: 80001,
+        }),
+      });
+      console.log("response from fe -->", response);
+    } catch (error) {
+      console.error("error from fe -->", error);
+    }
+  };
+
+  const testCircleAuth = async (): Promise<void> => {
+    try {
+      const response = await fetch("/api/wallet/gen-c-t", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lol: "lmao",
+        }),
+      });
+      console.log("r fe", response);
+    } catch (error) {
+      console.error("e from auth", error);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <DashboardHeader title="Objectives Test" info="TODO" />
-
       <DashboardActionButton
-        // onClick={testSmartAccount}
-        btnText="Test Smart Account"
+        onClick={testCreateWalletSet}
+        btnText="Do stuff"
         isPrimary
       />
-
       <DashboardActionButton
         onClick={testOpenZeppelin}
         btnText="Test Smart Account"
