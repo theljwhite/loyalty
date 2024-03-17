@@ -145,6 +145,16 @@ export default async function handler(
 
   //TODO validateWhitelistedDomain(req.headers.host);
 
+  const encoder = new TextEncoder();
+  const entitySecretLength = encoder.encode(String(entitySecret)).length;
+  if (entitySecretLength !== 32) {
+    return res
+      .status(400)
+      .json({
+        error: "Entity secret incorrect length. Did you generate it correctly?",
+      });
+  }
+
   if (
     backendAdapter !== "next" &&
     backendAdapter !== "server-sdk" &&
