@@ -1,12 +1,13 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { type NextApiRequest, type NextApiResponse } from "next";
 import { Defender } from "@openzeppelin/defender-sdk";
-import LoyaltyObjectivesAbi from "../../../../contractsAndAbis/0.02/LoyaltyProgram/LoyaltyObjectivesAbi.json";
+import LoyaltyObjectivesAbi from "../../../contractsAndAbis/0.02/LoyaltyProgram/LoyaltyObjectivesAbi.json";
 import { Contract } from "ethers";
 import { type TransactionReceipt } from "ethers";
 import { db } from "~/server/db";
 import { MAX_OBJECTIVES_LENGTH } from "~/constants/loyaltyConstants";
 import { relayChains } from "~/configs/openzeppelin";
-import { parseUUID } from "~/utils/parseUUID";
+import { validateApiRequestHeaders } from "~/utils/apiValidation";
+import { ETHEREUM_ADDRESS_REGEX } from "~/constants/regularExpressions";
 
 //TODO 3-17: this is strictly for experimentation right now
 
@@ -118,22 +119,31 @@ export default async function handler(
   const backendAdapter = req.headers["x-loyalty-be-adapter"] ?? "";
   //TODO verify apiKey, entitySecret, version
 
-  if (!creatorApiKey || !entitySecret || !version || !backendAdapter) {
-    return res.status(400).json({ error: "Missing required headers" });
-  }
+  validateApiRequestHeaders(true, req.headers, res);
 
-  const { userAddress, userId, objectiveIndex, loyaltyContractAddress } =
-    req.body;
+  const body = req.body;
+  const userWalletAddress = body.userWalletAddress;
+  const userId = body.userId;
+  const objectiveIndex = body.objectiveIndex;
+  const loyaltyContractAddress = body.loyaltyContractAddress;
+
   const { chain: chainName } = req.query;
 
-  if ((!userAddress && !userId) || (userAddress && userId)) {
+  if ((!userWalletAddress && !userId) || (userWalletAddress && userId)) {
     return res.status(400).json({
       error:
         "User must be identified by wallet address or userId. Cannot use both",
     });
   }
 
-  if (!objectiveIndex || !loyaltyContractAddress) {
+  if (userWalletAddress && !ETHEREUM_ADDRESS_REGEX.test(userWalletAddress)) {
+    return res.status(400).json({
+      error:
+        "Incorrect user wallet address. Must be in hexadecimal format ie: 0x...",
+    });
+  }
+
+  if (!objectiveIndex && !loyaltyContractAddress) {
     return res.status(400).json({ error: "Missing required body paramaters" });
   }
 
@@ -144,16 +154,6 @@ export default async function handler(
   }
 
   //TODO validateWhitelistedDomain(req.headers.host);
-
-  const encoder = new TextEncoder();
-  const entitySecretLength = encoder.encode(String(entitySecret)).length;
-  if (entitySecretLength !== 32) {
-    return res
-      .status(400)
-      .json({
-        error: "Entity secret incorrect length. Did you generate it correctly?",
-      });
-  }
 
   if (
     backendAdapter !== "next" &&
@@ -182,33 +182,37 @@ export default async function handler(
       return res.status(400).json({ error: "Not a supported blockchain" });
     }
 
-    let completingObjectiveAddress: string = userAddress;
+    let completingObjectiveAddress: string = userWalletAddress;
 
-    if (!userAddress && userId) {
-      const generatedWalletAddress = await generateEOA(
-        loyaltyContractAddress,
-        String(userId),
-      );
+    if (!userWalletAddress && userId) {
+      // const generatedWalletAddress = await generateEOA(
+      //   loyaltyContractAddress,
+      //   String(userId),
+      // );
 
-      if (!generatedWalletAddress) {
-        return res.status(500).json({ error: "Failed to generate EOA" });
-      }
-      completingObjectiveAddress = generatedWalletAddress;
+      // if (!generatedWalletAddress) {
+      //   return res.status(500).json({ error: "Failed to generate EOA" });
+      // }
+      // completingObjectiveAddress = generatedWalletAddress;
+      console.log("would have generated wallet");
     }
 
-    const txReceipt = await relayerCompleteObjective(
-      objectiveIndex,
-      completingObjectiveAddress,
-      loyaltyContractAddress,
-      verifiedProgram.chain,
-    );
+    console.log("now tx would have ran");
+    // const txReceipt = await relayerCompleteObjective(
+    //   objectiveIndex,
+    //   completingObjectiveAddress,
+    //   loyaltyContractAddress,
+    //   verifiedProgram.chain,
+    // );
 
-    if (!txReceipt) {
-      res.statusMessage = "Transaction failed or reverted";
-      return res.status(500).json({ error: "Transaction failed or reverted" });
-    }
+    // if (!txReceipt) {
+    //   res.statusMessage = "Transaction failed or reverted";
+    //   return res.status(500).json({ error: "Transaction failed or reverted" });
+    // }
 
-    return res.status(200).json(txReceipt);
+    // return res.status(200).json(txReceipt);
+
+    return res.status(200).json({ message: "responded" });
   } catch (error) {
     console.error("error from serv -->", error);
     return res.status(500).json({ error: "Internal Server Error" });
