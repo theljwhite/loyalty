@@ -5,13 +5,14 @@ import { handleLoyaltyPathValidation } from "~/utils/handleServerAuth";
 import { getDashboardLayout } from "~/layouts/LayoutDashboard";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
-import { type RewardType } from "@prisma/client";
+import { RewardType } from "@prisma/client";
 import {
   ChecklistIcon,
   ERC1155Icon,
   ERC721Icon,
   EthIcon,
   OutLink,
+  WarningIcon,
 } from "~/components/UI/Dashboard/Icons";
 import { type Url } from "next/dist/shared/lib/router/router";
 import { ROUTE_DOCS_QUICKSTART } from "~/configs/routes";
@@ -21,6 +22,7 @@ import DashboardPageLoading from "~/components/UI/Dashboard/DashboardPageLoading
 import DashboardBreadcrumb from "~/components/UI/Dashboard/DashboardBreadcrumb";
 import DashboardInfoBox from "~/components/UI/Dashboard/DashboardInfoBox";
 import DashboardPageError from "~/components/UI/Dashboard/DashboardPageError";
+import DashboardInfoBanner from "~/components/UI/Dashboard/DashboardInfoBanner";
 
 //TODO - the JSX can be cleaned up a bit here, lol. all of this component can tbh.
 //TODO - styling fixes (clean it up and responsiveness)
@@ -80,8 +82,10 @@ export default function DashboardHome() {
     QuickStartOptions[]
   >(quickStartOptionsData);
   const [didSelect, setDidSelect] = useState<boolean>(false);
+
   const router = useRouter();
   const { address } = router.query;
+  const loyaltyAddress = String(address);
 
   const {
     data: loyaltyProgram,
@@ -89,7 +93,7 @@ export default function DashboardHome() {
     isError,
   } = api.loyaltyPrograms.getBasicLoyaltyDataByAddress.useQuery(
     {
-      contractAddress: String(address),
+      contractAddress: loyaltyAddress,
     },
     { refetchOnWindowFocus: false },
   );
@@ -205,28 +209,52 @@ export default function DashboardHome() {
                       <div key={option.id}>
                         <div>
                           <p className="text-sm font-medium leading-5">
-                            {option.title}
+                            {option.title} Next Steps
                           </p>
-                          <p className="mb-2 text-[13px] font-normal text-dashboard-lightGray">
-                            {option.rewardType === "Points"
-                              ? "Review your objectives and/or tiers in the"
-                              : "You should first deploy and set up your escrow contract in the"}{" "}
-                            <code className="rounded-lg border border-dashboard-codeBorder bg-dashboard-codeBg p-1 pe-[0.3em] ps-[0.3em] text-xs">
-                              {option.rewardType === "Points"
-                                ? "Overview"
-                                : "Escrow Overview"}
-                            </code>{" "}
-                            tab
-                          </p>
+                          <div className="mt-2">
+                            {loyaltyProgram.escrowAddress ? (
+                              loyaltyProgram.stepsNeeded.map((item, index) => {
+                                return (
+                                  <div key={index}>
+                                    <div className="mb-2 flex items-start gap-[0.5rem] rounded-md bg-neutral-2 p-3 text-sm font-[0.8125rem] leading-[1.125rem] text-dashboard-lightGray">
+                                      <WarningIcon
+                                        size={16}
+                                        color="currentColor"
+                                      />
+
+                                      <div className="break-word inline-block">
+                                        {item.step}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <div>
+                                <p className="mb-2 text-[13px] font-normal text-dashboard-lightGray">
+                                  {option.rewardType === "Points"
+                                    ? "Set your loyalty program as active in"
+                                    : "You should first deploy and set up your escrow contract in the"}{" "}
+                                  <code className="rounded-lg border border-dashboard-codeBorder bg-dashboard-codeBg p-1 pe-[0.3em] ps-[0.3em] text-xs">
+                                    {option.rewardType === "Points"
+                                      ? "Overview"
+                                      : "Escrow Deploy"}
+                                  </code>{" "}
+                                  tab
+                                </p>
+
+                                <DashboardInfoBox
+                                  infoType="warn"
+                                  info={
+                                    option.rewardType === "Points"
+                                      ? "Next steps are to review your objectives and/or tiers and set your loyalty program to active."
+                                      : `Next steps are to deploy your ${option.rewardType} contract, deposit reward tokens, and customize your escrow settings.`
+                                  }
+                                />
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <DashboardInfoBox
-                          infoType="warn"
-                          info={
-                            option.rewardType === "Points"
-                              ? "Next steps are to review your objectives and/or tiers and set your loyalty program to active."
-                              : `Next steps are to deploy your ${option.rewardType} contract, approve and deposit reward tokens, and customize your escrow settings.`
-                          }
-                        />
                       </div>
                     )}
                   </div>

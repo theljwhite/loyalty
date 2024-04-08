@@ -4,8 +4,9 @@ import { useRouter } from "next/router";
 import { type GetServerSideProps, GetServerSidePropsContext } from "next";
 import { handleLoyaltyPathValidation } from "~/utils/handleServerAuth";
 import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
-import CreatorPaths from "~/components/UI/Dashboard/Developers/CreatorPaths";
 import DashboardInfoBanner from "~/components/UI/Dashboard/DashboardInfoBanner";
+import WalletSetSettings from "~/components/UI/Dashboard/User/WalletSetSettings";
+import WalletStats from "~/components/UI/Dashboard/User/WalletStats";
 
 export const getServerSideProps: GetServerSideProps = async (
   ctx: GetServerSidePropsContext,
@@ -13,25 +14,23 @@ export const getServerSideProps: GetServerSideProps = async (
   return handleLoyaltyPathValidation(ctx);
 };
 
-const Paths: NextPage = () => {
-  const router = useRouter();
-  const { address: loyaltyAddress } = router.query;
-
+const UserSettings: NextPage = () => {
   return (
     <div className="space-y-8">
       <DashboardHeader
-        title="Paths"
-        info="Configure paths from your website or app where objectives may be completed by users."
+        title="User Settings"
+        info="Manage global user-based settings for your loyalty program's users"
       />
       <DashboardInfoBanner
-        info={`Fields marked as Required are required in order to use ${process.env.NEXT_PUBLIC_PROJECT_NAME} API routes or SDK within your own application/server side environment.`}
-        infoType="info"
+        infoType="warn"
+        info="Learn more about wallet sets and how to support your non-crypto savvy users in your loyalty program before you make any changes."
       />
-      <CreatorPaths />
+      <WalletSetSettings />
+      <WalletStats />
     </div>
   );
 };
 
 // @ts-ignore
-Paths.getLayout = getDashboardLayout;
-export default Paths;
+UserSettings.getLayout = getDashboardLayout;
+export default UserSettings;

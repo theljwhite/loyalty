@@ -1,4 +1,4 @@
-import Loyalty from "~/contractsAndAbis/0.02/Loyalty/Loyalty.json";
+import Loyalty from "~/contractsAndAbis/0.03/Loyalty/Loyalty.json";
 import { useState } from "react";
 import { readContract } from "wagmi/actions";
 import { decodeBytes32String } from "ethers";

@@ -1,36 +1,27 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { circleChains, initiateCircleSdk } from "~/configs/circle";
+import { circleChains } from "~/configs/circle";
 import { db } from "~/server/db";
+import { createWalletSet } from "~/utils/transactionRelayUtils";
+
+//TODO protect this. move DB call to TRPC router/caller factory
 
 const checkIfExistingSetForProgram = async (
   loyaltyAddress: string,
-): Promise<{ name: string; walletSetId: string | null } | undefined> => {
+): Promise<
+  { name: string; walletSetId: string | null; chainId: number } | undefined
+> => {
   const program = await db.loyaltyProgram.findUnique({
     where: { address: loyaltyAddress },
-    select: { name: true, walletSetId: true },
+    select: { name: true, walletSetId: true, chainId: true },
   });
 
   if (!program) return undefined;
 
-  return { name: program.name, walletSetId: program.walletSetId };
-};
-
-const updateDbWalletSet = async (
-  loyaltyAddress: string,
-  walletSetId: string,
-): Promise<boolean> => {
-  if (!walletSetId) return false;
-
-  try {
-    const update = await db.loyaltyProgram.update({
-      where: { address: loyaltyAddress },
-      data: { walletSetId },
-    });
-    if (update.walletSetId === walletSetId) return true;
-    return false;
-  } catch (error) {
-    return false;
-  }
+  return {
+    name: program.name,
+    walletSetId: program.walletSetId,
+    chainId: program.chainId,
+  };
 };
 
 export default async function handler(
@@ -41,15 +32,23 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { loyaltyAddress, chainId } = req.body;
+  const { loyaltyAddress } = req.body;
 
-  const validChain = circleChains.some((chain) => chain.chainId === chainId);
-  if (!validChain) {
-    res.statusMessage = "Not a supported blockchain";
-    return res.status(400).json({ error: "Not a supported blockchain" });
-  }
   try {
     const loyaltyProgram = await checkIfExistingSetForProgram(loyaltyAddress);
+
+    if (!loyaltyProgram) {
+      return res.status(500).json({ error: "Couldnt verify loyalty program" });
+    }
+
+    const validChain = circleChains.some(
+      (chain) => chain.chainId === loyaltyProgram.chainId,
+    );
+
+    if (!validChain) {
+      res.statusMessage = "Not a supported blockchain";
+      return res.status(400).json({ error: "Not a supported blockchain" });
+    }
 
     if (!loyaltyProgram) {
       res.statusMessage = "Could not verify loyalty program";
@@ -59,38 +58,24 @@ export default async function handler(
     }
     if (loyaltyProgram.walletSetId) {
       return res
-        .status(500)
+        .status(409)
         .json({ error: "Program already has a wallet set" });
     }
 
-    const circleDeveloperSdk = initiateCircleSdk();
-    const newWalletSetName = loyaltyAddress + loyaltyProgram.name;
-
-    const response = await circleDeveloperSdk.createWalletSet({
-      name: "test name",
-    });
-
-    if (!response.data) {
-      res.statusMessage = "Bad response from external provider";
-      return res
-        .status(500)
-        .json({ error: "Bad response from external provider" });
-    }
-
-    const didUpdate = await updateDbWalletSet(
-      loyaltyAddress,
-      response.data.walletSet?.id ?? "",
+    const walletSetId = await createWalletSet(
+      String(loyaltyAddress),
+      loyaltyProgram.chainId,
     );
 
-    if (!didUpdate) {
+    if (!walletSetId) {
       return res
         .status(500)
-        .json({ error: "Failed to update database with wallet set" });
+        .json({ error: "Failed to execute wallet set creation" });
     }
-    return res.status(200).json({ walletSetId: response.data.walletSet });
+
+    return res.status(200).json({ walletSetId });
   } catch (error) {
     console.error("error from create wallet set", error);
-    res.statusMessage = "Failed to verify or execute wallet set creation";
     return res
       .status(500)
       .json({ error: "Failed to verify or execute wallet set creation" });

@@ -4,7 +4,6 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
-import { TRPCError } from "@trpc/server";
 
 export const userRouter = createTRPCRouter({
   giveCreatorRole: protectedProcedure
@@ -15,5 +14,16 @@ export const userRouter = createTRPCRouter({
         data: { role: "Creator" },
       });
       return userUpdate.role;
+    }),
+  getApiKeyCreationDate: protectedProcedure
+    .input(z.object({ creatorId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const user = await ctx.db.user.findUnique({
+        where: { id: input.creatorId },
+        select: { apiKeyUpdatedAt: true },
+      });
+
+      if (!user || !user.apiKeyUpdatedAt) return null;
+      else return user.apiKeyUpdatedAt;
     }),
 });

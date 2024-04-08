@@ -1,7 +1,7 @@
 import { useSession } from "next-auth/react";
 import { useDeployLoyaltyStore } from "../useDeployLoyalty/store";
 import { useEscrowApprovalsStore } from "../useEscrowApprovals/store";
-import { useEscrowAbi } from "../useContractAbi/useContractAbi";
+import { useEscrowAbi, useLoyaltyAbi } from "../useContractAbi/useContractAbi";
 import { EscrowContractState, useDeployEscrowStore } from "./store";
 import { useError } from "../useError";
 import { useEthersSigner } from "~/helpers/ethers";
@@ -11,7 +11,6 @@ import {
   writeContract,
   waitForTransaction,
 } from "wagmi/actions";
-import Loyalty from "~/contractsAndAbis/0.01/Loyalty/Loyalty.json";
 import { api } from "~/utils/api";
 import {
   dismissToast,
@@ -40,6 +39,7 @@ export function useDeployEscrow() {
   const { error, handleErrorFlow } = useError();
   const signer = useEthersSigner();
   const factoryParams = useEscrowAbi(escrowType);
+  const { abi: loyaltyAbi } = useLoyaltyAbi();
   const { data: session } = useSession();
   const { mutate: createEscrowDbRecord } =
     api.escrow.createEscrow.useMutation();
@@ -91,7 +91,7 @@ export function useDeployEscrow() {
   const attachEscrowToLoyalty = async (): Promise<void> => {
     const loyaltyContractConfig = {
       address: deployLoyaltyData.address as `0x${string}`,
-      abi: Loyalty.abi,
+      abi: loyaltyAbi,
     };
 
     const writeConfig = await prepareWriteContract({

@@ -12,6 +12,7 @@ import {
   useChainModal,
   useConnectModal,
 } from "@rainbow-me/rainbowkit";
+import { api } from "~/utils/api";
 import {
   ROUTE_DASHBOARD_HOME,
   ROUTE_DASHBORD_ANALYTICS,
@@ -26,7 +27,9 @@ import {
   ROUTE_DASHBOARD_USER_POINTS,
   ROUTE_DASHBOARD_USER_REWARDS,
   ROUTE_DASHBOARD_API_KEY,
-  ROUTE_DASHBOARD_DOMAINS,
+  ROUTE_DASHBOARD_PATHS,
+  ROUTE_DASHBOARD_DEV_CONSOLE,
+  ROUTE_DASHBOARD_USER_SETTINGS,
 } from "~/configs/routes";
 import {
   HomeIcon,
@@ -44,6 +47,8 @@ import {
   KeyIcon,
   DomainIcon,
   UpDownChevron,
+  EditPencil,
+  ClipboardOne,
 } from "~/components/UI/Dashboard/Icons/index";
 
 interface LayoutDashboardSidebarProps {
@@ -54,6 +59,7 @@ interface NavLinkProps {
   link: NavLink;
   pathname: string;
   lightMode?: boolean;
+  actionNeeded?: boolean;
 }
 
 type NavLink = {
@@ -61,6 +67,7 @@ type NavLink = {
   label: string;
   href: string;
   icon: JSX.Element;
+  actionNeeded?: boolean;
 };
 
 //1-31 - added a test light mode to this, so it's temporarily sloppy code now
@@ -100,11 +107,16 @@ const NavLink: React.FC<NavLinkProps> = ({
           >
             <span className="flex items-center justify-between gap-3">
               {link.icon}
+              {link.actionNeeded && (
+                <span
+                  className={`${"bg-orange-400"} absolute right-2  size-2.5 rounded-full border-2 border-gray-900 shadow-[inset_0_0.5px_0_theme(colors.white/10%),inset_0_0_0_0.5px_theme(colors.white/10%)]`}
+                />
+              )}
               <span className="flex items-center gap-2 text-base text-sm font-medium ">
                 {link.label}
               </span>
             </span>
-          </span>
+          </span>{" "}
         </button>
       </Link>
     </div>
@@ -114,26 +126,16 @@ const NavLink: React.FC<NavLinkProps> = ({
 const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
   const { children } = props;
   const { data: session } = useSession();
-  const { pathname, query } = useRouter();
-  const { isConnected, address } = useAccount();
-  const { chain } = useNetwork();
-  const { openAccountModal } = useAccountModal();
-  const { openConnectModal } = useConnectModal();
-  const { openChainModal } = useChainModal();
-  const [isClient, setIsClient] = useState<boolean>();
-  const [testLightMode, setTestLightMode] = useState<boolean>(false);
 
-  const connected = isConnected && address && isClient;
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const { query, asPath } = useRouter();
+  const { address: loyaltyAddress } = query;
+  const loyaltyAddressString = String(loyaltyAddress);
 
   const navLinks: NavLink[] = [
     {
       id: 0,
       label: "Home",
-      href: ROUTE_DASHBOARD_HOME,
+      href: ROUTE_DASHBOARD_HOME(loyaltyAddressString),
       icon: <HomeIcon size={16} color="currentColor" />,
     },
     {
@@ -169,52 +171,102 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
     {
       id: 6,
       label: "Escrow Overview",
-      href: ROUTE_DASHBOARD_ESCROW_OVERVIEW,
+      href: ROUTE_DASHBOARD_ESCROW_OVERVIEW(loyaltyAddressString),
       icon: <ShieldIconOne size={16} color="currentColor" />,
     },
     {
       id: 7,
       label: "Escrow Wallet",
-      href: "TODO Fix paths",
+      href: ROUTE_DASHBOARD_ESCROW_WALLET(loyaltyAddressString),
       icon: <WalletIcon size={16} color="currentColor" />,
     },
     {
       id: 8,
       label: "Escrow Settings",
-      href: ROUTE_DASHBOARD_ESCROW_SETTINGS,
+      href: ROUTE_DASHBOARD_ESCROW_SETTINGS(loyaltyAddressString),
       icon: <SettingsOne size={16} color="currentColor" />,
     },
     {
       id: 9,
+      label: "User Settings",
+      href: ROUTE_DASHBOARD_USER_SETTINGS(loyaltyAddressString),
+      icon: <ClipboardOne size={16} color="currentColor" />,
+    },
+    {
+      id: 10,
       label: "User Objectives",
       href: ROUTE_DASHBOARD_USER_COMPLETION,
       icon: <ChecklistIcon size={16} color="currentColor" />,
     },
     {
-      id: 10,
+      id: 11,
       label: "User Points",
       href: ROUTE_DASHBOARD_USER_POINTS,
       icon: <PointsIcon size={16} color="currentColor" />,
     },
     {
-      id: 11,
+      id: 12,
       label: "User Rewards",
       href: ROUTE_DASHBOARD_USER_REWARDS,
       icon: <CoinsOne size={16} color="currentColor" />,
     },
     {
-      id: 12,
+      id: 13,
       label: "API Keys",
-      href: ROUTE_DASHBOARD_API_KEY,
+      href: ROUTE_DASHBOARD_API_KEY(loyaltyAddressString),
       icon: <KeyIcon size={16} color="currentColor" />,
     },
     {
-      id: 13,
-      label: "Domains",
-      href: ROUTE_DASHBOARD_DOMAINS,
+      id: 14,
+      label: "Paths",
+      href: ROUTE_DASHBOARD_PATHS(loyaltyAddressString),
       icon: <DomainIcon size={16} color="currentColor" />,
     },
+    {
+      id: 15,
+      label: "Developer Console",
+      href: ROUTE_DASHBOARD_DEV_CONSOLE(loyaltyAddressString),
+      icon: <EditPencil size={16} color="currentColor" />,
+    },
   ];
+
+  const [navLinksState, setNavLinksState] = useState<NavLink[]>(navLinks);
+  const { isConnected, address } = useAccount();
+  const { chain } = useNetwork();
+  const { openAccountModal } = useAccountModal();
+  const { openConnectModal } = useConnectModal();
+  const { openChainModal } = useChainModal();
+  const [isClient, setIsClient] = useState<boolean>();
+  const [testLightMode, _] = useState<boolean>(false);
+
+  const connected = isConnected && address && isClient;
+
+  api.loyaltyPrograms.getBasicLoyaltyDataByAddress.useQuery(
+    {
+      contractAddress: loyaltyAddressString,
+    },
+    {
+      onSuccess(data) {
+        if (data.stepsNeeded) {
+          const linksWithActionsNeeded = navLinks.map((link) => {
+            const stepsThatMatch = data.stepsNeeded.filter(
+              (step) => link.label === step.actionNeededHere,
+            );
+            if (stepsThatMatch.length > 0) {
+              return { ...link, actionNeeded: true };
+            } else return link;
+          });
+
+          setNavLinksState(linksWithActionsNeeded);
+        }
+      },
+      refetchOnWindowFocus: false,
+    },
+  );
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const lightModeAsideClass =
     "before:z-2 relative isolate flex h-full w-[17.5rem] shrink-0 flex-col text-dashboard-primary before:pointer-events-none before:absolute before:inset-x-0 before:bottom-0 before:h-[6.25rem] bg-dashboardLight-body";
@@ -252,14 +304,21 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
               >
                 <span className="flex min-w-0 items-center gap-3">
                   <span className="block aspect-square w-10 shrink-0 overflow-hidden rounded-full">
-                    <Image
-                      width={40}
-                      height={40}
-                      alt="user avatar"
-                      src={
-                        session?.user.image ?? "utilityImages/blankAvatar.svg"
-                      }
-                    />
+                    {session?.user.image ? (
+                      <Image
+                        width={40}
+                        height={40}
+                        alt="user avatar"
+                        src={session?.user.image}
+                      />
+                    ) : (
+                      <Image
+                        width={40}
+                        height={40}
+                        alt="default avatar"
+                        src={"/utilityImages/blankAvatar.svg"}
+                      />
+                    )}
                   </span>
                   <div>
                     <span
@@ -338,12 +397,12 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
             <div className="flex-1 overflow-y-auto">
               <nav className="space-y-8 py-5">
                 <div className="space-y-xs isolate px-4">
-                  {navLinks.slice(0, 3).map((link) => {
+                  {navLinksState.slice(0, 3).map((link) => {
                     return (
                       <NavLink
                         key={link.id}
                         link={link}
-                        pathname={pathname}
+                        pathname={asPath}
                         lightMode={testLightMode}
                       />
                     );
@@ -352,12 +411,12 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                 <div className="space-y-2 px-3">
                   <span className={sectionNameClass}>Loyalty Program</span>
                   <div className="space-y-xs">
-                    {navLinks.slice(3, 9).map((link) => {
+                    {navLinksState.slice(3, 9).map((link) => {
                       return (
                         <NavLink
                           key={link.id}
                           link={link}
-                          pathname={pathname}
+                          pathname={asPath}
                           lightMode={testLightMode}
                         />
                       );
@@ -367,12 +426,12 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                 <div className="space-y-2 px-3">
                   <span className={sectionNameClass}>Program Users</span>
                   <div className="space-y-xs">
-                    {navLinks.slice(9, 12).map((link) => {
+                    {navLinksState.slice(9, 13).map((link) => {
                       return (
                         <NavLink
                           key={link.id}
                           link={link}
-                          pathname={pathname}
+                          pathname={asPath}
                           lightMode={testLightMode}
                         />
                       );
@@ -382,12 +441,12 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                 <div className="space-y-2 px-3">
                   <span className={sectionNameClass}>Developers</span>
                   <div className="space-y-xs">
-                    {navLinks.slice(12, 14).map((link) => {
+                    {navLinksState.slice(13, 16).map((link) => {
                       return (
                         <NavLink
                           key={link.id}
                           link={link}
-                          pathname={pathname}
+                          pathname={asPath}
                           lightMode={testLightMode}
                         />
                       );

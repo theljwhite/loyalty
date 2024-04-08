@@ -5,9 +5,14 @@
         "internalType": "uint256",
         "name": "_objectiveIndex",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_user",
+        "type": "address"
       }
     ],
-    "name": "completeUserAuthorityObjective",
+    "name": "completeCreatorAuthorityObjective",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -25,7 +30,7 @@
         "type": "address"
       }
     ],
-    "name": "completeCreatorAuthorityObjective",
+    "name": "completeUserAuthorityObjective",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

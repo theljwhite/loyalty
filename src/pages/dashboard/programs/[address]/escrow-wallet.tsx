@@ -86,6 +86,7 @@ const EscrowWallet: NextPage = () => {
             copySuccessMessage="Copied escrow address"
             containerBg="bg-neutral-2"
             dataLoading={contractDbLoading}
+            isSecret
           />
           <DashboardCopyDataBox
             title="Your Deposit Key"

@@ -29,7 +29,7 @@ model LoyaltyProgram {
     rewardType    RewardType
     escrowAddress String?      @unique
     escrow        Escrow?
-    version       String       @default("0.01")
+    version       String       @default("0.03")
     createdAt     DateTime     @default(now())
     updatedAt     DateTime     @updatedAt
     wallets       Wallet[]
@@ -51,7 +51,7 @@ model Escrow {
     isRewardApproved Boolean        @default(false)
     isDepositKeySet  Boolean        @default(false)
     loyaltyAddress   String         @unique
-    loyalty          LoyaltyProgram @relation(fields: [loyaltyAddress], references: [address])
+    loyalty          LoyaltyProgram @relation(fields: [loyaltyAddress], references: [address]) //make this loyaltyProgram
     createdAt        DateTime       @default(now())
     updatedAt        DateTime       @updatedAt
 }
@@ -62,7 +62,7 @@ model Objective {
     title            String
     reward           Int
     authority        Authority
-    LoyaltyProgram   LoyaltyProgram? @relation(fields: [loyaltyProgramId], references: [id])
+    loyaltyProgram   LoyaltyProgram? @relation(fields: [loyaltyProgramId], references: [id])
     loyaltyProgramId String?
 }
 
@@ -71,7 +71,7 @@ model Tier {
     indexInContract  Int
     name             String
     rewardsRequired  Int
-    LoyaltyProgram   LoyaltyProgram? @relation(fields: [loyaltyProgramId], references: [id])
+    loyaltyProgram   LoyaltyProgram? @relation(fields: [loyaltyProgramId], references: [id])
     loyaltyProgramId String?
 }
 
@@ -125,7 +125,8 @@ model User {
     accounts        Account[]
     sessions        Session[]
     role            UserRole         @default(User)
-    apiKey          String?          @default(uuid()) //change this later
+    apiKey          String?          @unique
+    apiKeyUpdatedAt DateTime?
 }
 
 model VerificationToken {

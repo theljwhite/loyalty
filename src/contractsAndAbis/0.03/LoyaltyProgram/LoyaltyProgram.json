@@ -17,12 +17,7 @@
     },
     {
       "inputs": [],
-      "name": "InvalidObjectiveAuthority",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "InvalidObjectiveIndex",
+      "name": "InvalidObjective",
       "type": "error"
     },
     {
@@ -58,22 +53,22 @@
     },
     {
       "inputs": [],
-      "name": "OnlyCreatorCanMarkOwnerObjectiveAsComplete",
+      "name": "OnlyCreatorOrRelay",
       "type": "error"
     },
     {
       "inputs": [],
-      "name": "OnlyCreatorOrTeamCanSetActive",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "OnlyTeamCanCall",
+      "name": "OnlyUserOrRelay",
       "type": "error"
     },
     {
       "inputs": [],
       "name": "ProgramDurationTooShort",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ProgramMustBeActive",
       "type": "error"
     },
     {
@@ -155,9 +150,15 @@
           "internalType": "uint256",
           "name": "completedAt",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "authority",
+          "type": "bytes32"
         }
       ],
-      "name": "OwnerAuthorityObjectiveCompleted",
+      "name": "ObjectiveCompleted",
       "type": "event"
     },
     {
@@ -172,17 +173,23 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "objectiveIndex",
+          "name": "total",
           "type": "uint256"
         },
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "completedAt",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "updatedAt",
           "type": "uint256"
         }
       ],
-      "name": "UserAuthorityObjectiveCompleted",
+      "name": "PointsUpdate",
       "type": "event"
     },
     {
@@ -274,6 +281,11 @@
           "internalType": "uint256",
           "name": "_objectiveIndex",
           "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
         }
       ],
       "name": "completeUserAuthorityObjective",
@@ -292,6 +304,24 @@
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_points",
+          "type": "uint256"
+        }
+      ],
+      "name": "deductPointsFromUser",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -465,6 +495,37 @@
       "type": "function"
     },
     {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_points",
+          "type": "uint256"
+        }
+      ],
+      "name": "givePointsToUser",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "greatestPointsGiven",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [],
       "name": "isActive",
       "outputs": [
@@ -472,6 +533,19 @@
           "internalType": "bool",
           "name": "",
           "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "mumbaiRelay",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
         }
       ],
       "stateMutability": "view",
@@ -517,6 +591,19 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "sepoliaRelay",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "address",
@@ -549,6 +636,19 @@
           "internalType": "enum LoyaltyProgram.LoyaltyState",
           "name": "",
           "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "testRelayDelete",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
         }
       ],
       "stateMutability": "view",

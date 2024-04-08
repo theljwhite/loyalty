@@ -34,7 +34,7 @@ export default function DashboardCopyDataBox({
   showBorder,
   dataLoading,
 }: DashboardCopyDataBoxProps) {
-  const [isHidden, setIsHidden] = useState<boolean>(false);
+  const [isHidden, setIsHidden] = useState<boolean>(true);
 
   return (
     <div
