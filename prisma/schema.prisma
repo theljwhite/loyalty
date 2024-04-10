@@ -127,6 +127,7 @@ model User {
     role            UserRole         @default(User)
     apiKey          String?          @unique
     apiKeyUpdatedAt DateTime?
+    rsaPublicKey    String?          @unique //this may be temporary and moved elsewhere, considering best security practices
 }
 
 model VerificationToken {

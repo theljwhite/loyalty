@@ -3,7 +3,6 @@ import {
   relayRequestSchema,
   validateKeyCacheProgram,
   handleWalletCacheGenerateWallet,
-  handleIdempotencyKeyAndCache,
   type ObjectivesIdempotencyPayload,
   type RelayIdempotencyMetadata,
   type RelayTransactionResult,
@@ -13,12 +12,13 @@ import {
   estimateRelayTransactionOutcome,
   relayerCompleteObjective,
 } from "~/utils/transactionRelayUtils";
+import { verifySignature } from "~/utils/encryption";
 
 //TODO: this is strictly for experimentation right now
 //all of the caching utility funcs imported here from apiValid,
 //may have to split cache DB's for them. rn it is using the same redis DB.
 
-//this architecture may be changed, this is just to get a flow down.
+//this architecture (lol) may be changed, this is just to get a flow down.
 //as in, at least this app's NextJS api routes prob wont be used as REST API
 //itll be moved elsewhere
 
@@ -42,6 +42,7 @@ export default async function handler(
   const idempotencyKey = String(req.headers["x-idempotency-key"]);
   const version = String(req.headers["x-loyalty-version"]);
   const backendAdapter = String(req.headers["x-loyalty-be-adapter"]);
+  const ciphertextSignature = String(req.headers["x-ciphertext-signature"]);
 
   const body = req.body;
   const userWalletAddress = body.userWalletAddress;
@@ -53,6 +54,8 @@ export default async function handler(
   const chainId = Number(chain);
 
   const program = await validateKeyCacheProgram(apiKey, loyaltyContractAddress);
+
+  //TODO verify/validate ciphertext here
 
   if (!program.keyValid) {
     return res
@@ -92,9 +95,6 @@ export default async function handler(
     relayResult.status = 503;
     return res.status(503).json({ error: message });
   }
-
-  //TODO more authentication other than API key here.
-  //(entity secret ciphertext, some other form of encryption and validating requests)
 
   try {
     let completingObjectiveAddress: string = userWalletAddress;

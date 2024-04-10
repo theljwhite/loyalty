@@ -73,7 +73,7 @@ export const loyaltyProgramsRouter = createTRPCRouter({
           programEnd: input.programEnd,
           rewardType: formattedRewardType,
           tiersActive: input.tiers && input.tiers.length > 0 ? true : false,
-          version: input.version,
+          version: input.version ?? process.env.LATEST_PROGRAM_VERSION,
         },
       });
 

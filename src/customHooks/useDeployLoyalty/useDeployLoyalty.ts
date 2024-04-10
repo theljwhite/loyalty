@@ -106,7 +106,6 @@ export function useDeployLoyalty() {
           programStart,
           programEnd: programEndsAt,
           rewardType,
-          version: process.env.NEXT_PUBLIC_CONTRACT_VERSION,
         });
 
         giveCreatorRole({ userId: session?.user.id ?? "" });

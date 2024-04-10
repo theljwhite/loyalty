@@ -392,11 +392,14 @@ export const handleApiResponseWithIdempotency = async <TPayload>(
   return { data: response, status, errors };
 };
 
+
+
 export const doPayloadChecksum = <TPayload>(payload: TPayload): string => {
   const sha56 = forge.md.sha256.create();
   sha56.update(JSON.stringify(payload));
   return sha56.digest().toHex();
 };
+
 
 export const getProgramAndApiKey = async (
   hash: string,
