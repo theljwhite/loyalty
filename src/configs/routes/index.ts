@@ -3,7 +3,6 @@
 export const ROUTE_DASHBORD_ANALYTICS = "/dashboard/analytics";
 export const ROUTE_DASHBOARD_BALANCES = "/dashboard/balances";
 
-export const ROUTE_DASHBOARD_OVERVIEW = "/dashboard/overview";
 export const ROUTE_DASHBOARD_OBJECTIVES = "/dashboard/objectives";
 export const ROUTE_DASHBOARD_TIERS = "/dashboard/tiers";
 
@@ -12,8 +11,11 @@ export const DASHBOARD_BASE = `/dashboard/programs`;
 export const ROUTE_DASHBOARD_HOME = (loyaltyAddress: string) =>
   `/dashboard/programs/${loyaltyAddress}`;
 
+export const ROUTE_DASHBOARD_OVERVIEW = (loyaltyAddress: string) =>
+  DASHBOARD_BASE + `/${loyaltyAddress}/overview`;
+
 export const ROUTE_DASHBOARD_ESCROW_OVERVIEW = (loyaltyAddress: string) =>
-  DASHBOARD_BASE + `${loyaltyAddress}/escrow-overview`;
+  DASHBOARD_BASE + `/${loyaltyAddress}/escrow-overview`;
 
 export const ROUTE_DASHBOARD_ESCROW_SETTINGS = (loyaltyAddress: string) =>
   DASHBOARD_BASE + `/${loyaltyAddress}/escrow-settings`;

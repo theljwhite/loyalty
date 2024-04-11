@@ -153,7 +153,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
     {
       id: 3,
       label: "Overview",
-      href: ROUTE_DASHBOARD_OVERVIEW,
+      href: ROUTE_DASHBOARD_OVERVIEW(loyaltyAddressString),
       icon: <EyeballIcon size={16} color="currentColor" />,
     },
     {

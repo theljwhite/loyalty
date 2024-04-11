@@ -392,14 +392,11 @@ export const handleApiResponseWithIdempotency = async <TPayload>(
   return { data: response, status, errors };
 };
 
-
-
 export const doPayloadChecksum = <TPayload>(payload: TPayload): string => {
   const sha56 = forge.md.sha256.create();
   sha56.update(JSON.stringify(payload));
   return sha56.digest().toHex();
 };
-
 
 export const getProgramAndApiKey = async (
   hash: string,
@@ -413,7 +410,7 @@ export const getProgramAndApiKey = async (
   const base64Hash = forge.util.encode64(hash);
   try {
     const user = await db.user.findUnique({
-      where: { apiKey: base64Hash },
+      where: { apiKey: base64Hash }, //select publicKey too
       select: {
         loyaltyPrograms: {
           where: { address: loyaltyAddress },

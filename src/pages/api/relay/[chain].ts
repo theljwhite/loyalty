@@ -42,7 +42,7 @@ export default async function handler(
   const idempotencyKey = String(req.headers["x-idempotency-key"]);
   const version = String(req.headers["x-loyalty-version"]);
   const backendAdapter = String(req.headers["x-loyalty-be-adapter"]);
-  const ciphertextSignature = String(req.headers["x-ciphertext-signature"]);
+  const cipherTextSignature = String(req.headers["x-ciphertext-signature"]);
 
   const body = req.body;
   const userWalletAddress = body.userWalletAddress;
@@ -55,12 +55,27 @@ export default async function handler(
 
   const program = await validateKeyCacheProgram(apiKey, loyaltyContractAddress);
 
-  //TODO verify/validate ciphertext here
-
   if (!program.keyValid) {
     return res
       .status(401)
       .json({ error: "Malformed authorization credentials" });
+  }
+
+  let publicKey: string = "TODO"; //fetch public key or retrieve cached one
+
+  if (!publicKey) {
+    //replace this with !program.publicKey
+    return res.status(401).json({ error: "Could not fetch entity public key" });
+  }
+
+  const isSignatureVerified = verifySignature(
+    entitySecretCipherText,
+    cipherTextSignature,
+    publicKey,
+  );
+
+  if (!isSignatureVerified) {
+    return res.status(401).json({ error: "Invalid ciphertext signature" });
   }
 
   const mayNeedWalletGenerated = userId && !userWalletAddress;

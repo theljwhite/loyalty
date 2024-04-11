@@ -48,6 +48,7 @@ export const env = createEnv({
     UPSTASH_REST_TOKEN: z.string(),
     LOADED_BAKED_POTATO: z.string(),
     LOADED_SWEET_POTATO: z.string(),
+    LOADED_MASHED_POTATO: z.string(),
 
     RELAY_ACCESS_CONTROL_ALLOW_METHODS: z.string(),
     RELAY_ACCESS_CONTROL_ALLOW_HEADERS: z.string(),
@@ -99,6 +100,7 @@ export const env = createEnv({
     UPSTASH_REST_TOKEN: process.env.UPSTASH_REST_TOKEN,
     LOADED_BAKED_POTATO: process.env.LOADED_BAKED_POTATO,
     LOADED_SWEET_POTATO: process.env.LOADED_SWEET_POTATO,
+    LOADED_MASHED_POTATO: process.env.LOADED_MASHED_POTATO,
 
     RELAY_ACCESS_CONTROL_ALLOW_METHODS:
       process.env.RELAY_ACCESS_CONTROL_ALLOW_METHODS,

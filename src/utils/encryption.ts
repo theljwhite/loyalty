@@ -19,10 +19,10 @@ export const createPublicKeyDerivative = (): string | null => {
   if (!thatAndFiftyCentsWillGetYouACupOfCoffeeFromMcDonalds) {
     return null;
   }
+  const fixedLineBreaks =
+    thatAndFiftyCentsWillGetYouACupOfCoffeeFromMcDonalds.replace(/\\n/g, "\n");
 
-  const privateKey = forge.pki.privateKeyFromPem(
-    thatAndFiftyCentsWillGetYouACupOfCoffeeFromMcDonalds,
-  );
+  const privateKey = forge.pki.privateKeyFromPem(fixedLineBreaks);
   const publicKey = forge.pki.setRsaPublicKey(privateKey.n, privateKey.e);
   const publicKeyPem = forge.pki.publicKeyToPem(publicKey);
   return publicKeyPem;
