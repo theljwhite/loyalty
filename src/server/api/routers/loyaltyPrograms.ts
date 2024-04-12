@@ -278,7 +278,6 @@ export const loyaltyProgramsRouter = createTRPCRouter({
         });
         stateUpdates.escrowState = updateEscrow.state;
       }
-
       return stateUpdates;
     }),
 });

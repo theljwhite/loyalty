@@ -21,5 +21,5 @@ export default async function handler(
     return res.status(500).json({ error: "Failed to fetch public key" });
   }
 
-  return res.status(200).json({ publicKey });
+  return res.status(200).json({ data: { publicKey } });
 }

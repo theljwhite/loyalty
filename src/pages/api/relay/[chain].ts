@@ -71,8 +71,6 @@ export default async function handler(
     program.publicKey,
   );
 
-  console.log("sig verified", isSignatureVerified);
-
   if (!isSignatureVerified) {
     return res.status(401).json({ error: "Invalid ciphertext signature" });
   }

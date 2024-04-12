@@ -1,6 +1,5 @@
 import { db } from "~/server/db";
 import forge from "node-forge";
-import { Redis } from "@upstash/redis";
 
 export const isHashCollision = async (hash: string): Promise<boolean> => {
   const base64Hash = forge.util.encode64(hash);
@@ -48,10 +47,13 @@ export const getPublicKeyByApiKey = async (
   apiKey: string,
 ): Promise<string | null> => {
   const hashedApiKey = hashApiKey(apiKey);
+  const base64Hash = forge.util.encode64(hashedApiKey);
+
   const user = await db.user.findUnique({
-    where: { apiKey: hashedApiKey },
+    where: { apiKey: base64Hash },
     select: { rsaPublicKey: true },
   });
+
   if (!user || !user.rsaPublicKey) return "";
 
   return user.rsaPublicKey;

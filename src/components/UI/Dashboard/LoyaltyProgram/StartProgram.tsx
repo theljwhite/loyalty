@@ -33,7 +33,6 @@ export default function StartProgram({ loyaltyAddress }: StartProgramProps) {
     },
     { refetchOnWindowFocus: false },
   );
-
   const { mutateAsync: updateProgramAndEscrowState } =
     api.loyaltyPrograms.updateProgramStateOrEscrowState.useMutation();
 

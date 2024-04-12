@@ -6,7 +6,7 @@ import {
   getExistingApiKeyByCreatorId,
 } from "~/utils/apiUtils";
 import { keyCreationHeadersSchema } from "~/utils/apiValidation";
-import { createPublicKeyDerivative } from "~/utils/encryption";
+import { generateRSAKeyPair } from "~/utils/encryption";
 
 const storePublicKey = async (
   rsaPublicKey: string,
@@ -53,22 +53,24 @@ export default async function handler(
 
   const existingPublicKey = await getExistingPublicKey(creatorId);
 
-  if (existingPublicKey) {
-    //TODO this may be changed depending on entire flow with,
-    //managing the rotation of secrets
-    return res.status(200).json({ message: "You already have a public key" });
-  }
+  // if (existingPublicKey) {
+  //   //TODO this may be changed depending on entire flow with,
+  //   //managing the rotation of secrets
+  //   return res.status(200).json({ message: "You already have a public key" });
+  // }
 
-  const newPublicKey = createPublicKeyDerivative();
+  const { publicKeyPem, privateKeyPem } = generateRSAKeyPair();
+  //TODO - a secure way of storing the private keys
+  console.log("priv key pem", privateKeyPem);
 
-  if (!newPublicKey) {
+  if (!publicKeyPem) {
     return res.status(500).json({ error: "Failed to generate public key" });
   }
 
-  const dbDidUpdate = storePublicKey(newPublicKey, creatorId);
+  const dbDidUpdate = storePublicKey(publicKeyPem, creatorId);
 
   if (!dbDidUpdate)
     return res.status(500).json({ error: "Internal Server Error. Try later." });
 
-  return res.status(200).json({ publicKey: newPublicKey });
+  return res.status(200).json({ publicKey: publicKeyPem });
 }

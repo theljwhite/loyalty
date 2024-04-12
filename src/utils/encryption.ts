@@ -2,30 +2,16 @@ import forge from "node-forge";
 
 //this is for experimentation purposes, may be deleted and not utilized.
 
-export const thisWillBeDeleted = (): {
+export const generateRSAKeyPair = (): {
+  publicKeyPem: string;
   privateKeyPem: string;
 } => {
-  const rsaPrivateKey = forge.pki.rsa.generateKeyPair({
+  const keys = forge.pki.rsa.generateKeyPair({
     bits: 4096,
-  }).privateKey;
-  const privateKeyPem = forge.pki.privateKeyToPem(rsaPrivateKey);
-  return { privateKeyPem };
-};
-
-export const createPublicKeyDerivative = (): string | null => {
-  const thatAndFiftyCentsWillGetYouACupOfCoffeeFromMcDonalds =
-    process.env.LOADED_MASHED_POTATO;
-
-  if (!thatAndFiftyCentsWillGetYouACupOfCoffeeFromMcDonalds) {
-    return null;
-  }
-  const fixedLineBreaks =
-    thatAndFiftyCentsWillGetYouACupOfCoffeeFromMcDonalds.replace(/\\n/g, "\n");
-
-  const privateKey = forge.pki.privateKeyFromPem(fixedLineBreaks);
-  const publicKey = forge.pki.setRsaPublicKey(privateKey.n, privateKey.e);
-  const publicKeyPem = forge.pki.publicKeyToPem(publicKey);
-  return publicKeyPem;
+  });
+  const publicKeyPem = forge.pki.publicKeyToPem(keys.publicKey);
+  const privateKeyPem = forge.pki.privateKeyToPem(keys.privateKey);
+  return { publicKeyPem, privateKeyPem };
 };
 
 export const verifySignature = (
