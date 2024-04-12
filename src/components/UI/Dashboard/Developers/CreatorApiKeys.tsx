@@ -11,11 +11,9 @@ import DashboardInfoBanner from "../DashboardInfoBanner";
 import DashboardActionButton from "../DashboardActionButton";
 import DashboardSimpleInputModal from "../DashboardSimpleInputModal";
 
-//TODO - this component needs cleaned up in general, terrible lol.
+//TODO - this component needs cleaned up in general, lol.
 //needs better UI.
 //will refactor this.
-//or completely delete.
-
 //TODO - for now, make keys scrollable when visible without setting max-w to 600?
 
 type ApiKeyStatus = "idle" | "loading" | "error" | "success";
@@ -52,32 +50,52 @@ export default function CreatorApiKeys() {
     (chain) => chain.id === program?.chainId,
   );
   const isTestnetApikey = relayChain?.isTestChain;
+  const requestHeaders = {
+    "Content-Type": "application/json",
+    "x-loyalty-creator-id": session?.user.id ?? "",
+    "x-loyalty-address": String(loyaltyAddress),
+    "x-loyalty-chain": String(relayChain?.id ?? ""),
+  };
 
   const handleGenerateApiKey = async (): Promise<void> => {
     setApiKeyStatus("loading");
-    const route = `/api/creator/gen-api-key`; //TODO remove hardcode
+    const route = "/api/creator/gen-api-key";
     try {
       const response = await fetch(route, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-loyalty-creator-id": session?.user.id ?? "",
-          "x-loyalty-address": String(loyaltyAddress),
-          "x-loyalty-chain": relayChain?.name ?? "",
-        },
+        headers: requestHeaders,
       });
       if (response.ok) {
         const data = await response.json();
         const apiKey = data.apiKey;
 
-        setApiKeyStatus("success");
-        setNewApiKey(apiKey);
-        toastSuccess("Created new API key.");
+        const didPublicKeyGenerate = await handleGeneratePublicKey();
+
+        if (!didPublicKeyGenerate) {
+          toastError("Error generating keys. Try again in a moment.");
+          setApiKeyStatus("error");
+        }
+
+        if (didPublicKeyGenerate) {
+          setApiKeyStatus("success");
+          setNewApiKey(apiKey);
+          toastSuccess("Created new API key.");
+        }
       }
     } catch (error) {
       toastError("Error generating api key. Try again in a moment.");
       setApiKeyStatus("error");
     }
+  };
+
+  const handleGeneratePublicKey = async (): Promise<boolean> => {
+    const route = "/api/creator/gen-public-key";
+    const response = await fetch(route, {
+      method: "POST",
+      headers: requestHeaders,
+    });
+    if (response.ok) return true;
+    return false;
   };
 
   const onConfirmCreateKey = async (): Promise<void> => {

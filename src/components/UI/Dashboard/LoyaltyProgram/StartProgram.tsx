@@ -7,8 +7,6 @@ import DashboardContentBox from "../DashboardContentBox";
 import DashboardToggleSwitch from "../DashboardToggleSwitch";
 import DashboardSimpleInputModal from "../DashboardSimpleInputModal";
 
-//TODO 4-10 - this is unfinished
-
 interface StartProgramProps {
   loyaltyAddress: string;
 }
@@ -34,21 +32,32 @@ export default function StartProgram({ loyaltyAddress }: StartProgramProps) {
     },
     { refetchOnWindowFocus: false },
   );
+  const { data: programChain } = api.loyaltyPrograms.getChainOnly.useQuery(
+    {
+      loyaltyAddress,
+    },
+    { refetchOnWindowFocus: false },
+  );
+
   const programState = data?.state;
   const alreadyActiveProgram = programState === "Active";
+  const chainId = programChain?.chainId;
 
   const doSetActiveChecksOpenConfirm = async (): Promise<void> => {
     const rewardType = data?.rewardType;
-    if (!data || !programState || !rewardType) setStatus("error");
+    if (!data || !programState || !rewardType) {
+      toastError("Program data not found.");
+    }
 
-    if (rewardType === "Points" && programState !== "Idle") setStatus("error");
-
+    if (rewardType === "Points" && programState !== "Idle") {
+      toastError("Your program is not ready to be made active.");
+    }
     if (rewardType !== "Points") {
       const escrowState = data?.escrowState;
 
-      if (!escrowState) setStatus("error");
+      if (!escrowState) toastError("Program data not found.");
       if (programState !== "AwaitingEscrowSetup" || escrowState !== "Idle") {
-        setStatus("error");
+        toastError("Your program is not ready to be made active.");
       }
     }
 
@@ -56,6 +65,7 @@ export default function StartProgram({ loyaltyAddress }: StartProgramProps) {
   };
 
   const makeProgramActive = async (): Promise<void> => {
+    setIsConfirmOpen(false);
     toastLoading("Request sent to wallet", true);
     try {
       const setProgramActive = await writeContract({
@@ -64,7 +74,7 @@ export default function StartProgram({ loyaltyAddress }: StartProgramProps) {
         args: [],
       });
       const receipt = await waitForTransaction({
-        chainId: 0, //TODO get chain id from db for this call.
+        chainId,
         hash: setProgramActive.hash,
       });
 
@@ -98,7 +108,7 @@ export default function StartProgram({ loyaltyAddress }: StartProgramProps) {
       {isConfirmOpen && (
         <DashboardSimpleInputModal
           modalTitle="Confirm Begin Program"
-          modalDescription="Confirm that you are ready to make your program active by typing 'Confirm' in the box below."
+          modalDescription="If you are ready to start your program, type 'Confirm' in the box below."
           bannerInfo="This action is irreversible. Make sure you understand the state cycle of your program before continuing."
           inputLabel="Type Confirm below"
           inputState={confirm}

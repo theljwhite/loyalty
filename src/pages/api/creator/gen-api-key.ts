@@ -4,6 +4,7 @@ import { isHashCollision } from "~/utils/apiUtils";
 import forge from "node-forge";
 import { db } from "~/server/db";
 import { getServerAuthSession } from "~/server/auth";
+import { keyCreationHeadersSchema } from "~/utils/apiValidation";
 
 //TODO this is experimental and keys can be handled more securely,
 //either through Supabase itself or a vault
@@ -28,33 +29,27 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const session = await getServerAuthSession({ req, res });
-
-  if (!session) return res.status(401).json({ error: "Unauthorized" });
-
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const creatorId = req.headers["x-loyalty-creator-id"];
-  const loyaltyContractAddress = req.headers["x-loyalty-address"];
-  const loyaltyContractChainName = req.headers["x-loyalty-chain"];
+  const session = await getServerAuthSession({ req, res });
 
-  if (!creatorId || !loyaltyContractAddress || !loyaltyContractChainName) {
-    return res.status(400).json({ error: "Missing required headers" });
+  if (!session) return res.status(401).json({ error: "Unauthorized" });
+
+  const input = keyCreationHeadersSchema.safeParse(req);
+
+  if (!input.success) {
+    const errorMessages = input.error.issues.map((issue) => issue.message);
+    return res.status(400).json({ error: errorMessages });
   }
 
-  if (
-    typeof creatorId !== "string" ||
-    typeof loyaltyContractAddress !== "string" ||
-    typeof loyaltyContractChainName !== "string"
-  ) {
-    return res.status(400).json({ error: "Headers should be strings" });
-  }
+  const creatorId = String(req.headers["x-loyalty-creator-id"]);
+  const loyaltyContractChainId = String(req.headers["x-loyalty-chain"]);
 
   try {
     const [relayChain] = relayChains.filter(
-      (chain) => chain.name === loyaltyContractChainName,
+      (chain) => chain.id === Number(loyaltyContractChainId),
     );
 
     if (!relayChain) {

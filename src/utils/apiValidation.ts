@@ -129,6 +129,20 @@ export const relayRequestSchema = z.object({
   }),
 });
 
+export const keyCreationHeadersSchema = z.object({
+  headers: z.object({
+    "x-loyalty-creator-id": z.string().cuid(),
+    "x-loyalty-address": z
+      .string()
+      .refine(isAddress, "Invalid loyalty address"),
+    "x-loyalty-chain": z.string().refine((chainId) => {
+      return relayChains.some(
+        (relayChain) => relayChain.id === Number(chainId),
+      );
+    }),
+  }),
+});
+
 export const walletsValidationSchema = z.object({
   contractAddress: z.string().refine(isAddress, "Invalid ethereum address"),
   externalId: z.string().uuid(),
@@ -218,39 +232,52 @@ export const validateKeyHandleCache = async (
 export const validateKeyCacheProgram = async (
   apiKeyHeader: string,
   loyaltyAddress: string,
-): Promise<{ keyValid: boolean; walletSetId: string | null }> => {
+): Promise<{
+  keyValid: boolean;
+  walletSetId: string | null;
+  publicKey: string | null;
+}> => {
   const hashedReceivedKey = hashApiKey(apiKeyHeader);
   const base64HashedKey = forge.util.encode64(hashedReceivedKey);
 
   try {
-    const cacheResult: { key: string; walletSetId: string | null } | null =
-      await redisInstance.get(`HN_${loyaltyAddress}`);
+    const cacheResult: {
+      key: string;
+      walletSetId: string | null;
+      publicKey: string | null;
+    } | null = await redisInstance.get(`HN_${loyaltyAddress}`);
 
     if (!cacheResult) {
       const dbResult = await getProgramAndApiKey(
         hashedReceivedKey,
         loyaltyAddress,
       );
-      if (!dbResult) return { keyValid: false, walletSetId: null };
+
+      if (!dbResult) {
+        return { keyValid: false, walletSetId: null, publicKey: null };
+      }
 
       await redisInstance.set(`HN_${loyaltyAddress}`, {
         key: base64HashedKey,
         walletSetId: dbResult.walletSetId,
+        publicKey: dbResult.publicKey,
       });
       await redisInstance.expire(`HN_${loyaltyAddress}`, 120);
 
       return {
         keyValid: true,
         walletSetId: dbResult.walletSetId,
+        publicKey: dbResult.publicKey,
       };
     }
 
     return {
       keyValid: cacheResult.key ? true : false,
       walletSetId: cacheResult.walletSetId,
+      publicKey: cacheResult.publicKey,
     };
   } catch (error) {
-    return { keyValid: false, walletSetId: null };
+    return { keyValid: false, walletSetId: null, publicKey: null };
   }
 };
 
@@ -406,12 +433,14 @@ export const getProgramAndApiKey = async (
   chain: string;
   chainId: number;
   walletSetId: string | null;
+  publicKey: string;
 } | null> => {
   const base64Hash = forge.util.encode64(hash);
   try {
     const user = await db.user.findUnique({
-      where: { apiKey: base64Hash }, //select publicKey too
+      where: { apiKey: base64Hash },
       select: {
+        rsaPublicKey: true,
         loyaltyPrograms: {
           where: { address: loyaltyAddress },
           select: {
@@ -424,7 +453,12 @@ export const getProgramAndApiKey = async (
       },
     });
 
-    if (!user || !user.loyaltyPrograms || user.loyaltyPrograms.length === 0) {
+    if (
+      !user ||
+      !user.rsaPublicKey ||
+      !user.loyaltyPrograms ||
+      user.loyaltyPrograms.length === 0
+    ) {
       return null;
     }
     const program = user.loyaltyPrograms[0];
@@ -438,6 +472,7 @@ export const getProgramAndApiKey = async (
       chain: program.chain,
       chainId: program.chainId,
       walletSetId: program.walletSetId,
+      publicKey: user.rsaPublicKey,
     };
   } catch (error) {
     return null;

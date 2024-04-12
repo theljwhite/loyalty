@@ -61,18 +61,17 @@ export default async function handler(
       .json({ error: "Malformed authorization credentials" });
   }
 
-  let publicKey: string = "TODO"; //fetch public key or retrieve cached one
-
-  if (!publicKey) {
-    //replace this with !program.publicKey
+  if (!program.publicKey) {
     return res.status(401).json({ error: "Could not fetch entity public key" });
   }
 
   const isSignatureVerified = verifySignature(
     entitySecretCipherText,
     cipherTextSignature,
-    publicKey,
+    program.publicKey,
   );
+
+  console.log("sig verified", isSignatureVerified);
 
   if (!isSignatureVerified) {
     return res.status(401).json({ error: "Invalid ciphertext signature" });
@@ -144,7 +143,6 @@ export default async function handler(
     );
 
     if (!txReceipt) {
-      relayResult.txReverted = true;
       relayResult.errorMessage = `Transaction reverted. Details: TODO`;
       relayResult.status = 500;
       const { data, status, errors } = await handleApiResponseWithIdempotency(

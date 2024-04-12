@@ -4,7 +4,6 @@ import { type GetServerSideProps, GetServerSidePropsContext } from "next";
 import { handleLoyaltyPathValidation } from "~/utils/handleServerAuth";
 import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
 import CreatorApiKeys from "~/components/UI/Dashboard/Developers/CreatorApiKeys";
-import DashboardInfoBox from "~/components/UI/Dashboard/DashboardInfoBox";
 import EntitySecret from "~/components/UI/Dashboard/Developers/EntitySecret";
 
 export const getServerSideProps: GetServerSideProps = async (

@@ -228,4 +228,16 @@ export const loyaltyProgramsRouter = createTRPCRouter({
       if (!program) throw new TRPCError({ code: "NOT_FOUND" });
       return { objectives: program.objectives, tiers: program.tiers };
     }),
+  getChainOnly: protectedProcedure
+    .input(z.object({ loyaltyAddress: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const program = await ctx.db.loyaltyProgram.findUnique({
+        where: { address: input.loyaltyAddress },
+        select: { chain: true, chainId: true },
+      });
+
+      if (!program) throw new TRPCError({ code: "NOT_FOUND" });
+
+      return { chain: program.chain, chainId: program.chainId };
+    }),
 });

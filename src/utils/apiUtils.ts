@@ -17,3 +17,42 @@ export const hashApiKey = (apiKey: string) => {
   sha256.update(apiKey);
   return sha256.digest().toHex();
 };
+
+export const getExistingPublicKey = async (
+  creatorId: string,
+): Promise<string> => {
+  const user = await db.user.findUnique({
+    where: { id: creatorId },
+    select: { rsaPublicKey: true },
+  });
+
+  if (!user || !user.rsaPublicKey) return "";
+
+  return user.rsaPublicKey;
+};
+
+export const getExistingApiKeyByCreatorId = async (
+  creatorId: string,
+): Promise<string> => {
+  const user = await db.user.findUnique({
+    where: { id: creatorId },
+    select: { apiKey: true },
+  });
+
+  if (!user || !user.apiKey) return "";
+
+  return user.apiKey;
+};
+
+export const getPublicKeyByApiKey = async (
+  apiKey: string,
+): Promise<string | null> => {
+  const hashedApiKey = hashApiKey(apiKey);
+  const user = await db.user.findUnique({
+    where: { apiKey: hashedApiKey },
+    select: { rsaPublicKey: true },
+  });
+  if (!user || !user.rsaPublicKey) return "";
+
+  return user.rsaPublicKey;
+};
