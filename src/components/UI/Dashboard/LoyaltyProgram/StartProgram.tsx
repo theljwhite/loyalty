@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useLoyaltyAbi } from "~/customHooks/useContractAbi/useContractAbi";
+import { useAccount } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { api } from "~/utils/api";
 import { writeContract, waitForTransaction } from "wagmi/actions";
 import { toastSuccess, toastLoading, toastError } from "../../Toast/Toast";
@@ -11,10 +13,7 @@ interface StartProgramProps {
   loyaltyAddress: string;
 }
 
-type SetActiveStatus = "idle" | "loading" | "success" | "error";
-
 export default function StartProgram({ loyaltyAddress }: StartProgramProps) {
-  const [status, setStatus] = useState<SetActiveStatus>("idle");
   const [isChecked, setIsChecked] = useState<boolean>(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState<boolean>(false);
   const [isConfirmValid, setIsConfirmValid] = useState<boolean>(false);
@@ -22,9 +21,11 @@ export default function StartProgram({ loyaltyAddress }: StartProgramProps) {
 
   const { abi } = useLoyaltyAbi();
   const loyaltyContractConfig = {
-    address: "loyaltyAddress" as `0x${string}`,
+    address: loyaltyAddress as `0x${string}`,
     abi,
   };
+  const { isConnected, address: userAddress } = useAccount();
+  const { openConnectModal } = useConnectModal();
 
   const { data } = api.loyaltyPrograms.getBasicLoyaltyDataByAddress.useQuery(
     {
@@ -32,18 +33,17 @@ export default function StartProgram({ loyaltyAddress }: StartProgramProps) {
     },
     { refetchOnWindowFocus: false },
   );
-  const { data: programChain } = api.loyaltyPrograms.getChainOnly.useQuery(
-    {
-      loyaltyAddress,
-    },
-    { refetchOnWindowFocus: false },
-  );
+
+  const { mutateAsync: updateProgramAndEscrowState } =
+    api.loyaltyPrograms.updateProgramStateOrEscrowState.useMutation();
 
   const programState = data?.state;
   const alreadyActiveProgram = programState === "Active";
-  const chainId = programChain?.chainId;
+  const chainId = data?.chainId;
 
   const doSetActiveChecksOpenConfirm = async (): Promise<void> => {
+    if (!isConnected || !userAddress) openConnectModal?.();
+
     const rewardType = data?.rewardType;
     if (!data || !programState || !rewardType) {
       toastError("Program data not found.");
@@ -79,8 +79,18 @@ export default function StartProgram({ loyaltyAddress }: StartProgramProps) {
       });
 
       if (receipt.status === "success") {
-        toastSuccess("Your program is now active!");
-        setIsChecked(true);
+        const dbUpdate = await updateProgramAndEscrowState({
+          loyaltyAddress,
+          newProgramState: "Active",
+          newEscrowState: data?.escrowAddress ? "InIssuance" : undefined,
+        });
+        if (dbUpdate.state) {
+          const message = dbUpdate.escrowState
+            ? "Your program is now active and escrow is ready to issue rewards!"
+            : "Your loyalty program is now active!";
+          setIsChecked(true);
+          toastSuccess(message);
+        }
       }
 
       if (receipt.status === "reverted") {
@@ -88,7 +98,7 @@ export default function StartProgram({ loyaltyAddress }: StartProgramProps) {
       }
     } catch (error) {
       console.error("error from make active", error);
-      //TODO handle error
+      //TODO handle contract errors caught here
       toastError("Failed to set program as active. Try again later.");
     }
   };

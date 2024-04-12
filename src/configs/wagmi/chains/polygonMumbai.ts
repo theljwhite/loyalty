@@ -2,7 +2,7 @@ import { Chain } from "@rainbow-me/rainbowkit";
 
 export const polygonTestnet: Chain = {
   id: 80001,
-  name: "polygonTestnet",
+  name: "polygonMumbai",
   network: "polygonTestnet",
   iconUrl: "/chainImages/polygon.svg",
   nativeCurrency: {

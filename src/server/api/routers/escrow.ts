@@ -6,7 +6,7 @@ import {
 } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 
-const escrowState = z.enum([
+export const escrowState = z.enum([
   "Idle",
   "AwaitingEscrowApprovals",
   "DepositPeriod",

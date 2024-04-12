@@ -17,8 +17,10 @@ import {
 import { configureChains, Chain, createConfig } from "wagmi";
 import { jsonRpcProvider } from "wagmi/providers/jsonRpc";
 import { polygonTestnet } from "./chains/polygonMumbai";
+import { polygonAmoy } from "./chains/polygonAmoy";
+import { sepoliaTestnet } from "./chains/sepolia";
 
-export const allChains: Chain[] = [polygonTestnet];
+export const allChains: Chain[] = [polygonTestnet, polygonAmoy, sepoliaTestnet];
 
 const publicClients = [
   jsonRpcProvider({

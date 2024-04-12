@@ -6,8 +6,9 @@ import {
 } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { rewardTypeNumToPrismaEnum } from "~/utils/rewardTypeNumToPrismaEnum";
-import { RewardType } from "@prisma/client";
+import { EscrowState, ProgramState, RewardType } from "@prisma/client";
 import { getAfterDeploymentStepsNeeded } from "~/utils/afterDeploymentSteps";
+import { escrowState } from "./escrow";
 
 const objectivesInputSchema = z.array(
   z.object({
@@ -148,6 +149,7 @@ export const loyaltyProgramsRouter = createTRPCRouter({
           state: true,
           escrowAddress: true,
           escrow: true,
+          chainId: true,
         },
       });
 
@@ -164,6 +166,7 @@ export const loyaltyProgramsRouter = createTRPCRouter({
         rewardType: loyaltyProgram?.rewardType,
         state: loyaltyProgram?.state,
         escrowState: loyaltyProgram?.escrow?.state,
+        chainId: loyaltyProgram?.chainId,
         stepsNeeded: nextStepsNeeded,
       };
     }),
@@ -239,5 +242,43 @@ export const loyaltyProgramsRouter = createTRPCRouter({
       if (!program) throw new TRPCError({ code: "NOT_FOUND" });
 
       return { chain: program.chain, chainId: program.chainId };
+    }),
+  updateProgramStateOrEscrowState: protectedProcedure
+    .input(
+      z.object({
+        loyaltyAddress: z.string(),
+        newProgramState: programState.optional(),
+        newEscrowState: escrowState.optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { loyaltyAddress, newProgramState, newEscrowState } = input;
+
+      const stateUpdates: {
+        state: ProgramState | null;
+        escrowState: EscrowState | null;
+      } = { state: null, escrowState: null };
+
+      if (newProgramState) {
+        const update = await ctx.db.loyaltyProgram.update({
+          where: { address: loyaltyAddress },
+          data: {
+            state: newProgramState,
+          },
+        });
+        stateUpdates.state = update.state;
+      }
+
+      if (newEscrowState) {
+        const updateEscrow = await ctx.db.escrow.update({
+          where: { loyaltyAddress },
+          data: {
+            state: newEscrowState,
+          },
+        });
+        stateUpdates.escrowState = updateEscrow.state;
+      }
+
+      return stateUpdates;
     }),
 });
