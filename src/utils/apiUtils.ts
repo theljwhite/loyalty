@@ -11,9 +11,9 @@ export const isHashCollision = async (hash: string): Promise<boolean> => {
   }
 };
 
-export const hashApiKey = (apiKey: string) => {
+export const sha256Hash = (str: string) => {
   const sha256 = forge.md.sha256.create();
-  sha256.update(apiKey);
+  sha256.update(str);
   return sha256.digest().toHex();
 };
 
@@ -46,7 +46,7 @@ export const getExistingApiKeyByCreatorId = async (
 export const getPublicKeyByApiKey = async (
   apiKey: string,
 ): Promise<string | null> => {
-  const hashedApiKey = hashApiKey(apiKey);
+  const hashedApiKey = sha256Hash(apiKey);
   const base64Hash = forge.util.encode64(hashedApiKey);
 
   const user = await db.user.findUnique({

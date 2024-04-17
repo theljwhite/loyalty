@@ -8,6 +8,9 @@ import {
 import { keyCreationHeadersSchema } from "~/utils/apiValidation";
 import { generateRSAKeyPair } from "~/utils/encryption";
 
+//public key gen may not be done in this part of the project.
+//this is for experimentation.
+
 const storePublicKey = async (
   rsaPublicKey: string,
   creatorId: string,
@@ -60,8 +63,10 @@ export default async function handler(
   // }
 
   const { publicKeyPem, privateKeyPem } = generateRSAKeyPair();
-  //TODO - a secure way of storing the private keys
-  console.log("priv key pem", privateKeyPem);
+  //TODO - a secure way of storing the private keys (AWS, HSM)
+
+  console.log("pub", publicKeyPem);
+  console.log("priv", privateKeyPem);
 
   if (!publicKeyPem) {
     return res.status(500).json({ error: "Failed to generate public key" });

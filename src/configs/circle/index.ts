@@ -10,7 +10,7 @@ export const circleChains: CircleChain[] = [
   { chainId: 5, chainName: "ETH-GOERLI" },
   { chainId: 11155111, chainName: "ETH-SEPOLIA" },
   { chainId: 1, chainName: "ETH" },
-  { chainId: 80001, chainName: "MATIC-MUMBAI" },
+  { chainId: 80002, chainName: "MATIC-AMOY" as Blockchain },
   { chainId: 137, chainName: "MATIC" },
   { chainId: 43113, chainName: "AVAX-FUJI" },
   { chainId: 43114, chainName: "AVAX" },

@@ -46,5 +46,6 @@ export const ROUTE_DOCS_QUICK_POINTS = "/docs/quickstart/Points";
 export const ROUTE_DOCS_QUICK_ERC20 = "/docs/quickstart/ERC20";
 export const ROUTE_DOCS_QUICK_ERC721 = "/docs/quickstart/ERC721";
 export const ROUTE_DOCS_QUICK_ERC1155 = "/docs/quickstart/ERC1155";
+export const ROUTE_DOCS_SDK_MAIN = "/docs/sdk";
 
 //...etc

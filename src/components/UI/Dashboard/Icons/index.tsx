@@ -595,6 +595,31 @@ export const ClipboardOne = ({ color, size }: IconProps): JSX.Element => (
   </svg>
 );
 
+export const FolderIcon = ({ color, size }: IconProps): JSX.Element => (
+  <svg
+    height={size}
+    width={size}
+    version="1.1"
+    viewBox="0 0 20 16"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlnsXlink="http://www.w3.org/1999/xlink"
+  >
+    <title />
+    <desc />
+    <defs />
+    <g fill="none" fillRule="evenodd" id="Page-1" stroke="none" strokeWidth="1">
+      <g fill={color} id="Core" transform="translate(-44.000000, -256.000000)">
+        <g id="folder" transform="translate(44.000000, 256.000000)">
+          <path
+            d="M8,0 L2,0 C0.9,0 0,0.9 0,2 L0,14 C0,15.1 0.9,16 2,16 L18,16 C19.1,16 20,15.1 20,14 L20,4 C20,2.9 19.1,2 18,2 L10,2 L8,0 L8,0 Z"
+            id="Shape"
+          />
+        </g>
+      </g>
+    </g>
+  </svg>
+);
+
 export const SortIcon = ({ color, size }: IconProps): JSX.Element => (
   <svg
     width={size}

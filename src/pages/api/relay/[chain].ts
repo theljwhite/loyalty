@@ -12,7 +12,7 @@ import {
   estimateRelayTransactionOutcome,
   relayerCompleteObjective,
 } from "~/utils/transactionRelayUtils";
-import { verifySignature } from "~/utils/encryption";
+import { validateEntitySecretCipherText } from "~/utils/encryption";
 
 //TODO: this is strictly for experimentation right now
 //all of the caching utility funcs imported here from apiValid,
@@ -20,7 +20,7 @@ import { verifySignature } from "~/utils/encryption";
 
 //this architecture (lol) may be changed, this is just to get a flow down.
 //as in, at least this app's NextJS api routes prob wont be used as REST API
-//itll be moved elsewhere
+//itll be moved elsewhere. same with the encryption aspects.
 
 export default async function handler(
   req: NextApiRequest,
@@ -42,7 +42,6 @@ export default async function handler(
   const idempotencyKey = String(req.headers["x-idempotency-key"]);
   const version = String(req.headers["x-loyalty-version"]);
   const backendAdapter = String(req.headers["x-loyalty-be-adapter"]);
-  const cipherTextSignature = String(req.headers["x-ciphertext-signature"]);
 
   const body = req.body;
   const userWalletAddress = body.userWalletAddress;
@@ -65,112 +64,117 @@ export default async function handler(
     return res.status(401).json({ error: "Could not fetch entity public key" });
   }
 
-  const isSignatureVerified = verifySignature(
+  //TODO - change these vars once storage is implemented
+  let storedHash: string = "";
+  let privateKey: string = "";
+  const isCipherTextValid = validateEntitySecretCipherText(
+    storedHash,
     entitySecretCipherText,
-    cipherTextSignature,
-    program.publicKey,
+    process.env.LOADED_MASHED_POTATO ?? "",
   );
 
-  if (!isSignatureVerified) {
-    return res.status(401).json({ error: "Invalid ciphertext signature" });
+  if (!isCipherTextValid) {
+    return res.status(401).json({ error: "Invalid ciphertext" });
   }
 
-  const mayNeedWalletGenerated = userId && !userWalletAddress;
-  const relayResult: RelayTransactionResult = {
-    contractWritten: false,
-    generatedWallet: false,
-    txReverted: false,
-    walletError: false,
-    networkError: false,
-    unknownError: false,
-    errorMessage: "",
-    status: 0,
-  };
+  return res.status(200).json({ message: "Reached - success" });
 
-  const idempotencyPayload: ObjectivesIdempotencyPayload = {
-    userId,
-    userWalletAddress,
-    loyaltyContractAddress,
-    objectiveIndex,
-  };
-  const idempotencyMetadata: RelayIdempotencyMetadata<ObjectivesIdempotencyPayload> =
-    {
-      timestamp: new Date().toISOString(),
-      result: relayResult,
-      payload: idempotencyPayload,
-    };
+  // const mayNeedWalletGenerated = userId && !userWalletAddress;
+  // const relayResult: RelayTransactionResult = {
+  //   contractWritten: false,
+  //   generatedWallet: false,
+  //   txReverted: false,
+  //   walletError: false,
+  //   networkError: false,
+  //   unknownError: false,
+  //   errorMessage: "",
+  //   status: 0,
+  // };
 
-  if (mayNeedWalletGenerated && !program.walletSetId) {
-    const message = "No wallet set found for program";
-    relayResult.walletError = true;
-    relayResult.errorMessage = message;
-    relayResult.status = 503;
-    return res.status(503).json({ error: message });
-  }
+  // const idempotencyPayload: ObjectivesIdempotencyPayload = {
+  //   userId,
+  //   userWalletAddress,
+  //   loyaltyContractAddress,
+  //   objectiveIndex,
+  // };
+  // const idempotencyMetadata: RelayIdempotencyMetadata<ObjectivesIdempotencyPayload> =
+  //   {
+  //     timestamp: new Date().toISOString(),
+  //     result: relayResult,
+  //     payload: idempotencyPayload,
+  //   };
 
-  try {
-    let completingObjectiveAddress: string = userWalletAddress;
+  // if (mayNeedWalletGenerated && !program.walletSetId) {
+  //   const message = "No wallet set found for program";
+  //   relayResult.walletError = true;
+  //   relayResult.errorMessage = message;
+  //   relayResult.status = 503;
+  //   return res.status(503).json({ error: message });
+  // }
 
-    if (mayNeedWalletGenerated) {
-      const walletAgent = await handleWalletCacheGenerateWallet(
-        userId,
-        chainId,
-        program.walletSetId ?? "",
-      );
+  // try {
+  //   let completingObjectiveAddress: string = userWalletAddress;
 
-      if (!walletAgent) {
-        relayResult.walletError = true;
-        relayResult.errorMessage = "Failed to fetch or generate wallet agent";
-        relayResult.status = 500;
-        const { data, status, errors } = await handleApiResponseWithIdempotency(
-          idempotencyKey,
-          req.url ?? "",
-          idempotencyMetadata,
-        );
-        return res.status(status).json({ data, error: errors });
-      }
-      relayResult.generatedWallet = walletAgent.isNewWallet;
-      completingObjectiveAddress = walletAgent.address;
-    }
+  //   if (mayNeedWalletGenerated) {
+  //     const walletAgent = await handleWalletCacheGenerateWallet(
+  //       userId,
+  //       chainId,
+  //       program.walletSetId ?? "",
+  //     );
 
-    const txReceipt = await relayerCompleteObjective(
-      objectiveIndex,
-      completingObjectiveAddress,
-      loyaltyContractAddress,
-      Number(chainId),
-    );
+  //     if (!walletAgent) {
+  //       relayResult.walletError = true;
+  //       relayResult.errorMessage = "Failed to fetch or generate wallet agent";
+  //       relayResult.status = 500;
+  //       const { data, status, errors } = await handleApiResponseWithIdempotency(
+  //         idempotencyKey,
+  //         req.url ?? "",
+  //         idempotencyMetadata,
+  //       );
+  //       return res.status(status).json({ data, error: errors });
+  //     }
+  //     relayResult.generatedWallet = walletAgent.isNewWallet;
+  //     completingObjectiveAddress = walletAgent.address;
+  //   }
 
-    if (!txReceipt) {
-      relayResult.errorMessage = `Transaction reverted. Details: TODO`;
-      relayResult.status = 500;
-      const { data, status, errors } = await handleApiResponseWithIdempotency(
-        idempotencyKey,
-        req.url ?? "",
-        idempotencyMetadata,
-      );
-      return res.status(status).json({ data, error: errors });
-    }
+  //   const txReceipt = await relayerCompleteObjective(
+  //     objectiveIndex,
+  //     completingObjectiveAddress,
+  //     loyaltyContractAddress,
+  //     Number(chainId),
+  //   );
 
-    relayResult.contractWritten = txReceipt ? true : false;
-    relayResult.status = 200;
+  //   if (!txReceipt) {
+  //     relayResult.errorMessage = `Transaction reverted. Details: TODO`;
+  //     relayResult.status = 500;
+  //     const { data, status, errors } = await handleApiResponseWithIdempotency(
+  //       idempotencyKey,
+  //       req.url ?? "",
+  //       idempotencyMetadata,
+  //     );
+  //     return res.status(status).json({ data, error: errors });
+  //   }
 
-    const { data, status } = await handleApiResponseWithIdempotency(
-      idempotencyKey,
-      req.url ?? "",
-      idempotencyMetadata,
-    );
-    const dataWithTxReceipt = { ...data, receipt: txReceipt };
-    return res.status(status).json(dataWithTxReceipt);
-  } catch (error) {
-    console.error("error from serv -->", error);
-    relayResult.unknownError = true;
-    relayResult.errorMessage = "Internal Server Error";
-    relayResult.status = 500;
-    const { status, errors } = await handleApiResponseWithIdempotency(
-      idempotencyKey,
-      req.url ?? "",
-      idempotencyMetadata,
-    );
-    return res.status(status).json({ error: errors });
-  }
+  //   relayResult.contractWritten = txReceipt ? true : false;
+  //   relayResult.status = 200;
+
+  //   const { data, status } = await handleApiResponseWithIdempotency(
+  //     idempotencyKey,
+  //     req.url ?? "",
+  //     idempotencyMetadata,
+  //   );
+  //   const dataWithTxReceipt = { ...data, receipt: txReceipt };
+  //   return res.status(status).json(dataWithTxReceipt);
+  // } catch (error) {
+  //   console.error("error from serv -->", error);
+  //   relayResult.unknownError = true;
+  //   relayResult.errorMessage = "Internal Server Error";
+  //   relayResult.status = 500;
+  //   const { status, errors } = await handleApiResponseWithIdempotency(
+  //     idempotencyKey,
+  //     req.url ?? "",
+  //     idempotencyMetadata,
+  //   );
+  //   return res.status(status).json({ error: errors });
+  // }
 }

@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { type GetServerSideProps, GetServerSidePropsContext } from "next";
 import { handleLoyaltyPathValidation } from "~/utils/handleServerAuth";
 import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
+import RegisterEntitySecret from "~/components/UI/Dashboard/Developers/RegisterEntitySecret";
 
 export const getServerSideProps: GetServerSideProps = async (
   ctx: GetServerSidePropsContext,
@@ -11,16 +12,15 @@ export const getServerSideProps: GetServerSideProps = async (
   return handleLoyaltyPathValidation(ctx);
 };
 
-const Objectives: NextPage = () => {
-  const router = useRouter();
-  const { address: loyaltyAddress } = router.query;
+const DevConsole: NextPage = () => {
   return (
     <div className="space-y-8">
-      <DashboardHeader title="Objectives Test" info="TODO" />
+      <DashboardHeader title="Developer Console" />
+      <RegisterEntitySecret />
     </div>
   );
 };
 
 // @ts-ignore
-Objectives.getLayout = getDashboardLayout;
-export default Objectives;
+DevConsole.getLayout = getDashboardLayout;
+export default DevConsole;

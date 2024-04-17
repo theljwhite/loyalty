@@ -5,7 +5,7 @@ import { Redis } from "@upstash/redis";
 import { isAddress } from "ethers";
 import { relayChains } from "~/configs/openzeppelin";
 import { MAX_OBJECTIVES_LENGTH } from "~/constants/loyaltyConstants";
-import { hashApiKey } from "./apiUtils";
+import { sha256Hash } from "./apiUtils";
 import {
   assignExistingUnassignedWallet,
   createWalletCacheFlow,
@@ -19,6 +19,8 @@ import {
 //all of this may be moved and not even done in this project
 //this is to just get a flow down for REST api external use of the smart contracts.
 //by developers on their own apps/websites.
+
+//TODO 4/16 - some of these zod schemas can be consolidated/broken down better
 
 export const redisInstance = new Redis({
   url: process.env.UPSTASH_URL ?? "",
@@ -143,6 +145,15 @@ export const keyCreationHeadersSchema = z.object({
   }),
 });
 
+export const secretHeadersSchema = z.object({
+  headers: z.object({
+    "x-loyalty-creator-id": z.string().cuid(),
+  }),
+  body: z.object({
+    entitySecretCipherText: z.string().length(684),
+  }),
+});
+
 export const walletsValidationSchema = z.object({
   contractAddress: z.string().refine(isAddress, "Invalid ethereum address"),
   externalId: z.string().uuid(),
@@ -205,7 +216,7 @@ export const validateKeyHandleCache = async (
   apiKeyHeader: string,
   loyaltyAddress: string,
 ): Promise<boolean> => {
-  const hashedReceivedKey = hashApiKey(apiKeyHeader);
+  const hashedReceivedKey = sha256Hash(apiKeyHeader);
   const base64HashedKey = forge.util.encode64(hashedReceivedKey);
 
   try {
@@ -237,7 +248,7 @@ export const validateKeyCacheProgram = async (
   walletSetId: string | null;
   publicKey: string | null;
 }> => {
-  const hashedReceivedKey = hashApiKey(apiKeyHeader);
+  const hashedReceivedKey = sha256Hash(apiKeyHeader);
   const base64HashedKey = forge.util.encode64(hashedReceivedKey);
 
   try {
