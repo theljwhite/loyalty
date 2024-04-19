@@ -1,8 +1,11 @@
 import forge from "node-forge";
+import { z } from "zod";
 import { sha256Hash } from "./apiUtils";
 
 //this is for experimentation purposes, may be deleted and not utilized.
 //at least not from this part of the project (this app).
+//priv keys will be managed via HSM or AWS KMS, or other solution.
+//this is just for lol's, haha lol's.
 
 const BASE64_POTATO = process.env.LOADED_BAKED_POTATO; //use a different potato in future
 
@@ -20,10 +23,13 @@ export const generateRSAKeyPair = (): {
 
 export const decryptCipherText = (
   entitySecretCipherText: string,
-  privateKey: string,
+  entityPrivateKey?: string,
 ): string | null => {
+  //private key will come from AWS KMS or hardware sec module or other solution;
+  //or likely none of this will even be managed here (in this app at all)
+  const tempPrivKey = process.env.LOADED_MASHED_POTATO ?? ""; //this is hardcoded for now
   try {
-    const privateKeyObj = forge.pki.privateKeyFromPem(privateKey);
+    const privateKeyObj = forge.pki.privateKeyFromPem(tempPrivKey);
     const cipherTextBytes = forge.util.decode64(entitySecretCipherText);
 
     const decrypted = privateKeyObj.decrypt(cipherTextBytes, "RSA-OAEP", {
@@ -34,6 +40,62 @@ export const decryptCipherText = (
   } catch (error) {
     return null;
   }
+};
+
+export const validateRecoveryFile = async (
+  recoveryFileContent: string,
+  creatorId: string,
+): Promise<boolean> => {
+  try {
+    const fileContentShape = z.string().length(216);
+    const fileContentParse = fileContentShape.safeParse(recoveryFileContent);
+
+    if (!fileContentParse.success) return false;
+
+    const binary = forge.util.decode64(recoveryFileContent);
+
+    const decryptedData = decryptRecoveryFile(binary);
+
+    if (!decryptedData) return false;
+
+    const pipeIndex = decryptedData.indexOf("|");
+    if (pipeIndex === -1) return false;
+
+    const hashedEntitySecret = decryptedData.slice(0, pipeIndex);
+    const hashedCreatorId = decryptedData.slice(pipeIndex + 1);
+    /*
+  const user = await db.user.findUnique({
+    where: {id: creatorId},
+    select: {esHash: true}
+  })
+
+  if (!user || !user.esHash) return false; 
+
+  */
+    const TEMP_DB_ES_HASH: string = ""; //temp, will be fetched from DB.
+    const creatorIdHash = sha256Hash(creatorId);
+
+    const isSecretValid = hashedEntitySecret === TEMP_DB_ES_HASH;
+    const isCreatorValid = hashedCreatorId === creatorIdHash;
+
+    return isSecretValid && isCreatorValid;
+  } catch (error) {
+    console.error("Error from validate recovery file", error);
+    return false;
+  }
+};
+
+export const decryptRecoveryFile = (data: string): string => {
+  const key = forge.util.decode64(BASE64_POTATO ?? ""); // from HSM or other
+  const iv = data.slice(0, 16);
+  const encryptedData = data.slice(16);
+
+  const decipher = forge.cipher.createDecipher("AES-CBC", key);
+  decipher.start({ iv });
+  decipher.update(forge.util.createBuffer(encryptedData));
+  decipher.finish();
+
+  return decipher.output.toString();
 };
 
 export const storeEntitySecretHash = async (
@@ -62,11 +124,11 @@ export const storeEntitySecretHash = async (
 export const storeEncryptedEntitySecretHash = async (
   entitySecretCipherText: string,
   creatorId: string,
-  privateKey: string,
+  entityPrivateKey: string,
 ): Promise<string | null> => {
   const decryptedCipherText = decryptCipherText(
     entitySecretCipherText,
-    privateKey,
+    entityPrivateKey,
   );
   if (!decryptedCipherText) return null;
 
@@ -85,9 +147,12 @@ export const storeEncryptedEntitySecretHash = async (
   const encryptedIv = iv + encrypted;
   const encryptedHashBase64 = forge.util.encode64(encryptedIv);
 
+  console.log("hashed entity secret is", hashedEntitySecret);
+
   const cipherTwo = forge.cipher.createCipher("AES-CBC", key);
   const ivTwo = forge.random.getBytesSync(16);
-  const bothHashes = hashedEntitySecret + hashedCreatorId;
+  const pipe = "|";
+  const bothHashes = hashedEntitySecret + pipe + hashedCreatorId;
 
   cipherTwo.start({ iv: ivTwo });
   cipherTwo.update(forge.util.createBuffer(bothHashes));
@@ -99,7 +164,7 @@ export const storeEncryptedEntitySecretHash = async (
   /*
   const update = await db.user.update({
     where: {apiKey: apiKey}, 
-    data: {esHash: forge.util.encode64(encryptedHashBase64) }
+    data: {esHash: encryptedHashBase64}
   })
   */
 
@@ -124,11 +189,14 @@ export const decryptEntitySecretHash = (encryptedHash: string): string => {
 export const validateEntitySecretCipherText = (
   storedHash: string,
   entitySecretCipherText: string,
-  privateKey: string,
-): boolean => {
-  const decryptedSecret = decryptCipherText(entitySecretCipherText, privateKey);
+  entityPrivateKey: string,
+): boolean | null => {
+  const decryptedSecret = decryptCipherText(
+    entitySecretCipherText,
+    entityPrivateKey,
+  );
 
-  if (!decryptedSecret) return false;
+  if (!decryptedSecret) return null;
 
   const hashedSecret = sha256Hash(decryptedSecret);
 
@@ -138,10 +206,13 @@ export const validateEntitySecretCipherText = (
 export const validateCipherTextFromEncryptedHash = (
   storedEncryptedHash: string,
   entitySecretCipherText: string,
-  privateKey: string,
-): boolean => {
-  const decryptedSecret = decryptCipherText(entitySecretCipherText, privateKey);
-  if (!decryptedSecret) return false;
+  entityPrivateKey: string,
+): boolean | null => {
+  const decryptedSecret = decryptCipherText(
+    entitySecretCipherText,
+    entityPrivateKey,
+  );
+  if (!decryptedSecret) return null;
 
   const decryptedHash = decryptEntitySecretHash(storedEncryptedHash);
 
@@ -149,26 +220,3 @@ export const validateCipherTextFromEncryptedHash = (
 
   return decryptedHash === hashedSecret;
 };
-
-// export const validateRecoveryFile = (
-//   base64Data: string,
-//   privateKey: string,
-//   creatorId: string,
-// ): boolean => {
-
-//   /*
-
-//   const user = await db.user.findUnique({
-//     where: {id: creatorId},
-//     select: {esHash: true}
-//   })
-
-//   if (!user || !user.esHash) return false;
-
-//   */
-
-//   const encryptedData = forge.util.decode64(base64Data);
-
-// //TODO - finish
-
-// }

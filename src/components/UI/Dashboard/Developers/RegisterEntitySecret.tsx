@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { z } from "zod";
 import { ROUTE_DASHBOARD_API_KEY, ROUTE_DOCS_SDK_MAIN } from "~/configs/routes";
-import { toastError, toastLoading, toastSuccess } from "../../Toast/Toast";
+import { toastError, toastSuccess } from "../../Toast/Toast";
 import DashboardActionButton from "../DashboardActionButton";
 import ResetEntitySecret from "./ResetEntitySecret";
+
+//TODO - add manual download, success modal, and then loading state once db is impl.
 
 export type EntitySecretAction = "Rotate" | "Reset";
 
@@ -15,7 +17,8 @@ export default function RegisterEntitySecret() {
   const [isResetSecretOpen, setIsResetSecretOpen] = useState<boolean>(false);
   const [secretAction, setSecretAction] =
     useState<EntitySecretAction>("Rotate");
-  const [recoveryFile, setRecoveryFile] = useState<File | undefined>();
+  const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const manualDownloadRef = useRef<HTMLAnchorElement | null>(null);
 
   const router = useRouter();
   const { address: loyaltyAddress } = router.query;
@@ -39,18 +42,18 @@ export default function RegisterEntitySecret() {
       return;
     }
 
-    //TODO - finish here
-  };
+    const blob = new Blob([base64data], { type: "text/plain" });
+    const timestamp = new Date().toLocaleDateString();
 
-  const validateCipherTextEntry = (): boolean => {
-    const input = cipherTextSchema.safeParse(cipherTextEntry);
-    if (!input.success) return false;
-    return true;
-  };
+    if (manualDownloadRef.current) {
+      manualDownloadRef.current.href = URL.createObjectURL(blob);
+      manualDownloadRef.current.download = `recovery_file_${timestamp}.dat`;
+      manualDownloadRef.current.click();
+      //TODO - revoke object URL?
+    }
 
-  const openResetModal = (action: EntitySecretAction): void => {
-    setSecretAction(action);
-    setIsResetSecretOpen(true);
+    toastSuccess("Success. Check downloads for your recovery file.");
+    setIsSuccess(true);
   };
 
   const callRegisterAndGenRecoveryFile = async (): Promise<string> => {
@@ -67,15 +70,24 @@ export default function RegisterEntitySecret() {
         }),
       });
 
-      if (!response.ok) throw new Error();
+      if (!response.ok) return "";
 
-      const base64data = await response.json();
-      return base64data;
+      const base64Data = await response.json();
+      return base64Data.data;
     } catch (error) {
-      console.error("error from call reg gen file", error);
-      toastError("Failed to register entity secret. Try later.");
       return "";
     }
+  };
+
+  const validateCipherTextEntry = (): boolean => {
+    const input = cipherTextSchema.safeParse(cipherTextEntry);
+    if (!input.success) return false;
+    return true;
+  };
+
+  const openResetModal = (action: EntitySecretAction): void => {
+    setSecretAction(action);
+    setIsResetSecretOpen(true);
   };
 
   return (
@@ -233,6 +245,21 @@ export default function RegisterEntitySecret() {
                       btnType="button"
                       onClick={() => setCipherTextEntry("")}
                     />
+                    {isSuccess && (
+                      <DashboardActionButton
+                        isPrimary={false}
+                        btnText="Download Recovery File"
+                        onClick={() => manualDownloadRef.current?.click()}
+                      />
+                    )}
+                    <a
+                      className="hidden"
+                      target="_blank"
+                      ref={manualDownloadRef}
+                    >
+                      Download Recovery File
+                    </a>
+
                     <DashboardActionButton
                       isPrimary
                       btnText="Register Entity Secret"

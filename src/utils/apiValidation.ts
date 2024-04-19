@@ -123,11 +123,11 @@ export const relayRequestSchema = z.object({
       return true;
     }),
   query: z.object({
-    chain: z.string().refine((chainId) => {
-      return relayChains.some(
-        (relayChain) => relayChain.id === Number(chainId),
-      );
-    }),
+    chain: z
+      .string()
+      .refine((chainId) =>
+        relayChains.some((relayChain) => relayChain.id === Number(chainId)),
+      ),
   }),
 });
 
@@ -145,12 +145,20 @@ export const keyCreationHeadersSchema = z.object({
   }),
 });
 
-export const secretHeadersSchema = z.object({
+export const secretRequestSchema = z.object({
   headers: z.object({
     "x-loyalty-creator-id": z.string().cuid(),
   }),
   body: z.object({
     entitySecretCipherText: z.string().length(684),
+    fileContent: z.string().optional(),
+  }),
+});
+
+export const secretRotateRequestSchema = z.object({
+  headers: secretRequestSchema.shape.headers,
+  body: secretRequestSchema.shape.body.extend({
+    newEntitySecretCipherText: z.string().length(684),
   }),
 });
 
