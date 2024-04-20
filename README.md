@@ -27,10 +27,10 @@ The totality of this project will include this NextJS app, the smart contracts t
 Note that in the following screenshots, all visual elements and styling may not be final. Some elements are visual placeholders until the logic for each section is finished. I havent even decided on a primary font family yet. But to give you an idea of how it may look, some previews:
 
 Connecting wallet:
-![Connecting wallet](https://i.ibb.co/FbsJt9F/connect1.png)
+![Connecting wallet](https://i.ibb.co/YP9Zb3g/connect-Wallet-New.png)
 
 Dashboard 1:
-![Dashboard 1](https://i.ibb.co/ggn1QcD/loyalty-Programs.png)
+![Dashboard 1](https://i.ibb.co/3SVtRz6/dashboard-New.png)
 
 Creating Loyalty Program 1:
 ![Creating Loyalty Program 1](https://i.ibb.co/s6tNT1m/create-Obj.png)
@@ -40,6 +40,9 @@ Creating Loyalty Program 2:
 
 Dashboard 2:
 ![Dashboard 2](https://i.ibb.co/WvNXf4b/dbHome.png)
+
+Dashboard 3:
+![Dashboard 3](https://i.ibb.co/LvCdvPS/overview-New.png)
 
 Dashboard Balances:
 ![Dashboard Balances](https://i.ibb.co/n7fSgJD/balance-By-Chain.png)
@@ -51,7 +54,7 @@ Other Stuff (Unfinished):
 ![Set Deposit Period](https://i.ibb.co/0QK2vVT/deposit-Period.png)
 
 Escrow Wallet (Unfinished):
-![Escrow Wallet Unfinished](https://i.ibb.co/yVDR4S7/escrow-Wallet1.png)
+![Escrow Wallet Unfinished](https://i.ibb.co/6tfBvGJ/escrow-Wallet-New.png)
 
 Depositing Rewards (Unfinished):
 ![Depositing Rewards Unfinished](https://i.ibb.co/Kmdz9zf/erc721-Deposit.png)
@@ -61,6 +64,9 @@ Escrow Settings (Unfinished):
 
 API Keys (WIP, not sure that I like this visually):
 ![Escrow Settings Unfinished](https://i.ibb.co/w67T4KT/apiKeys1.png)
+
+Other stuff
+![Entity Secret Unfinished](https://i.ibb.co/Tq1PVqJ/resetNew.png)
 
 ...etc (will update with more screenshots)
 
