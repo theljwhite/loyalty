@@ -44,14 +44,8 @@ Dashboard 2:
 Dashboard 3:
 ![Dashboard 3](https://i.ibb.co/LvCdvPS/overview-New.png)
 
-Dashboard Balances:
-![Dashboard Balances](https://i.ibb.co/n7fSgJD/balance-By-Chain.png)
-
 Experimenting with lighter Dashboard colors:
 ![Dashboard Light](https://i.ibb.co/GvdN79h/lightcropped.png)
-
-Other Stuff (Unfinished):
-![Set Deposit Period](https://i.ibb.co/0QK2vVT/deposit-Period.png)
 
 Escrow Wallet (Unfinished):
 ![Escrow Wallet Unfinished](https://i.ibb.co/6tfBvGJ/escrow-Wallet-New.png)
@@ -61,12 +55,6 @@ Depositing Rewards (Unfinished):
 
 Escrow Settings (Unfinished):
 ![Escrow Settings Unfinished](https://i.ibb.co/ygW6k60/escrow-Settings-ERC721.png)
-
-API Keys (WIP, not sure that I like this visually):
-![Escrow Settings Unfinished](https://i.ibb.co/w67T4KT/apiKeys1.png)
-
-Other stuff
-![Entity Secret Unfinished](https://i.ibb.co/Tq1PVqJ/resetNew.png)
 
 ...etc (will update with more screenshots)
 
