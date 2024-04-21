@@ -22,7 +22,7 @@ export default function DashboardActionButton({
       <button
         type={btnType}
         onClick={onClick}
-        className="relative ms-4 inline-flex h-10 w-auto min-w-10 select-none appearance-none items-center justify-center whitespace-nowrap rounded-md bg-primary-1 pe-4 ps-4 align-middle align-middle text-sm font-semibold leading-[1.2] text-white disabled:bg-stone-200 disabled:text-gray-400"
+        className="relative ms-4 inline-flex h-10 w-auto min-w-10 select-none appearance-none items-center justify-center whitespace-nowrap rounded-md bg-primary-1 pe-4 ps-4 align-middle align-middle text-sm font-semibold leading-[1.2] text-white disabled:cursor-not-allowed disabled:bg-stone-200 disabled:text-gray-400"
         {...(disableCondition && { disabled: disableCondition })}
       >
         {btnText}

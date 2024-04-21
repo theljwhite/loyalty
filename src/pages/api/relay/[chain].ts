@@ -12,7 +12,8 @@ import {
   estimateRelayTransactionOutcome,
   relayerCompleteObjective,
 } from "~/utils/transactionRelayUtils";
-import { validateEntitySecretCipherText } from "~/utils/encryption";
+import { getEsHashByApiKey } from "~/utils/apiUtils";
+import { validateCipherTextFromEncryptedHash } from "~/utils/encryption";
 
 //TODO: this is strictly for experimentation right now
 //all of the caching utility funcs imported here from apiValid,
@@ -64,11 +65,13 @@ export default async function handler(
     return res.status(401).json({ error: "Could not fetch entity public key" });
   }
 
-  //TODO - change these vars once storage is implemented
-  let storedHash: string = "";
-  let privateKey: string = "";
-  const isCipherTextValid = validateEntitySecretCipherText(
-    storedHash,
+  //TODO - change priv key below once implemented
+  //these calls can be consolidated with the others above and cached (validateKeyCacheProgram)
+
+  //TEMP
+  const base64StoredEsHash = await getEsHashByApiKey(apiKey);
+  const isCipherTextValid = validateCipherTextFromEncryptedHash(
+    base64StoredEsHash,
     entitySecretCipherText,
     process.env.LOADED_MASHED_POTATO ?? "", //hardcoded entity priv key for now,
   );
@@ -76,6 +79,7 @@ export default async function handler(
   if (!isCipherTextValid) {
     return res.status(401).json({ error: "Invalid ciphertext" });
   }
+  //END TEMP
 
   const mayNeedWalletGenerated = userId && !userWalletAddress;
   const relayResult: RelayTransactionResult = {

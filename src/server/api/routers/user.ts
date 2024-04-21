@@ -26,4 +26,15 @@ export const userRouter = createTRPCRouter({
       if (!user || !user.apiKeyUpdatedAt) return null;
       else return user.apiKeyUpdatedAt;
     }),
+  getEntitySecretUpdatedDate: protectedProcedure
+    .input(z.object({ creatorId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const user = await ctx.db.user.findUnique({
+        where: { id: input.creatorId },
+        select: { esUpdatedAt: true },
+      });
+
+      if (!user || !user.esUpdatedAt) return null;
+      return user.esUpdatedAt;
+    }),
 });

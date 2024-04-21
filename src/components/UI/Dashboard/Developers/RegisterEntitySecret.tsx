@@ -2,22 +2,25 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { api } from "~/utils/api";
 import { z } from "zod";
 import { ROUTE_DASHBOARD_API_KEY, ROUTE_DOCS_SDK_MAIN } from "~/configs/routes";
 import { toastError, toastSuccess } from "../../Toast/Toast";
 import DashboardActionButton from "../DashboardActionButton";
 import ResetEntitySecret from "./ResetEntitySecret";
-
-//TODO - add manual download, success modal, and then loading state once db is impl.
+import DashboardPageLoading from "../DashboardPageLoading";
+import { DashboardLoadingSpinner } from "../../Misc/Spinners";
 
 export type EntitySecretAction = "Rotate" | "Reset";
+type RegisterSecretStatus = "idle" | "loading" | "success";
 
 export default function RegisterEntitySecret() {
   const [cipherTextEntry, setCipherTextEntry] = useState<string>("");
   const [isResetSecretOpen, setIsResetSecretOpen] = useState<boolean>(false);
   const [secretAction, setSecretAction] =
     useState<EntitySecretAction>("Rotate");
-  const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const [registerStatus, setRegisterStatus] =
+    useState<RegisterSecretStatus>("idle");
   const manualDownloadRef = useRef<HTMLAnchorElement | null>(null);
 
   const router = useRouter();
@@ -25,20 +28,30 @@ export default function RegisterEntitySecret() {
   const { data: session } = useSession();
   const cipherTextSchema = z.string().length(684);
 
-  const TEMP_ENTITY_SEC_REGISTERED_DATE: Date | null = new Date(); //this will be fetched from DB
+  const { data: entitySecretUpdatedAt, isLoading: entitySecretLoading } =
+    api.users.getEntitySecretUpdatedDate.useQuery(
+      {
+        creatorId: session?.user.id ?? "",
+      },
+      { refetchOnWindowFocus: false },
+    );
 
   const registerEntitySecret = async (): Promise<void> => {
+    setRegisterStatus("loading");
+
     const isEntryValid = validateCipherTextEntry();
     if (!isEntryValid) {
       toastError(
         "Invalid cipher text. Should be a base64 encoded string of 684 characters.",
       );
+      setRegisterStatus("idle");
       return;
     }
 
     const base64data = await callRegisterAndGenRecoveryFile();
     if (!base64data) {
       toastError("Failed to register entity secret. Try later");
+      setRegisterStatus("idle");
       return;
     }
 
@@ -49,11 +62,10 @@ export default function RegisterEntitySecret() {
       manualDownloadRef.current.href = URL.createObjectURL(blob);
       manualDownloadRef.current.download = `recovery_file_${timestamp}.dat`;
       manualDownloadRef.current.click();
-      //TODO - revoke object URL?
     }
 
     toastSuccess("Success. Check downloads for your recovery file.");
-    setIsSuccess(true);
+    setRegisterStatus("success");
   };
 
   const callRegisterAndGenRecoveryFile = async (): Promise<string> => {
@@ -90,6 +102,8 @@ export default function RegisterEntitySecret() {
     setIsResetSecretOpen(true);
   };
 
+  if (entitySecretLoading) return <DashboardPageLoading />;
+
   return (
     <>
       {isResetSecretOpen && (
@@ -103,10 +117,14 @@ export default function RegisterEntitySecret() {
           <div className="flex-1">
             <div className="mb-1 flex items-center justify-between">
               <p className="text-md font-semibold capitalize leading-6">
-                Register Entity Secret Ciphertext
-                <code className="ml-1 inline-flex items-center gap-1 whitespace-nowrap bg-dashboard-badge py-0.5 pe-1.5 ps-1.5 align-middle text-xs font-normal leading-[1.4] text-dashboard-required">
-                  Required for SDK
-                </code>
+                {entitySecretUpdatedAt
+                  ? "Entity Secret Configurator"
+                  : "Register Entity Secret"}
+                {!entitySecretUpdatedAt && (
+                  <code className="ml-1 inline-flex items-center gap-1 whitespace-nowrap bg-dashboard-badge py-0.5 pe-1.5 ps-1.5 align-middle text-xs font-normal leading-[1.4] text-dashboard-required">
+                    Required for SDK
+                  </code>
+                )}
               </p>
             </div>
             <p className="mb-6 text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
@@ -120,7 +138,15 @@ export default function RegisterEntitySecret() {
                 API Keys.
               </Link>
             </p>
-            {!TEMP_ENTITY_SEC_REGISTERED_DATE && (
+            {entitySecretUpdatedAt && (
+              <p className="mb-6 text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
+                If you still need to download the recovery file that is used in
+                the case of an entity secret loss, you can do so by rotating
+                your entity secret.
+              </p>
+            )}
+
+            {!entitySecretUpdatedAt && (
               <div>
                 <p className="mb-6 text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
                   If you already have one, encrypt the entity secret using your
@@ -137,7 +163,7 @@ export default function RegisterEntitySecret() {
                 </p>
               </div>
             )}
-            {TEMP_ENTITY_SEC_REGISTERED_DATE ? (
+            {entitySecretUpdatedAt ? (
               <div className="border-box">
                 <div className="mt-8">
                   <hr className="m-0 border-dashboard-border1" />
@@ -173,7 +199,7 @@ export default function RegisterEntitySecret() {
                             <div className="flex">
                               <div className="flex items-center">
                                 <p className="line-clamp-1 overflow-hidden text-ellipsis text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
-                                  {TEMP_ENTITY_SEC_REGISTERED_DATE.toLocaleDateString()}
+                                  {entitySecretUpdatedAt.toLocaleDateString()}
                                 </p>
                               </div>
                             </div>
@@ -182,7 +208,7 @@ export default function RegisterEntitySecret() {
                             <div className="flex">
                               <div className="flex items-center">
                                 <p className="line-clamp-1 overflow-hidden text-ellipsis text-[13px] font-normal leading-[1.125] text-dashboard-lightGray">
-                                  {TEMP_ENTITY_SEC_REGISTERED_DATE.toLocaleDateString()}
+                                  {entitySecretUpdatedAt.toLocaleDateString()}
                                 </p>
                               </div>
                             </div>
@@ -245,10 +271,11 @@ export default function RegisterEntitySecret() {
                       btnType="button"
                       onClick={() => setCipherTextEntry("")}
                     />
-                    {isSuccess && (
+                    {registerStatus === "success" && (
                       <DashboardActionButton
-                        isPrimary={false}
+                        isPrimary
                         btnText="Download Recovery File"
+                        btnType="button"
                         onClick={() => manualDownloadRef.current?.click()}
                       />
                     )}
@@ -260,12 +287,19 @@ export default function RegisterEntitySecret() {
                       Download Recovery File
                     </a>
 
-                    <DashboardActionButton
-                      isPrimary
-                      btnText="Register Entity Secret"
-                      btnType="button"
-                      onClick={registerEntitySecret}
-                    />
+                    {registerStatus === "loading" ? (
+                      <div className="mr-12">
+                        <DashboardLoadingSpinner size={30} />
+                      </div>
+                    ) : (
+                      <DashboardActionButton
+                        isPrimary
+                        btnText="Register Entity Secret"
+                        btnType="button"
+                        onClick={registerEntitySecret}
+                        disableCondition={registerStatus === "success"}
+                      />
+                    )}
                   </div>
                 </div>
               </div>

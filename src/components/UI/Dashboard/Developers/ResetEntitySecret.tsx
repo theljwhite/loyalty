@@ -10,7 +10,7 @@ import DashboardActionButton from "../DashboardActionButton";
 import DashboardFileDrop from "../DashboardFileDrop";
 import { InfoIcon } from "../Icons";
 
-//TODO 4/18 - when db calls implemented this may also need loading state
+//TODO - may also need loading state just to be safe
 
 interface ResetEntitySecretProps {
   setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;

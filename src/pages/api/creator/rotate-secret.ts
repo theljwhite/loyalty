@@ -2,8 +2,9 @@ import { type NextApiRequest, type NextApiResponse } from "next";
 import { secretRotateRequestSchema } from "~/utils/apiValidation";
 import { getServerAuthSession } from "~/server/auth";
 import {
+  getEsHashByCreatorId,
   storeEncryptedEntitySecretHash,
-  validateEntitySecretCipherText,
+  validateCipherTextFromEncryptedHash,
 } from "~/utils/encryption";
 
 export default async function handler(
@@ -31,10 +32,16 @@ export default async function handler(
   const entitySecretCipherText = req.body.entitySecretCipherText;
   const newCipherText = req.body.newEntitySecretCipherText;
 
-  const TEMP_HASH_FROM_STORE = ""; //temporary before DB calls impl.
+  const base64StoredHash = await getEsHashByCreatorId(creatorId);
 
-  const currCipherTextIsValid = validateEntitySecretCipherText(
-    TEMP_HASH_FROM_STORE,
+  if (!base64StoredHash) {
+    return res
+      .status(500)
+      .json({ error: "Existing registered secret not found" });
+  }
+
+  const currCipherTextIsValid = validateCipherTextFromEncryptedHash(
+    base64StoredHash,
     entitySecretCipherText,
     process.env.LOADED_MASHED_POTATO ?? "", //temp hardcoded priv key
   );
@@ -45,8 +52,8 @@ export default async function handler(
       .json({ error: "Invalid current entity secret ciphertext" });
   }
 
-  const newCipherMatchesCurrentHash = validateEntitySecretCipherText(
-    TEMP_HASH_FROM_STORE,
+  const newCipherMatchesCurrentHash = validateCipherTextFromEncryptedHash(
+    base64StoredHash,
     newCipherText,
     process.env.LOADED_MASHED_POTATO ?? "", //temp hardcoded priv key
   );

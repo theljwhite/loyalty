@@ -125,9 +125,11 @@ model User {
     accounts        Account[]
     sessions        Session[]
     role            UserRole         @default(User)
-    apiKey          String?          @unique
+    apiKey          String?          @unique //this may be temporary and moved elsewhere, considering best security practices (even tho this is stored right now as a b64'd hash)
     apiKeyUpdatedAt DateTime?
     rsaPublicKey    String?          @unique //this may be temporary and moved elsewhere, considering best security practices
+    es              String?          @unique //this may be temporary and moved elsewhere, considering best security practices (even tho this is stored right now as a hash that is also encrypted and b64'd lols)
+    esUpdatedAt     DateTime?
 }
 
 model VerificationToken {

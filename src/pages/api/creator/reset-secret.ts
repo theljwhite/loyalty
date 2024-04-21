@@ -4,8 +4,8 @@ import { getServerAuthSession } from "~/server/auth";
 import {
   storeEncryptedEntitySecretHash,
   validateCipherTextFromEncryptedHash,
-  validateEntitySecretCipherText,
   validateRecoveryFile,
+  getEsHashByCreatorId,
 } from "~/utils/encryption";
 
 //TODO this as well as the other encrypted stuff prob wont be done from here
@@ -45,10 +45,17 @@ export default async function handler(
   }
 
   const entitySecretCipherText = req.body.entitySecretCipherText;
-  const TEMP_HASH_FROM_STORE = ""; //temp, will come from DB once impl.
 
-  const hashesDoMatch = validateEntitySecretCipherText(
-    TEMP_HASH_FROM_STORE,
+  const base64StoredHash = await getEsHashByCreatorId(creatorId);
+
+  if (!base64StoredHash) {
+    return res
+      .status(500)
+      .json({ error: "You do not have an existing registered secret" });
+  }
+
+  const hashesDoMatch = validateCipherTextFromEncryptedHash(
+    base64StoredHash,
     entitySecretCipherText,
     process.env.LOADED_MASHED_POTATO ?? "", //temp hardcoded priv key
   );

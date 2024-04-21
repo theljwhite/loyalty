@@ -58,3 +58,27 @@ export const getPublicKeyByApiKey = async (
 
   return user.rsaPublicKey;
 };
+
+export const getEsHashByCreatorId = async (
+  creatorId: string,
+): Promise<string> => {
+  const user = await db.user.findUnique({
+    where: { id: creatorId },
+    select: { es: true },
+  });
+  if (!user || !user.es) return "";
+  return user.es;
+};
+
+export const getEsHashByApiKey = async (apiKey: string): Promise<string> => {
+  const hashedApiKey = sha256Hash(apiKey);
+  const base64Hash = forge.util.encode64(hashedApiKey);
+
+  const user = await db.user.findUnique({
+    where: { apiKey: base64Hash },
+    select: { es: true },
+  });
+
+  if (!user || !user.es) return "";
+  return user.es;
+};

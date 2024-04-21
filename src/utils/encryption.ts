@@ -1,6 +1,7 @@
+import { db } from "~/server/db";
 import forge from "node-forge";
 import { z } from "zod";
-import { sha256Hash } from "./apiUtils";
+import { getEsHashByCreatorId, sha256Hash } from "./apiUtils";
 
 //this is for experimentation purposes, may be deleted and not utilized.
 //at least not from this part of the project (this app).
@@ -63,24 +64,19 @@ export const validateRecoveryFile = async (
 
     const hashedEntitySecret = decryptedData.slice(0, pipeIndex);
     const hashedCreatorId = decryptedData.slice(pipeIndex + 1);
-    /*
-  const user = await db.user.findUnique({
-    where: {id: creatorId},
-    select: {esHash: true}
-  })
 
-  if (!user || !user.esHash) return false; 
+    const base64StoredHash = await getEsHashByCreatorId(creatorId);
 
-  */
-    const TEMP_DB_ES_HASH: string = ""; //temp, will be fetched from DB.
+    if (!base64StoredHash) return false;
+
+    const decryptedStoredHash = decryptEntitySecretHash(base64StoredHash);
     const creatorIdHash = sha256Hash(creatorId);
 
-    const isSecretValid = hashedEntitySecret === TEMP_DB_ES_HASH;
+    const isSecretValid = hashedEntitySecret === decryptedStoredHash;
     const isCreatorValid = hashedCreatorId === creatorIdHash;
 
     return isSecretValid && isCreatorValid;
   } catch (error) {
-    console.error("Error from validate recovery file", error);
     return false;
   }
 };
@@ -96,29 +92,6 @@ export const decryptRecoveryFile = (data: string): string => {
   decipher.finish();
 
   return decipher.output.toString();
-};
-
-export const storeEntitySecretHash = async (
-  entitySecretCipherText: string,
-  privateKey: string,
-): Promise<string> => {
-  const decryptedCipherText = decryptCipherText(
-    entitySecretCipherText,
-    privateKey,
-  );
-  if (!decryptedCipherText) return "";
-
-  const hashedEntitySecret = sha256Hash(decryptedCipherText);
-  const base64Hash = forge.util.encode64(hashedEntitySecret);
-  /*
-  const update = await db.user.update({
-    where: {id: creatorId}, 
-    data: {esHash: base64Hash }
-  })
-
-  if (update.esHash) return update.esHash;
-  */
-  return "";
 };
 
 export const storeEncryptedEntitySecretHash = async (
@@ -147,8 +120,6 @@ export const storeEncryptedEntitySecretHash = async (
   const encryptedIv = iv + encrypted;
   const encryptedHashBase64 = forge.util.encode64(encryptedIv);
 
-  console.log("hashed entity secret is", hashedEntitySecret);
-
   const cipherTwo = forge.cipher.createCipher("AES-CBC", key);
   const ivTwo = forge.random.getBytesSync(16);
   const pipe = "|";
@@ -161,16 +132,14 @@ export const storeEncryptedEntitySecretHash = async (
   const encryptedBothHashes = cipherTwo.output.getBytes();
   const base64Data = forge.util.encode64(ivTwo + encryptedBothHashes);
 
-  /*
   const update = await db.user.update({
-    where: {apiKey: apiKey}, 
-    data: {esHash: encryptedHashBase64}
-  })
-  */
+    where: { id: creatorId },
+    data: { es: encryptedHashBase64, esUpdatedAt: new Date() },
+  });
 
-  // if (update.esHash) return base64Data
+  if (update.es) return base64Data;
 
-  return base64Data;
+  return null;
 };
 
 export const decryptEntitySecretHash = (encryptedHash: string): string => {
@@ -215,8 +184,7 @@ export const validateCipherTextFromEncryptedHash = (
   if (!decryptedSecret) return null;
 
   const decryptedHash = decryptEntitySecretHash(storedEncryptedHash);
-
-  const hashedSecret = sha256Hash(decryptedHash);
+  const hashedSecret = sha256Hash(decryptedSecret);
 
   return decryptedHash === hashedSecret;
 };
