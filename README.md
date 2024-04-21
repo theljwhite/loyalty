@@ -56,6 +56,9 @@ Depositing Rewards (Unfinished):
 Escrow Settings (Unfinished):
 ![Escrow Settings Unfinished](https://i.ibb.co/ygW6k60/escrow-Settings-ERC721.png)
 
+Other stuff:
+![Reset Entity Secret](https://i.ibb.co/Jx165kX/resetNew.png)
+
 ...etc (will update with more screenshots)
 
 This app utilizes Prisma, TRPC, Tailwind, Ethers, Wagmi, RainbowKit, and more.
