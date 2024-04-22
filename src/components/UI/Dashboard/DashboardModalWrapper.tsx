@@ -20,7 +20,7 @@ export default function DashboardModalWrapper({
 
   return (
     <>
-      <div className="fixed left-0 top-0 !m-0 h-dvh w-screen bg-black/[0.32]" />
+      <div className="fixed left-0 top-0 z-[1400] !m-0 h-dvh w-screen bg-black/[0.40] backdrop-blur" />
       <div
         onClick={closeModalOnOverlayClick}
         className="fixed left-0 top-0 z-[1400] flex h-dvh w-screen items-start justify-center overflow-auto overscroll-y-none"

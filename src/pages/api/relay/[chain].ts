@@ -8,10 +8,7 @@ import {
   type RelayTransactionResult,
   handleApiResponseWithIdempotency,
 } from "../../../utils/apiValidation";
-import {
-  estimateRelayTransactionOutcome,
-  relayerCompleteObjective,
-} from "~/utils/transactionRelayUtils";
+import { relayerCompleteObjective } from "~/utils/transactionRelayUtils";
 import { getEsHashByApiKey } from "~/utils/apiUtils";
 import { validateCipherTextFromEncryptedHash } from "~/utils/encryption";
 
