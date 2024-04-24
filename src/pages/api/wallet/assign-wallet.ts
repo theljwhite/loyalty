@@ -1,9 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { db } from "~/server/db";
 import { initiateCircleSdk } from "~/configs/circle";
-import { parseUUID } from "~/utils/parseUUID";
 
 //TODO - protect route
+// - validate with zod
 
 const getWalletDbRecord = async (
   externalId: string,
@@ -44,11 +44,6 @@ export default async function handler(
   }
 
   const { externalId } = req.body;
-  const isUUID = parseUUID(externalId);
-
-  if (!isUUID) {
-    return res.status(500).json({ error: "Failed to validate id as UUID" });
-  }
 
   try {
     const walletDbRecord = await getWalletDbRecord(externalId);

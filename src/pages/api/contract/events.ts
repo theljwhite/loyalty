@@ -11,10 +11,12 @@ export default async function handler(
 ) {
   const input = eventApiRouteSchema.safeParse(req);
 
-  if (!input.success) {
-    const errorMessages = input.error.issues.map((issue) => issue.message);
-    return res.status(400).json({ error: errorMessages });
-  }
+  console.log("req", req.body);
+
+  // if (!input.success) {
+  //   const errorMessages = input.error.issues.map((issue) => issue.message);
+  //   return res.status(400).json({ error: errorMessages });
+  // }
 
   const signature = req.headers["x-signature"];
 

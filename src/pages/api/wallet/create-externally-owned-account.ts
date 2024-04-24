@@ -1,14 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { initiateCircleSdk } from "~/configs/circle";
 import { circleChains } from "~/configs/circle";
-import { appRouter } from "~/server/api/root";
-import { parseUUID } from "~/utils/parseUUID";
 import {
   getWalletSetIdForProgram,
   createDbWallet,
 } from "~/utils/transactionRelayUtils";
 
 //TODO: protect route
+//  - validate with zod
 
 export default async function handler(
   req: NextApiRequest,
@@ -18,12 +17,6 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
   const { loyaltyAddress, userUniqueId } = req.body;
-
-  const isUUID = parseUUID(userUniqueId);
-
-  if (!isUUID) {
-    return res.status(500).json({ error: "Failed to validate id as UUID" });
-  }
 
   try {
     const program = await getWalletSetIdForProgram(loyaltyAddress);
