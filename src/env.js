@@ -31,6 +31,7 @@ export const env = createEnv({
     DISCORD_CLIENT_ID: z.string(),
     DISCORD_CLIENT_SECRET: z.string(),
     MORALIS_API_KEY: z.string(),
+    MORALIS_STREAM_SECRET: z.string(),
 
     OPEN_ZEPP_SEPOLIA_RELAY_ADDRESS: z.string(),
     OPEN_ZEPP_SEPOLIA_API_KEY: z.string(),
@@ -87,6 +88,7 @@ export const env = createEnv({
     NEXT_PUBLIC_ALCHEMY_SEPOLIA: process.env.NEXT_PUBLIC_ALCHEMY_SEPOLIA,
     NEXT_PUBLIC_WALLET_CONNECT_ID: process.env.NEXT_PUBLIC_WALLET_CONNECT_ID,
     MORALIS_API_KEY: process.env.MORALIS_API_KEY,
+    MORALIS_STREAM_SECRET: process.env.MORALIS_STREAM_SECRET,
 
     OPEN_ZEPP_SEPOLIA_RELAY_ADDRESS:
       process.env.OPEN_ZEPP_SEPOLIA_RELAY_ADDRESS,
