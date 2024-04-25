@@ -5,6 +5,8 @@ import LPEventsAbi from "../contractsAndAbis/Events/LPEventsAbi.json";
 
 //TODO - finish add req body shape to schema
 
+export type ContractEventType = "ObjectiveCompleted" | "PointsUpdate";
+
 export type ObjectiveCompleteEvent = {
   user: string | `0x${string}`;
   objectiveIndex: number;
@@ -20,6 +22,24 @@ export type PointsUpdateEvent = {
 };
 
 type EventRequestBody = z.infer<typeof eventApiRouteSchema.shape.body>;
+type EventRequestInputs = z.infer<typeof eventReqBodyInputsShape>;
+
+const eventReqBodyParamsEmptyArray = z.array(z.any()).length(0);
+const eventReqBodyInputsShape = z.array(
+  z.object({
+    type: z.string(),
+    name: z.string(),
+    indexed: z.boolean(),
+    internalType: z.string().optional(),
+  }),
+);
+const eventReqBodyAbiShape = z.array(
+  z.object({
+    name: z.literal("ObjectiveCompleted").or(z.literal("PointsUpdate")),
+    type: z.literal("event"),
+    anonymous: z.boolean(),
+  }),
+);
 
 export const eventApiRouteSchema = z.object({
   headers: z.object({
@@ -29,21 +49,73 @@ export const eventApiRouteSchema = z.object({
     tag: z.literal("PROGRESS_STREAM_ONE"),
     chainId: z.string(),
     confirmed: z.boolean(),
-    block: z.record(z.string(), z.string()),
+    block: z.object({
+      number: z.string(),
+      hash: z.string(),
+      timestamp: z.string(),
+    }),
     txs: z.array(z.any()),
-    abis: z.array(z.record(z.string(), z.any())),
-    logs: z.array(z.record(z.string(), z.any())),
+    abi: eventReqBodyAbiShape,
+    logs: z.array(
+      z.object({
+        logIndex: z.string(),
+        transactionHash: z.string(),
+        address: z.string(),
+        data: z.string(),
+        topic0: z.string(),
+        topic1: z.string(),
+        topic2: z.string(),
+        topic3: z.string(),
+      }),
+    ),
     streamId: z.string(),
+    retries: z.number(),
+    txsInternal: eventReqBodyParamsEmptyArray,
+    erc20Transfers: eventReqBodyParamsEmptyArray,
+    erc20Approvals: eventReqBodyParamsEmptyArray,
+    nftTransfers: eventReqBodyParamsEmptyArray,
+    nativeBalances: z.unknown(),
+    nftTokenApprovals: z.unknown(),
+    nftApprovals: z.object({
+      ERC1155: eventReqBodyParamsEmptyArray,
+      ERC721: eventReqBodyParamsEmptyArray,
+    }),
   }),
 });
 
-export const objectiveEventAbi = [
-  "event ObjectiveCompleted(address indexed user, uint256 objectiveIndex, uint256 completedAt, bytes32 authority",
-];
+export const parseEventReqBodyInputs = (
+  event: ContractEventType,
+  inputs: any[],
+): boolean => {
+  const parsedInputTypes = eventReqBodyInputsShape.safeParse(inputs);
 
-export const pointsUpdateEventAbi = [
-  "event PointsUpdate(address indexed user, uint256 total, uint256 amount, uint256 updatedAt",
-];
+  if (!parsedInputTypes.success) return false;
+
+  let correctInputsValues: EventRequestInputs = [];
+
+  if (event === "ObjectiveCompleted") {
+    correctInputsValues = LPEventsAbi[0]?.inputs ?? [];
+  }
+
+  if (event === "PointsUpdate") {
+    correctInputsValues = LPEventsAbi[1]?.inputs ?? [];
+  }
+
+  if (!correctInputsValues || correctInputsValues.length !== inputs.length) {
+    return false;
+  }
+
+  const valuesMatch = inputs.every((item, index) => {
+    const correctInput = correctInputsValues[index];
+    return (
+      item.type === correctInput?.type &&
+      item.name === correctInput?.name &&
+      item.indexed === correctInput?.indexed
+    );
+  });
+
+  return valuesMatch;
+};
 
 export const addContractAddressToStream = async (
   loyaltyAddresses: string[],
@@ -68,19 +140,20 @@ export const addContractAddressToStream = async (
 };
 
 export const getEventName = (abis: any[]): string => {
-  const abiEvents = abis.filter((item) => item.type === "event");
+  const relevantAbi = abis
+    .filter((item) => item.type === "event")
+    .find(
+      (event) =>
+        event.name === "ObjectiveCompleted" || event.name === "PointsUpdate",
+    );
 
-  const relevantAbi = abiEvents.find(
-    (event) =>
-      event.name === "ObjectiveCompleted" || event.name === "PointsUpdate",
-  );
   if (!relevantAbi.name) return "";
 
   return relevantAbi.name;
 };
 
 export const decodeEventLogs = (data: EventRequestBody): void => {
-  const eventName = getEventName(data.abis);
+  const eventName = getEventName(data.abi);
 
   if (eventName === "ObjectiveCompleted") {
     //TODO
