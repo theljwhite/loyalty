@@ -3,23 +3,23 @@ import Moralis from "moralis";
 import { z } from "zod";
 import LPEventsAbi from "../contractsAndAbis/Events/LPEventsAbi.json";
 
-//TODO - finish add req body shape to schema
-
 export type ContractEventType = "ObjectiveCompleted" | "PointsUpdate";
-
 export type ObjectiveCompleteEvent = {
   user: string | `0x${string}`;
   objectiveIndex: number;
   authority: Authority;
-  completedAt: number;
+  completedAt: Date;
 };
-
 export type PointsUpdateEvent = {
-  userAddress: string | `0x${string}`;
+  user: string | `0x${string}`;
   total: number;
   amount: number;
-  updatedAt: number;
+  updatedAt: Date;
 };
+export type DecodedLogsReturn = {
+  contractAddress: string | `0x${string}`;
+  chainId: number;
+} & (ObjectiveCompleteEvent | PointsUpdateEvent);
 
 type EventRequestBody = z.infer<typeof eventApiRouteSchema.shape.body>;
 type EventRequestInputs = z.infer<typeof eventReqBodyInputsShape>;
@@ -74,8 +74,8 @@ export const eventApiRouteSchema = z.object({
     erc20Transfers: eventReqBodyParamsEmptyArray,
     erc20Approvals: eventReqBodyParamsEmptyArray,
     nftTransfers: eventReqBodyParamsEmptyArray,
-    nativeBalances: z.unknown(),
-    nftTokenApprovals: z.unknown(),
+    nativeBalances: z.array(z.any()),
+    nftTokenApprovals: z.any(),
     nftApprovals: z.object({
       ERC1155: eventReqBodyParamsEmptyArray,
       ERC721: eventReqBodyParamsEmptyArray,
@@ -152,14 +152,44 @@ export const getEventName = (abis: any[]): string => {
   return relevantAbi.name;
 };
 
-export const decodeEventLogs = (data: EventRequestBody): void => {
+export const decodeEventLogs = (
+  data: EventRequestBody,
+): DecodedLogsReturn | null => {
   const eventName = getEventName(data.abi);
 
   if (eventName === "ObjectiveCompleted") {
-    //TODO
+    const decodedObjEvent = Moralis.Streams.parsedLogs<ObjectiveCompleteEvent>(
+      data as any,
+    );
+
+    if (!decodedObjEvent || !decodedObjEvent[0]) return null;
+
+    return {
+      user: decodedObjEvent[0].user,
+      objectiveIndex: Number(decodedObjEvent[0].objectiveIndex),
+      authority: decodedObjEvent[0].authority,
+      completedAt: new Date(Number(decodedObjEvent[0].completedAt)),
+      contractAddress: data.logs[0]?.address ?? "",
+      chainId: Number(data.chainId),
+    };
   }
 
   if (eventName === "PointsUpdate") {
-    //TODO
+    const decodedEvent = Moralis.Streams.parsedLogs<PointsUpdateEvent>(
+      data as any,
+    );
+
+    if (!decodedEvent || !decodedEvent[0]) return null;
+
+    return {
+      user: decodedEvent[0].user,
+      total: decodedEvent[0].total,
+      amount: decodedEvent[0].amount,
+      updatedAt: new Date(Number(decodedEvent[0].updatedAt)),
+      contractAddress: data.logs[0]?.address ?? "",
+      chainId: Number(data.chainId),
+    };
   }
+
+  return null;
 };

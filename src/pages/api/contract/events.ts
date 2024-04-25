@@ -1,9 +1,13 @@
 import { type NextApiRequest, type NextApiResponse } from "next";
 import { id } from "ethers";
-import { eventApiRouteSchema } from "~/utils/contractEventListener";
+import {
+  decodeEventLogs,
+  eventApiRouteSchema,
+} from "~/utils/contractEventListener";
 import { redisInstance } from "~/utils/apiValidation";
 
 //TODO - unfinished (this will also prob not be done from this app, but elsewhere)
+//for now, may change it to perform operations only once a confirmed req is received
 
 export default async function handler(
   req: NextApiRequest,
@@ -11,12 +15,10 @@ export default async function handler(
 ) {
   const input = eventApiRouteSchema.safeParse(req);
 
-  console.log("req", req.body);
-
-  // if (!input.success) {
-  //   const errorMessages = input.error.issues.map((issue) => issue.message);
-  //   return res.status(400).json({ error: errorMessages });
-  // }
+  if (!input.success) {
+    const errorMessages = input.error.issues.map((issue) => issue.message);
+    return res.status(400).json({ error: errorMessages });
+  }
 
   const signature = req.headers["x-signature"];
 
@@ -33,19 +35,30 @@ export default async function handler(
     `CE-${signature}`,
   );
 
+  //handles the correct order of received webhooks (unconfirmed first, then confirmed)
   if (!data.confirmed && !payloadCount) {
     await redisInstance.set(`CE-${signature}`, 1);
     return res.status(202).end();
   }
 
+  //handles incorrect order, if confirmed is sent before unconfirmed
   if (data.confirmed && payloadCount !== 1) {
     await redisInstance.set(`CE-${signature}`, 1);
     return res.status(202).end();
   }
 
-  if (data.confirmed && payloadCount === 1) {
+  //as long as a prior webhook has been received, regardless of order, perform operations
+  if (payloadCount === 1) {
     await redisInstance.set(`CE-${signature}`, 2);
-    //TODO - finish logic here
+
+    const relevantDataFromEvent = decodeEventLogs(data);
+
+    if (!relevantDataFromEvent) {
+      return res.status(500).json({ error: "Failed to decode event logs" });
+    }
+
+    //TODO - store results in different db for tracking
+    //await store(relevantDataFromEvent)
   }
 
   return res.status(200).end();
