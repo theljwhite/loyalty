@@ -59,7 +59,9 @@ export default async function handler(
 
     //TODO - store results in different db for tracking
     //await store(relevantDataFromEvent)
+
+    return res.status(200).end();
   }
 
-  return res.status(200).end();
+  return res.status(202).end();
 }
