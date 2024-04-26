@@ -1,8 +1,9 @@
 import { type NextApiRequest, type NextApiResponse } from "next";
 import { id } from "ethers";
 import {
-  decodeEventLogs,
+  decodeProgramEventLogs,
   eventApiRouteSchema,
+  getEventName,
 } from "~/utils/contractEventListener";
 import { redisInstance } from "~/utils/apiValidation";
 
@@ -51,7 +52,13 @@ export default async function handler(
   if (payloadCount === 1) {
     await redisInstance.set(`CE-${signature}`, 2);
 
-    const relevantDataFromEvent = decodeEventLogs(data);
+    const eventName = getEventName(data.abi);
+
+    if (!eventName) {
+      return res.status(500).json({ error: "Incorrect event name" });
+    }
+
+    const relevantDataFromEvent = decodeProgramEventLogs(data, eventName);
 
     if (!relevantDataFromEvent) {
       return res.status(500).json({ error: "Failed to decode event logs" });
