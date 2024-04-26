@@ -4,6 +4,7 @@ import {
   decodeProgramEventLogs,
   eventApiRouteSchema,
   getEventName,
+  parseEventReqBodyInputs,
 } from "~/utils/contractEventListener";
 import { redisInstance } from "~/utils/apiValidation";
 
@@ -56,6 +57,19 @@ export default async function handler(
 
     if (!eventName) {
       return res.status(500).json({ error: "Incorrect event name" });
+    }
+
+    if (data.abi.length !== 1) {
+      return res.status(500).json({ error: "Invalid abi length" });
+    }
+
+    const isValidInputs = parseEventReqBodyInputs(
+      eventName,
+      data.abi[0].inputs,
+    );
+
+    if (!isValidInputs) {
+      return res.status(500).json({ error: "Invalid input properties" });
     }
 
     const relevantDataFromEvent = decodeProgramEventLogs(data, eventName);

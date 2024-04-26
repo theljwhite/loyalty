@@ -1,36 +1,30 @@
-import { type Authority } from "@prisma/client";
 import Moralis from "moralis";
 import { z } from "zod";
+import {
+  type ObjectiveCompleteEvent,
+  type PointsUpdateEvent,
+  type ERC20RewardedEvent,
+  type ERC721RewardedEvent,
+  type ERC1155RewardedEvent,
+} from "~/contractsAndAbis/Events/types";
 import LPEventsAbi from "../contractsAndAbis/Events/LPEventsAbi.json";
 import EscrowRewardEventsAbi from "../contractsAndAbis/Events/EscrowRewardEventsAbi.json";
 
 //TODO - decode logs can be made more dynamic if need be (if more events need to be listened to in future)
 
-export type ProgramEvent = "ObjectiveCompleted" | "PointsUpdate";
-export type EscrowEvent =
-  | "ERC20Rewarded"
-  | "ERC721TokenRewarded"
-  | "ERC1155Rewarded";
-export type EventType = "Program" | "Escrow";
-
 export type WithChainLogs = {
   contractAddress: string | `0x${string}`;
   chainId: number;
 };
-export type ObjectiveCompleteEvent = {
-  user: string | `0x${string}`;
-  objectiveIndex: number;
-  authority: Authority;
-  completedAt: Date;
-};
 
-export type PointsUpdateEvent = {
-  user: string | `0x${string}`;
-  total: number;
-  amount: number;
-  updatedAt: Date;
-};
 export type ProgramDecodedLogs = (ObjectiveCompleteEvent | PointsUpdateEvent) &
+  WithChainLogs;
+
+export type EscrowRewardDecodedLogs = (
+  | ERC20RewardedEvent
+  | ERC721RewardedEvent
+  | ERC1155RewardedEvent
+) &
   WithChainLogs;
 
 type EventRequestBody = z.infer<typeof eventApiRouteSchema.shape.body>;
@@ -56,6 +50,7 @@ const eventReqBodyAbiShape = z.array(
     name: z.string(),
     type: z.string(),
     anonymous: z.boolean(),
+    inputs: eventReqBodyInputsShape,
   }),
 );
 
@@ -102,26 +97,28 @@ export const eventApiRouteSchema = z.object({
 });
 
 export const parseEventReqBodyInputs = (
-  eventType: EventType,
-  event: ProgramEvent | EscrowEvent,
-  inputs: any[],
+  eventName: string,
+  inputs: EventRequestInputs,
 ): boolean => {
   const parsedInputTypes = eventReqBodyInputsShape.safeParse(inputs);
 
   if (!parsedInputTypes.success) return false;
 
+  const isProgramEvent = programEventNames.includes(eventName);
+  const isEscrowEvent = escrowEventNames.includes(eventName);
+
   let correctInputsValues: EventRequestInputs = [];
 
-  if (eventType === "Program") {
+  if (isProgramEvent) {
     const matchingProgramEvent = LPEventsAbi.find(
-      (item) => item.name === event,
+      (item) => item.name === eventName,
     );
     correctInputsValues = matchingProgramEvent?.inputs ?? [];
   }
 
-  if (eventType === "Escrow") {
+  if (isEscrowEvent) {
     const matchingEscrowEvent = EscrowRewardEventsAbi.find(
-      (item) => item.name === event,
+      (item) => item.name === eventName,
     );
     correctInputsValues = matchingEscrowEvent?.inputs ?? [];
   }
@@ -188,6 +185,48 @@ export const decodeProgramEventLogs = (
       contractAddress: data.logs[0]?.address ?? "",
       chainId: Number(data.chainId),
     };
+  }
+
+  return null;
+};
+
+export const decodeEscrowRewardLogs = (
+  data: EventRequestBody,
+  eventName: string,
+): EscrowRewardDecodedLogs | null => {
+  if (eventName === "ERC20Rewarded") {
+    const decodedERC20Event = Moralis.Streams.parsedLogs<ERC20RewardedEvent>(
+      data as any,
+    );
+    if (!decodedERC20Event || !decodedERC20Event[0]) return null;
+    return {
+      user: decodedERC20Event[0].user,
+      amount: decodedERC20Event[0].amount,
+      rewardCondition: decodedERC20Event[0].rewardCondition,
+      rewardedAt: new Date(Number(decodedERC20Event[0].rewardedAt)),
+      contractAddress: data.logs[0]?.address ?? "",
+      chainId: Number(data.chainId),
+    };
+  }
+
+  if (eventName === "ERC721TokenRewarded") {
+    const decodedERC721Event = Moralis.Streams.parsedLogs<ERC721RewardedEvent>(
+      data as any,
+    );
+    if (!decodedERC721Event || !decodedERC721Event[0]) return null;
+
+    return {
+      user: decodedERC721Event[0].user,
+      token: decodedERC721Event[0].token,
+      rewardedAt: new Date(Number(decodedERC721Event[0].rewardedAt)),
+      contractAddress: data.logs[0]?.address ?? "",
+      chainId: Number(data.chainId),
+    };
+  }
+
+  if (eventName === "ERC1155Rewarded") {
+    //TODO
+    return null;
   }
 
   return null;
