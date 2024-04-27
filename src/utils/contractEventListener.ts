@@ -28,7 +28,7 @@ export type EscrowRewardDecodedLogs = (
   WithChainLogs;
 
 type EventRequestBody = z.infer<typeof eventApiRouteSchema.shape.body>;
-type EventRequestInputs = z.infer<typeof eventReqBodyInputsShape>;
+type EventInputs = z.infer<typeof eventReqBodyInputsShape>;
 type EventReqBodyAbiShape = z.infer<typeof eventReqBodyAbiShape>;
 
 export const programEventNames = LPEventsAbi.map((event) => event.name);
@@ -98,37 +98,17 @@ export const eventApiRouteSchema = z.object({
 
 export const parseEventReqBodyInputs = (
   eventName: string,
-  inputs: EventRequestInputs,
+  inputs: EventInputs,
 ): boolean => {
   const parsedInputTypes = eventReqBodyInputsShape.safeParse(inputs);
 
   if (!parsedInputTypes.success) return false;
 
-  const isProgramEvent = programEventNames.includes(eventName);
-  const isEscrowEvent = escrowEventNames.includes(eventName);
-
-  let correctInputsValues: EventRequestInputs = [];
-
-  if (isProgramEvent) {
-    const matchingProgramEvent = LPEventsAbi.find(
-      (item) => item.name === eventName,
-    );
-    correctInputsValues = matchingProgramEvent?.inputs ?? [];
-  }
-
-  if (isEscrowEvent) {
-    const matchingEscrowEvent = EscrowRewardEventsAbi.find(
-      (item) => item.name === eventName,
-    );
-    correctInputsValues = matchingEscrowEvent?.inputs ?? [];
-  }
-
-  if (!correctInputsValues || correctInputsValues.length !== inputs.length) {
-    return false;
-  }
+  const correctInputValues = getAbiEventInputs(eventName);
+  if (!correctInputValues) return false;
 
   const valuesMatch = inputs.every((item, index) => {
-    const correctInput = correctInputsValues[index];
+    const correctInput = correctInputValues[index];
     return (
       item.type === correctInput?.type &&
       item.name === correctInput?.name &&
@@ -149,14 +129,28 @@ export const getEventName = (abis: EventReqBodyAbiShape): string | null => {
   return matchingEvent ? matchingEvent.name : null;
 };
 
+const getAbiEventInputs = (eventName: string): EventInputs | null => {
+  const relevantProgramEvent = LPEventsAbi.find(
+    (event) => event.name === eventName,
+  );
+  if (relevantProgramEvent) return relevantProgramEvent.inputs;
+
+  const relevantEscrowEvent = EscrowRewardEventsAbi.find(
+    (event) => event.name === eventName,
+  );
+  if (relevantEscrowEvent) return relevantEscrowEvent.inputs;
+  return null;
+};
+
 export const decodeProgramEventLogs = (
   data: EventRequestBody,
   eventName: string,
 ): ProgramDecodedLogs | null => {
+  const tempData = data as any;
+
   if (eventName === "ObjectiveCompleted") {
-    const decodedObjEvent = Moralis.Streams.parsedLogs<ObjectiveCompleteEvent>(
-      data as any,
-    );
+    const decodedObjEvent =
+      Moralis.Streams.parsedLogs<ObjectiveCompleteEvent>(tempData);
 
     if (!decodedObjEvent || !decodedObjEvent[0]) return null;
 
@@ -171,9 +165,8 @@ export const decodeProgramEventLogs = (
   }
 
   if (eventName === "PointsUpdate") {
-    const decodedEvent = Moralis.Streams.parsedLogs<PointsUpdateEvent>(
-      data as any,
-    );
+    const decodedEvent =
+      Moralis.Streams.parsedLogs<PointsUpdateEvent>(tempData);
 
     if (!decodedEvent || !decodedEvent[0]) return null;
 
@@ -194,10 +187,11 @@ export const decodeEscrowRewardLogs = (
   data: EventRequestBody,
   eventName: string,
 ): EscrowRewardDecodedLogs | null => {
+  const tempData = data as any;
+
   if (eventName === "ERC20Rewarded") {
-    const decodedERC20Event = Moralis.Streams.parsedLogs<ERC20RewardedEvent>(
-      data as any,
-    );
+    const decodedERC20Event =
+      Moralis.Streams.parsedLogs<ERC20RewardedEvent>(tempData);
     if (!decodedERC20Event || !decodedERC20Event[0]) return null;
     return {
       user: decodedERC20Event[0].user,
@@ -210,9 +204,8 @@ export const decodeEscrowRewardLogs = (
   }
 
   if (eventName === "ERC721TokenRewarded") {
-    const decodedERC721Event = Moralis.Streams.parsedLogs<ERC721RewardedEvent>(
-      data as any,
-    );
+    const decodedERC721Event =
+      Moralis.Streams.parsedLogs<ERC721RewardedEvent>(tempData);
     if (!decodedERC721Event || !decodedERC721Event[0]) return null;
 
     return {
@@ -225,8 +218,19 @@ export const decodeEscrowRewardLogs = (
   }
 
   if (eventName === "ERC1155Rewarded") {
-    //TODO
-    return null;
+    const decodedERC1155Event =
+      Moralis.Streams.parsedLogs<ERC1155RewardedEvent>(tempData);
+
+    if (!decodedERC1155Event || !decodedERC1155Event[0]) return null;
+
+    return {
+      user: decodedERC1155Event[0].user,
+      token: decodedERC1155Event[0].token,
+      amount: decodedERC1155Event[0].amount,
+      rewardedAt: new Date(Number(decodedERC1155Event[0]?.rewardedAt)),
+      contractAddress: data.logs[0]?.address ?? "",
+      chainId: Number(data.chainId),
+    };
   }
 
   return null;
