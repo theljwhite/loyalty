@@ -35,6 +35,7 @@ const Dashboard: NextPage = (props) => {
     { refetchOnWindowFocus: false },
   );
   const router = useRouter();
+  const dashboardTitle = session?.user.name ?? "Programs";
 
   if (isError)
     return (
@@ -44,7 +45,7 @@ const Dashboard: NextPage = (props) => {
   return (
     <>
       <Head>
-        <title>Dashboard - {session?.user.name} </title>
+        <title>{`Dashboard - ${dashboardTitle}`}</title>
       </Head>
       <DashboardHeader title="Loyalty Programs" />
       {isLoading ? (
