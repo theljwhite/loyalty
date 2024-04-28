@@ -239,14 +239,40 @@ export const decodeEscrowRewardLogs = (
 export const addContractAddressToStream = async (
   loyaltyAddresses: string[],
 ): Promise<boolean> => {
+  //TODO make server side
   try {
     if (!Moralis.Core.isStarted) {
       await Moralis.start({
-        apiKey: process.env.MORALIS_API_KEY,
+        apiKey: process.env.NEXT_PUBLIC_MORALIS_API_KEY,
       });
     }
     const response = await Moralis.Streams.addAddress({
-      id: process.env.MORALIS_STREAM_ID_ONE ?? "",
+      id: process.env.NEXT_PUBLIC_MORALIS_STREAM_ID_ONE ?? "",
+      address: loyaltyAddresses,
+    });
+
+    if (response && response.result) return true;
+
+    return false;
+  } catch (error) {
+    console.error("erro from add", error);
+    return false;
+  }
+};
+
+export const deleteContractAddressFromStream = async (
+  loyaltyAddresses: string[],
+): Promise<boolean> => {
+  //TODO make server side
+  try {
+    if (!Moralis.Core.isStarted) {
+      await Moralis.start({
+        apiKey: process.env.NEXT_PUBLIC_MORALIS_API_KEY,
+      });
+    }
+
+    const response = await Moralis.Streams.deleteAddress({
+      id: process.env.NEXT_PUBLIC_MORALIS_STREAM_ID_ONE ?? "",
       address: loyaltyAddresses,
     });
 

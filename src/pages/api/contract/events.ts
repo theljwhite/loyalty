@@ -7,6 +7,7 @@ import {
   parseEventReqBodyInputs,
 } from "~/utils/contractEventListener";
 import { redisInstance } from "~/utils/apiValidation";
+import { db } from "~/server/db";
 
 //TODO - unfinished (this will also prob not be done from this app, but elsewhere)
 //for now, may change it to perform operations only once a confirmed req is received

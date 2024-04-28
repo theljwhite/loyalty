@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
+import {
+  addContractAddressToStream,
+  deleteContractAddressFromStream,
+} from "~/utils/contractEventListener";
+import { toastSuccess, toastError } from "../../Toast/Toast";
 import DashboardContentBox from "../DashboardContentBox";
 import DashboardToggleSwitch from "../DashboardToggleSwitch";
 
@@ -21,19 +26,47 @@ export default function AggregateAnalytics() {
   const { mutate: updateContractEvents } =
     api.loyaltyPrograms.updateContractEventListening.useMutation();
 
-  const onToggleSwitch = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  const onToggleSwitch = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ): Promise<void> => {
     const { checked } = e.target;
     setIsChecked(checked);
     setIsDisabled(true);
 
-    updateContractEvents({
-      loyaltyAddress: String(loyaltyAddress),
-      isEnabled: checked,
-    });
+    let didStreamUpdate = false;
+
+    if (checked) {
+      didStreamUpdate = await addContractAddressToStream([
+        String(loyaltyAddress),
+      ]);
+    }
+
+    if (!checked) {
+      didStreamUpdate = await deleteContractAddressFromStream([
+        String(loyaltyAddress),
+      ]);
+    }
+
+    if (didStreamUpdate) {
+      toastSuccess(`${checked ? "Enabled" : "Disabled"} aggregate analytics`);
+      updateContractEvents({
+        loyaltyAddress: String(loyaltyAddress),
+        isEnabled: checked,
+      });
+    }
+
+    if (!didStreamUpdate) {
+      toastError(
+        `Failed to ${
+          checked ? "enable" : "disable"
+        } aggregate analytics. Try later.`,
+      );
+      setIsChecked(checked);
+    }
 
     setTimeout(() => {
       setIsDisabled(false);
-    }, 5000);
+    }, 8000);
   };
 
   return (
@@ -48,6 +81,7 @@ export default function AggregateAnalytics() {
           checked={eventsEnabled || isChecked}
           onChange={onToggleSwitch}
           disableCheckbox={isDisabled}
+          disableCheckboxTip="Please wait a moment before trying again"
         />
       }
     />
