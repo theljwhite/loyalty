@@ -1,12 +1,12 @@
 import { type NextPage } from "next";
 import { getDashboardLayout } from "~/layouts/LayoutDashboard";
-import { useRouter } from "next/router";
 import { type GetServerSideProps, GetServerSidePropsContext } from "next";
 import { handleLoyaltyPathValidation } from "~/utils/handleServerAuth";
 import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
 import DashboardInfoBanner from "~/components/UI/Dashboard/DashboardInfoBanner";
 import WalletSetSettings from "~/components/UI/Dashboard/User/WalletSetSettings";
 import WalletStats from "~/components/UI/Dashboard/User/WalletStats";
+import AggregateAnalytics from "~/components/UI/Dashboard/User/AggregateAnalytics";
 
 export const getServerSideProps: GetServerSideProps = async (
   ctx: GetServerSidePropsContext,
@@ -27,6 +27,7 @@ const UserSettings: NextPage = () => {
       />
       <WalletSetSettings />
       <WalletStats />
+      <AggregateAnalytics />
     </div>
   );
 };

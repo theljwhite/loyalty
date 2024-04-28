@@ -12,28 +12,29 @@ datasource db {
 }
 
 model LoyaltyProgram {
-    id            String       @id @unique @default(cuid())
-    address       String       @unique
-    creatorId     String
-    creator       User         @relation(fields: [creatorId], references: [id])
-    name          String
-    description   String?
-    objectives    Objective[]
-    tiers         Tier[]
-    state         ProgramState
-    chain         String
-    chainId       Int
-    tiersActive   Boolean      @default(false)
-    programStart  DateTime
-    programEnd    DateTime
-    rewardType    RewardType
-    escrowAddress String?      @unique
-    escrow        Escrow?
-    version       String       @default("0.03")
-    createdAt     DateTime     @default(now())
-    updatedAt     DateTime     @updatedAt
-    wallets       Wallet[]
-    walletSetId   String?      @unique
+    id             String       @id @unique @default(cuid())
+    address        String       @unique
+    creatorId      String
+    creator        User         @relation(fields: [creatorId], references: [id])
+    name           String
+    description    String?
+    objectives     Objective[]
+    tiers          Tier[]
+    state          ProgramState
+    chain          String
+    chainId        Int
+    tiersActive    Boolean      @default(false)
+    programStart   DateTime
+    programEnd     DateTime
+    rewardType     RewardType
+    escrowAddress  String?      @unique
+    escrow         Escrow?
+    version        String       @default("0.03")
+    createdAt      DateTime     @default(now())
+    updatedAt      DateTime     @updatedAt
+    contractEvents Boolean?
+    wallets        Wallet[]
+    walletSetId    String?      @unique
 }
 
 model Escrow {

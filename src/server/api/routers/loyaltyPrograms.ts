@@ -243,6 +243,20 @@ export const loyaltyProgramsRouter = createTRPCRouter({
 
       return { chain: program.chain, chainId: program.chainId };
     }),
+  getContractEventsStatus: protectedProcedure
+    .input(
+      z.object({
+        loyaltyAddress: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const program = await ctx.db.loyaltyProgram.findUnique({
+        where: { address: input.loyaltyAddress },
+        select: { contractEvents: true },
+      });
+      if (!program) throw new TRPCError({ code: "NOT_FOUND" });
+      return program.contractEvents;
+    }),
   updateProgramStateOrEscrowState: protectedProcedure
     .input(
       z.object({
@@ -279,5 +293,14 @@ export const loyaltyProgramsRouter = createTRPCRouter({
         stateUpdates.escrowState = updateEscrow.state;
       }
       return stateUpdates;
+    }),
+  updateContractEventListening: protectedProcedure
+    .input(z.object({ loyaltyAddress: z.string(), isEnabled: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      const program = await ctx.db.loyaltyProgram.update({
+        where: { address: input.loyaltyAddress },
+        data: { contractEvents: input.isEnabled },
+      });
+      return program.contractEvents;
     }),
 });
