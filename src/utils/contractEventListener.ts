@@ -239,7 +239,6 @@ export const decodeEscrowRewardLogs = (
 export const addContractAddressToStream = async (
   loyaltyAddresses: string[],
 ): Promise<boolean> => {
-  //TODO make server side
   try {
     if (!Moralis.Core.isStarted) {
       await Moralis.start({
@@ -263,7 +262,6 @@ export const addContractAddressToStream = async (
 export const deleteContractAddressFromStream = async (
   loyaltyAddresses: string[],
 ): Promise<boolean> => {
-  //TODO make server side
   try {
     if (!Moralis.Core.isStarted) {
       await Moralis.start({

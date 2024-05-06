@@ -283,6 +283,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
   const sectionNameClass = `${
     testLightMode ? "text-dashboard-lightGray2" : "text-gray-400"
   } pl-3 text-xs font-medium`;
+  const blurRoutesClass = asPath === "/dashboard" && "blur pointer-events-none";
 
   return (
     <>
@@ -395,7 +396,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
               </div>
             </div>
             <div className="flex-1 overflow-y-auto">
-              <nav className="space-y-8 py-5">
+              <nav className={`${blurRoutesClass} space-y-8 py-5`}>
                 <div className="space-y-xs isolate px-4">
                   {navLinksState.slice(0, 3).map((link) => {
                     return (
