@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { getLayout } from "./Base";
 import type { ReactNode } from "react";
 import Image from "next/image";
@@ -51,6 +51,7 @@ import {
   EditPencil,
   ClipboardOne,
 } from "~/components/UI/Dashboard/Icons/index";
+import ProgramsDropdown from "~/components/UI/Misc/ProgramsDropdown";
 
 interface LayoutDashboardSidebarProps {
   children: React.ReactNode;
@@ -238,6 +239,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
   const { openConnectModal } = useConnectModal();
   const { openChainModal } = useChainModal();
   const [isClient, setIsClient] = useState<boolean>();
+  const [isProgramDropOpen, setIsProgramDropOpen] = useState<boolean>(false);
   const [testLightMode, _] = useState<boolean>(false);
 
   const connected = isConnected && address && isClient;
@@ -284,7 +286,8 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
   const sectionNameClass = `${
     testLightMode ? "text-dashboard-lightGray2" : "text-gray-400"
   } pl-3 text-xs font-medium`;
-  const blurRoutesClass = asPath === "/dashboard" && "blur pointer-events-none";
+  const blurRoutesClass =
+    asPath === "/dashboard" && "blur-sm pointer-events-none";
 
   return (
     <>
@@ -335,6 +338,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                   </div>
                 </span>
                 <span
+                  onClick={() => setIsProgramDropOpen(!isProgramDropOpen)}
                   className={`${
                     testLightMode
                       ? "text-dashboardLight-secondary"
@@ -344,6 +348,11 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                   <UpDownChevron size={16} color="currentColor" />
                 </span>
               </button>
+
+              {isProgramDropOpen && (
+                <ProgramsDropdown setIsDropdownOpen={setIsProgramDropOpen} />
+              )}
+
               <div className="mt-5 space-y-px">
                 <button
                   onClick={connected ? openAccountModal : openConnectModal}
