@@ -14,8 +14,9 @@ import {
 } from "@rainbow-me/rainbowkit";
 import { api } from "~/utils/api";
 import {
+  ROUTE_DASHBOARD_MAIN,
   ROUTE_DASHBOARD_HOME,
-  ROUTE_DASHBORD_ANALYTICS,
+  ROUTE_DASHBOARD_ANALYTICS,
   ROUTE_DASHBOARD_BALANCES,
   ROUTE_DASHBOARD_OVERVIEW,
   ROUTE_DASHBOARD_OBJECTIVES,
@@ -147,7 +148,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
     {
       id: 2,
       label: "Analytics",
-      href: ROUTE_DASHBORD_ANALYTICS,
+      href: ROUTE_DASHBOARD_ANALYTICS,
       icon: <AnalyticsIconOne size={16} color="currentColor" />,
     },
     {
@@ -322,13 +323,15 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                     )}
                   </span>
                   <div>
-                    <span
-                      className={`${
-                        testLightMode ? "text-dashboardLight-secondary" : ""
-                      } truncate font-lunch text-lg font-medium`}
-                    >
-                      Dashboard
-                    </span>
+                    <Link href={ROUTE_DASHBOARD_MAIN}>
+                      <span
+                        className={`${
+                          testLightMode ? "text-dashboardLight-secondary" : ""
+                        } truncate font-lunch text-lg font-medium`}
+                      >
+                        Dashboard
+                      </span>
+                    </Link>
                   </div>
                 </span>
                 <span

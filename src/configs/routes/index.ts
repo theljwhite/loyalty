@@ -1,6 +1,7 @@
 //DASHBOARD RELATED ROUTES:
 
-export const ROUTE_DASHBORD_ANALYTICS = "/dashboard/analytics";
+export const ROUTE_DASHBOARD_MAIN = "/dashboard";
+export const ROUTE_DASHBOARD_ANALYTICS = "/dashboard/analytics";
 export const ROUTE_DASHBOARD_BALANCES = "/dashboard/balances";
 
 export const ROUTE_DASHBOARD_OBJECTIVES = "/dashboard/objectives";
