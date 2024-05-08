@@ -51,7 +51,7 @@ import {
   EditPencil,
   ClipboardOne,
 } from "~/components/UI/Dashboard/Icons/index";
-import ProgramsDropdown from "~/components/UI/Misc/ProgramsDropdown";
+import ProgramsDropdown from "~/components/UI/Dashboard/Misc/ProgramsDropdown";
 
 interface LayoutDashboardSidebarProps {
   children: React.ReactNode;

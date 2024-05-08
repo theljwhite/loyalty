@@ -7,8 +7,8 @@ import {
   ROUTE_DASHBOARD_HOME,
   ROUTE_DASHBOARD_CREATE_LP,
 } from "~/configs/routes";
-import DashboardDropdownWrap from "../Dashboard/DashboardDropdownWrap";
-import { AddIcon, FolderIcon, WalletIcon } from "../Dashboard/Icons";
+import DashboardDropdownWrap from "../DashboardDropdownWrap";
+import { AddIcon, FolderIcon, WalletIcon } from "../Icons";
 
 interface ProgramsDropdownProps {
   setIsDropdownOpen: React.Dispatch<React.SetStateAction<boolean>>;
