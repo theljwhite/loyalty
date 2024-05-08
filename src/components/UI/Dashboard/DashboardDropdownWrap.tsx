@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import Link from "next/link";
-import { useWindowEvent } from "~/helpers/windowEvents";
+import { useOnClickOutside } from "~/helpers/windowEvents";
 import { SettingsOne } from "./Icons";
 
 interface DashboardDropdownWrapProps {
@@ -18,8 +18,6 @@ interface DashboardDropdownWrapProps {
     | ((isOpen: boolean) => any);
 }
 
-//TODO remove closeDropDownOnOverlayClick, replace with useWindowEvent
-
 export default function DashboardDropdownWrap({
   dropTitle,
   secondTitle,
@@ -34,17 +32,15 @@ export default function DashboardDropdownWrap({
 }: DashboardDropdownWrapProps) {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  //this approach prob isnt going to be best for dropdowns, will update it
-  const closeDropDownOnOverlayClick = (
-    e: React.MouseEvent<HTMLDivElement>,
-  ): void => {
-    if (e.target === e.currentTarget) setIsDropdownOpen(false);
+  const closeDropdownHandler = () => {
+    setIsDropdownOpen(false);
   };
+
+  useOnClickOutside(dropdownRef, closeDropdownHandler);
 
   return (
     <div
       ref={dropdownRef}
-      onClick={closeDropDownOnOverlayClick}
       className="fixed left-0 top-0 z-[1400] flex h-dvh w-screen items-start justify-center overflow-auto overscroll-y-none"
     >
       <div className="fixed left-0 top-0 z-auto min-w-max">
