@@ -1,5 +1,6 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useOnClickOutside } from "~/helpers/windowEvents";
 import { SettingsOne } from "./Icons";
 
@@ -33,12 +34,20 @@ export default function DashboardDropdownWrap({
   setIsDropdownOpen,
 }: DashboardDropdownWrapProps) {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const { events } = useRouter();
 
   const closeDropdownHandler = () => {
     setIsDropdownOpen(false);
   };
 
   useOnClickOutside(dropdownRef, closeDropdownHandler);
+
+  useEffect(() => {
+    events.on("routeChangeComplete", closeDropdownHandler);
+    return () => {
+      events.off("routeChangeComplete", closeDropdownHandler);
+    };
+  }, []);
 
   return (
     <div
