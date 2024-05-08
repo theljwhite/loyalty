@@ -304,6 +304,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
               className={testLightMode ? lightDividerClass : darkDividerClass}
             >
               <button
+                onClick={() => setIsProgramDropOpen(!isProgramDropOpen)}
                 type="button"
                 className="group flex w-full items-center justify-between focus:outline-none"
               >
@@ -326,19 +327,16 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                     )}
                   </span>
                   <div>
-                    <Link href={ROUTE_DASHBOARD_MAIN}>
-                      <span
-                        className={`${
-                          testLightMode ? "text-dashboardLight-secondary" : ""
-                        } truncate font-lunch text-lg font-medium`}
-                      >
-                        Dashboard
-                      </span>
-                    </Link>
+                    <span
+                      className={`${
+                        testLightMode ? "text-dashboardLight-secondary" : ""
+                      } truncate font-lunch text-lg font-medium`}
+                    >
+                      Dashboard
+                    </span>
                   </div>
                 </span>
                 <span
-                  onClick={() => setIsProgramDropOpen(!isProgramDropOpen)}
                   className={`${
                     testLightMode
                       ? "text-dashboardLight-secondary"

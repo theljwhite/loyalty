@@ -43,9 +43,9 @@ export default function DashboardDropdownWrap({
   useOnClickOutside(dropdownRef, closeDropdownHandler);
 
   useEffect(() => {
-    events.on("routeChangeComplete", closeDropdownHandler);
+    events.on("routeChangeStart", closeDropdownHandler);
     return () => {
-      events.off("routeChangeComplete", closeDropdownHandler);
+      events.off("routeChangeStart", closeDropdownHandler);
     };
   }, []);
 
