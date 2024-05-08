@@ -54,7 +54,7 @@ export default function DashboardDropdownWrap({
       <div className="relative isolate w-[272px] rounded-[0.75rem] border border-[rgba(19,_19,_22,_.05)] bg-dashboardLight-body leading-5 text-dashboard-activeTab outline-none [box-shadow:0_20px_25px_-5px_rgba(0,0,0,.1),0_8px_10px_-6px_rgba(0,0,0,.1)]">
         <div className="border-black/4 shadow-black/3 rounded-b-lg rounded-t-xl border-b bg-white bg-clip-padding text-dashboardLight-secondary">
           <div className="p-3">
-            <div className="text-sm font-medium">{dropTitle}</div>
+            <div className="text-xs font-medium">{dropTitle}</div>
             {secondTitle && secondTitleIcon && (
               <div className="mt-3 flex items-center gap-3">
                 <div className="flex size-6 items-center justify-center rounded bg-gray-100 p-1 text-dashboardLight-secondary">
