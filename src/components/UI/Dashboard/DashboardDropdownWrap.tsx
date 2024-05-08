@@ -10,6 +10,7 @@ interface DashboardDropdownWrapProps {
   secondTitleAction?: () => any;
   secondTitleRoute?: string;
   additionalAction?: () => any;
+  additionalRoute?: string;
   actionTitle?: string;
   actionIcon?: JSX.Element;
   children: React.ReactNode;
@@ -25,6 +26,7 @@ export default function DashboardDropdownWrap({
   secondTitleAction,
   secondTitleRoute,
   additionalAction,
+  additionalRoute,
   actionTitle,
   actionIcon,
   children,
@@ -87,6 +89,17 @@ export default function DashboardDropdownWrap({
               </div>
               <span className="text-sm">{actionTitle}</span>
             </div>
+          )}
+          {additionalRoute && (
+            <Link
+              href={additionalRoute}
+              className="focus:text-primary group relative flex cursor-pointer items-center gap-3.5 rounded-xl px-3.5 py-2 text-dashboardLight-secondary before:absolute before:inset-0 before:z-50 before:rounded-xl before:ring-gray-200 focus:outline-none before:focus:ring-[0.15625rem]"
+            >
+              <div className="p-0.5 text-dashboardLight-secondary">
+                {actionIcon}
+              </div>
+              <span className="text-sm">{actionTitle}</span>
+            </Link>
           )}
         </div>
       </div>

@@ -46,7 +46,7 @@ export default function ProgramsDropdown({
           ? ROUTE_DASHBOARD_HOME(loyaltyAddress)
           : ROUTE_DASHBOARD_MAIN
       }
-      additionalAction={() => console.log("TODO finish this")}
+      additionalRoute={ROUTE_DASHBOARD_CREATE_LP}
       actionTitle="Create Loyalty Program"
       actionIcon={<AddIcon size={12} color="currentColor" />}
       setIsDropdownOpen={setIsDropdownOpen}

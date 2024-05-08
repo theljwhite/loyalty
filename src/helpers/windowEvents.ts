@@ -25,7 +25,6 @@ export function useOnClickOutside<T>(
     }
     handler(event);
   };
-
   useEffect(() => {
     document.addEventListener("mousedown", listener);
     document.addEventListener("touchstart", listener);
