@@ -1,4 +1,6 @@
+import { useRef } from "react";
 import Link from "next/link";
+import { useWindowEvent } from "~/helpers/windowEvents";
 import { SettingsOne } from "./Icons";
 
 interface DashboardDropdownWrapProps {
@@ -16,6 +18,8 @@ interface DashboardDropdownWrapProps {
     | ((isOpen: boolean) => any);
 }
 
+//TODO remove closeDropDownOnOverlayClick, replace with useWindowEvent
+
 export default function DashboardDropdownWrap({
   dropTitle,
   secondTitle,
@@ -28,9 +32,7 @@ export default function DashboardDropdownWrap({
   children,
   setIsDropdownOpen,
 }: DashboardDropdownWrapProps) {
-  const lightWrapClass =
-    "border-[rgba(19,_19,_22,_.05)] bg-dashboardLight-body text-dashboard-activeTab";
-  const divideClass = "divide-gray-100 border-gray-100";
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   //this approach prob isnt going to be best for dropdowns, will update it
   const closeDropDownOnOverlayClick = (
@@ -41,13 +43,12 @@ export default function DashboardDropdownWrap({
 
   return (
     <div
+      ref={dropdownRef}
       onClick={closeDropDownOnOverlayClick}
       className="fixed left-0 top-0 z-[1400] flex h-dvh w-screen items-start justify-center overflow-auto overscroll-y-none"
     >
       <div className="fixed left-0 top-0 z-auto min-w-max">
-        <div
-          className={`${lightWrapClass} relative isolate w-[272px] rounded-[0.75rem] border leading-5 outline-none [box-shadow:0_20px_25px_-5px_rgba(0,0,0,.1),0_8px_10px_-6px_rgba(0,0,0,.1)]`}
-        >
+        <div className="relative isolate w-[272px] rounded-[0.75rem] border border-[rgba(19,_19,_22,_.05)] bg-dashboardLight-body leading-5 text-dashboard-activeTab outline-none [box-shadow:0_20px_25px_-5px_rgba(0,0,0,.1),0_8px_10px_-6px_rgba(0,0,0,.1)]">
           <div className="border-black/4 shadow-black/3 rounded-b-lg rounded-t-xl border-b bg-white bg-clip-padding text-dashboardLight-secondary">
             <div className="p-3">
               <div className="text-sm font-medium">{dropTitle}</div>
@@ -56,7 +57,7 @@ export default function DashboardDropdownWrap({
                   <div className="flex size-6 items-center justify-center rounded bg-gray-100 p-1 text-dashboardLight-secondary">
                     {secondTitleIcon}
                   </div>
-                  <span className="flex-grow truncate text-dashboardLight-primary">
+                  <span className="flex-grow truncate text-sm text-dashboardLight-primary">
                     {secondTitle}
                   </span>
                   {secondTitleAction ? (
@@ -64,21 +65,19 @@ export default function DashboardDropdownWrap({
                       onClick={secondTitleAction}
                       className="transition-color hover:text-primary rounded-lg border border-black/5 bg-white bg-clip-padding p-1 shadow-sm ring-gray-200 focus:outline-none focus:ring-2"
                     >
-                      <SettingsOne size={16} color="currentColor" />
+                      <SettingsOne size={14} color="currentColor" />
                     </div>
                   ) : (
                     <Link href={secondTitleRoute ?? ""}>
                       <div className="transition-color hover:text-primary rounded-lg border border-black/5 bg-white bg-clip-padding p-1 shadow-sm ring-gray-200 focus:outline-none focus:ring-2">
-                        <SettingsOne size={16} color="currentColor" />
+                        <SettingsOne size={14} color="currentColor" />
                       </div>
                     </Link>
                   )}
                 </div>
               )}
             </div>
-            <div
-              className={`${divideClass} rounded-b-inherit max-h-[50dvh] divide-y divide-gray-100  overflow-y-auto border-t`}
-            >
+            <div className="rounded-b-inherit max-h-[50dvh] divide-y divide-gray-100 divide-gray-100 overflow-y-auto  border-t border-gray-100">
               {children}
             </div>
           </div>
