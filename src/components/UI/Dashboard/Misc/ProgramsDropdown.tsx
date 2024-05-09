@@ -38,44 +38,46 @@ export default function ProgramsDropdown({
     .slice(0, 5);
 
   return (
-    <DashboardDropdownWrap
-      dropTitle="Loyalty Programs"
-      secondTitle={activeProgram?.name ?? ""}
-      secondTitleIcon={<WalletIcon size={16} color="currentColor" />}
-      secondTitleRoute={
-        loyaltyAddress
-          ? ROUTE_DASHBOARD_HOME(loyaltyAddress)
-          : ROUTE_DASHBOARD_MAIN
-      }
-      additionalRoute={ROUTE_DASHBOARD_CREATE_LP}
-      actionTitle="Create Loyalty Program"
-      actionIcon={<AddIcon size={12} color="currentColor" />}
-      setIsDropdownOpen={setIsDropdownOpen}
-    >
-      {isLoading ? (
-        <div className="focus:text-primary group flex cursor-pointer items-center justify-center gap-4 py-2 pl-4 pr-4 text-dashboardLight-secondary focus:bg-gray-50 focus:outline-none">
-          <DashboardLoadingSpinner size={16} />
-        </div>
-      ) : (
-        recentPrograms.length > 0 &&
-        recentPrograms.map((program) => {
-          return (
-            <div key={program.id}>
-              <Link href={ROUTE_DASHBOARD_HOME(program.address)}>
-                <div className="focus:text-primary group flex cursor-pointer items-center gap-4 py-2 pl-4 pr-4 text-dashboardLight-secondary focus:bg-gray-50 focus:outline-none">
-                  <div className="size-4 text-dashboardLight-secondary">
-                    <FolderIcon size={16} color="currentColor" />
+    <div className="fixed left-0 top-0 z-[1400] min-w-max translate-x-[14px] translate-y-[109px]">
+      <DashboardDropdownWrap
+        dropTitle="Loyalty Programs"
+        secondTitle={activeProgram?.name ?? ""}
+        secondTitleIcon={<WalletIcon size={16} color="currentColor" />}
+        secondTitleRoute={
+          loyaltyAddress
+            ? ROUTE_DASHBOARD_HOME(loyaltyAddress)
+            : ROUTE_DASHBOARD_MAIN
+        }
+        additionalRoute={ROUTE_DASHBOARD_CREATE_LP}
+        actionTitle="Create Loyalty Program"
+        actionIcon={<AddIcon size={12} color="currentColor" />}
+        setIsDropdownOpen={setIsDropdownOpen}
+      >
+        {isLoading ? (
+          <div className="focus:text-primary group flex cursor-pointer items-center justify-center gap-4 py-2 pl-4 pr-4 text-dashboardLight-secondary focus:bg-gray-50 focus:outline-none">
+            <DashboardLoadingSpinner size={16} />
+          </div>
+        ) : (
+          recentPrograms.length > 0 &&
+          recentPrograms.map((program) => {
+            return (
+              <div key={program.id}>
+                <Link href={ROUTE_DASHBOARD_HOME(program.address)}>
+                  <div className="focus:text-primary group flex cursor-pointer items-center gap-4 py-2 pl-4 pr-4 text-dashboardLight-secondary focus:bg-gray-50 focus:outline-none">
+                    <div className="size-4 text-dashboardLight-secondary">
+                      <FolderIcon size={16} color="currentColor" />
+                    </div>
+                    <span className="flex-1 truncate text-sm">
+                      {program.name}
+                    </span>
+                    <span />
                   </div>
-                  <span className="flex-1 truncate text-sm">
-                    {program.name}
-                  </span>
-                  <span />
-                </div>
-              </Link>
-            </div>
-          );
-        })
-      )}
-    </DashboardDropdownWrap>
+                </Link>
+              </div>
+            );
+          })
+        )}
+      </DashboardDropdownWrap>
+    </div>
   );
 }

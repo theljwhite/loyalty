@@ -1,9 +1,11 @@
 //DASHBOARD RELATED ROUTES:
 
+export const ROUTE_DASHBOARD_CREATOR_PROFILE = "/dashboard/creator";
+
 export const ROUTE_DASHBOARD_MAIN = "/dashboard";
 export const ROUTE_DASHBOARD_ANALYTICS = "/dashboard/analytics";
 export const ROUTE_DASHBOARD_BALANCES = "/dashboard/balances";
-export const ROUTE_DASHBOARD_CREATE_LP = "/dashboard/create"; 
+export const ROUTE_DASHBOARD_CREATE_LP = "/dashboard/create";
 
 export const ROUTE_DASHBOARD_OBJECTIVES = "/dashboard/objectives";
 export const ROUTE_DASHBOARD_TIERS = "/dashboard/tiers";
