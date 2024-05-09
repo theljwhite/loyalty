@@ -23,8 +23,6 @@ export default function ProgramsDropdown({
   const { address } = router.query;
   const loyaltyAddress = String(address);
 
-  const is = true;
-
   const { data: programs, isLoading } =
     api.loyaltyPrograms.getAllProgramsBasicInfo.useQuery(
       {
