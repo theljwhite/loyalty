@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Link from "next/link";
+import Head from "next/head";
 import { type GetServerSidePropsContext, type GetServerSideProps } from "next";
 import { handleLoyaltyPathValidation } from "~/utils/handleServerAuth";
 import { getDashboardLayout } from "~/layouts/LayoutDashboard";
@@ -22,7 +23,6 @@ import DashboardPageLoading from "~/components/UI/Dashboard/DashboardPageLoading
 import DashboardBreadcrumb from "~/components/UI/Dashboard/DashboardBreadcrumb";
 import DashboardInfoBox from "~/components/UI/Dashboard/DashboardInfoBox";
 import DashboardPageError from "~/components/UI/Dashboard/DashboardPageError";
-import DashboardInfoBanner from "~/components/UI/Dashboard/DashboardInfoBanner";
 
 //TODO - the JSX can be cleaned up a bit here, lol. all of this component can tbh.
 //TODO - styling fixes (clean it up and responsiveness)
@@ -126,161 +126,169 @@ export default function DashboardHome() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="relative flex items-center justify-between gap-4">
-        <DashboardBreadcrumb
-          firstTitle="Home"
-          secondTitle={loyaltyProgram.name}
-        />
-      </div>
-      <div className="relative flex items-center justify-between gap-4">
-        <div className="relative flex items-start justify-between gap-4">
-          <div className="flex w-full max-w-[80ch] flex-col gap-3">
-            <div className="w-full space-y-2">
-              <h1 className="truncate text-2xl font-medium tracking-tight text-dashboard-body">
-                Home
-              </h1>
+    <>
+      <Head>
+        <title>{`Home - ${loyaltyProgram.name}`}</title>
+      </Head>
+      <div className="space-y-8">
+        <div className="relative flex items-center justify-between gap-4">
+          <DashboardBreadcrumb
+            firstTitle="Home"
+            secondTitle={loyaltyProgram.name}
+          />
+        </div>
+        <div className="relative flex items-center justify-between gap-4">
+          <div className="relative flex items-start justify-between gap-4">
+            <div className="flex w-full max-w-[80ch] flex-col gap-3">
+              <div className="w-full space-y-2">
+                <h1 className="truncate text-2xl font-medium tracking-tight text-dashboard-body">
+                  Home
+                </h1>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div>
-        <div className="flex flex-col">
-          <div className="space-y-8">
-            <header className="space-y-1">
-              <h2 className="text-lg font-medium text-dashboard-body">
-                Your Loyalty Program is deployed!
-              </h2>
-              <p className="text-[13px] text-dashboard-lighterText">
-                Learn more below and get started setting up your program
-              </p>
-            </header>
-            <div className="space-y-6 rounded-2xl border border-dashboard-border1 p-6">
-              <div className="space-y-1">
-                <h3 className="text-[13px] font-semibold text-dashboard-body">
-                  Quickstarts
-                </h3>
-                <p className="text-xs text-dashboard-neutral">
-                  Choose your loyalty program type below to get it up and
-                  running in no time
+        <div>
+          <div className="flex flex-col">
+            <div className="space-y-8">
+              <header className="space-y-1">
+                <h2 className="text-lg font-medium text-dashboard-body">
+                  Your Loyalty Program is deployed!
+                </h2>
+                <p className="text-[13px] text-dashboard-lighterText">
+                  Learn more below and get started setting up your program
                 </p>
-              </div>
-              <ul className="isolate grid grid-cols-4 gap-1">
+              </header>
+              <div className="space-y-6 rounded-2xl border border-dashboard-border1 p-6">
+                <div className="space-y-1">
+                  <h3 className="text-[13px] font-semibold text-dashboard-body">
+                    Quickstarts
+                  </h3>
+                  <p className="text-xs text-dashboard-neutral">
+                    Choose your loyalty program type below to get it up and
+                    running in no time
+                  </p>
+                </div>
+                <ul className="isolate grid grid-cols-4 gap-1">
+                  {quickStartOptions.map((option) => {
+                    return (
+                      <li key={option.id}>
+                        <button
+                          onClick={() => selectQuickStartOption(option.id)}
+                          className="group relative flex aspect-square w-full items-center justify-center rounded-lg transition"
+                        >
+                          <div
+                            className={`absolute inset-0 rounded-xl ${
+                              option.selected ||
+                              (option.rewardType ===
+                                loyaltyProgram.rewardType &&
+                                !didSelect)
+                                ? "bg-neutral-100"
+                                : "bg-transparent"
+                            }`}
+                          />
+                          <div className="relative z-10 flex flex-col items-center space-y-4">
+                            <div className="transition duration-[450ms]">
+                              <div
+                                className={`${option.color} flex h-12 w-12 items-center justify-center rounded-full p-2`}
+                              >
+                                {option.image}
+                              </div>
+                            </div>
+                            <span className="font-book text-[13px] leading-none">
+                              {option.title}
+                            </span>
+                          </div>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+
                 {quickStartOptions.map((option) => {
                   return (
-                    <li key={option.id}>
-                      <button
-                        onClick={() => selectQuickStartOption(option.id)}
-                        className="group relative flex aspect-square w-full items-center justify-center rounded-lg transition"
-                      >
-                        <div
-                          className={`absolute inset-0 rounded-xl ${
-                            option.selected ||
-                            (option.rewardType === loyaltyProgram.rewardType &&
-                              !didSelect)
-                              ? "bg-neutral-100"
-                              : "bg-transparent"
-                          }`}
-                        />
-                        <div className="relative z-10 flex flex-col items-center space-y-4">
-                          <div className="transition duration-[450ms]">
-                            <div
-                              className={`${option.color} flex h-12 w-12 items-center justify-center rounded-full p-2`}
-                            >
-                              {option.image}
+                    <div key={option.id}>
+                      {(option.selected ||
+                        (option.rewardType === loyaltyProgram.rewardType &&
+                          !didSelect)) && (
+                        <div key={option.id}>
+                          <div>
+                            <p className="text-sm font-medium leading-5">
+                              {option.title} Next Steps
+                            </p>
+                            <div className="mt-2">
+                              {loyaltyProgram.escrowAddress ? (
+                                loyaltyProgram.stepsNeeded.map(
+                                  (item, index) => {
+                                    return (
+                                      <div key={index}>
+                                        <div className="mb-2 flex items-start gap-[0.5rem] rounded-md bg-neutral-2 p-3 text-sm font-[0.8125rem] leading-[1.125rem] text-dashboard-lightGray">
+                                          <WarningIcon
+                                            size={16}
+                                            color="currentColor"
+                                          />
+
+                                          <div className="break-word inline-block">
+                                            {item.step}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  },
+                                )
+                              ) : (
+                                <div>
+                                  <p className="mb-2 text-[13px] font-normal text-dashboard-lightGray">
+                                    {option.rewardType === "Points"
+                                      ? "Set your loyalty program as active in"
+                                      : "You should first deploy and set up your escrow contract in the"}{" "}
+                                    <code className="rounded-lg border border-dashboard-codeBorder bg-dashboard-codeBg p-1 pe-[0.3em] ps-[0.3em] text-xs">
+                                      {option.rewardType === "Points"
+                                        ? "Overview"
+                                        : "Escrow Deploy"}
+                                    </code>{" "}
+                                    tab
+                                  </p>
+
+                                  <DashboardInfoBox
+                                    infoType="warn"
+                                    info={
+                                      option.rewardType === "Points"
+                                        ? "Next steps are to review your objectives and/or tiers and set your loyalty program to active."
+                                        : `Next steps are to deploy your ${option.rewardType} contract, deposit reward tokens, and customize your escrow settings.`
+                                    }
+                                  />
+                                </div>
+                              )}
                             </div>
                           </div>
-                          <span className="font-book text-[13px] leading-none">
-                            {option.title}
-                          </span>
                         </div>
-                      </button>
-                    </li>
+                      )}
+                    </div>
                   );
                 })}
-              </ul>
 
-              {quickStartOptions.map((option) => {
-                return (
-                  <div key={option.id}>
-                    {(option.selected ||
-                      (option.rewardType === loyaltyProgram.rewardType &&
-                        !didSelect)) && (
-                      <div key={option.id}>
-                        <div>
-                          <p className="text-sm font-medium leading-5">
-                            {option.title} Next Steps
-                          </p>
-                          <div className="mt-2">
-                            {loyaltyProgram.escrowAddress ? (
-                              loyaltyProgram.stepsNeeded.map((item, index) => {
-                                return (
-                                  <div key={index}>
-                                    <div className="mb-2 flex items-start gap-[0.5rem] rounded-md bg-neutral-2 p-3 text-sm font-[0.8125rem] leading-[1.125rem] text-dashboard-lightGray">
-                                      <WarningIcon
-                                        size={16}
-                                        color="currentColor"
-                                      />
-
-                                      <div className="break-word inline-block">
-                                        {item.step}
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })
-                            ) : (
-                              <div>
-                                <p className="mb-2 text-[13px] font-normal text-dashboard-lightGray">
-                                  {option.rewardType === "Points"
-                                    ? "Set your loyalty program as active in"
-                                    : "You should first deploy and set up your escrow contract in the"}{" "}
-                                  <code className="rounded-lg border border-dashboard-codeBorder bg-dashboard-codeBg p-1 pe-[0.3em] ps-[0.3em] text-xs">
-                                    {option.rewardType === "Points"
-                                      ? "Overview"
-                                      : "Escrow Deploy"}
-                                  </code>{" "}
-                                  tab
-                                </p>
-
-                                <DashboardInfoBox
-                                  infoType="warn"
-                                  info={
-                                    option.rewardType === "Points"
-                                      ? "Next steps are to review your objectives and/or tiers and set your loyalty program to active."
-                                      : `Next steps are to deploy your ${option.rewardType} contract, deposit reward tokens, and customize your escrow settings.`
-                                  }
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                <Link href={getDocRouteForRewardType()}>
+                  <div className="relative my-6 inline-flex h-8 min-w-10 cursor-pointer items-center justify-center whitespace-nowrap rounded-md bg-primary-1 pe-3 ps-3 align-middle text-sm  text-white outline-none">
+                    Continue in docs
+                    <div className="ms-2 inline-flex shrink-0 self-center">
+                      <span className="mt-1 inline-block h-4 w-4 shrink-0">
+                        <OutLink size={12} color="currentColor" />{" "}
+                      </span>
+                    </div>
                   </div>
-                );
-              })}
-
-              <Link href={getDocRouteForRewardType()}>
-                <div className="relative my-6 inline-flex h-8 min-w-10 cursor-pointer items-center justify-center whitespace-nowrap rounded-md bg-primary-1 pe-3 ps-3 align-middle text-sm  text-white outline-none">
-                  Continue in docs
-                  <div className="ms-2 inline-flex shrink-0 self-center">
-                    <span className="mt-1 inline-block h-4 w-4 shrink-0">
-                      <OutLink size={12} color="currentColor" />{" "}
-                    </span>
-                  </div>
-                </div>
-              </Link>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
+        <DashboardStateStatus
+          programState={loyaltyProgram.state}
+          containerBg="bg-transparent"
+        />
+        <DashboardAnalyticsStatus containerBg="bg-transparent" />
       </div>
-      <DashboardStateStatus
-        programState={loyaltyProgram.state}
-        containerBg="bg-transparent"
-      />
-      <DashboardAnalyticsStatus containerBg="bg-transparent" />
-    </div>
+    </>
   );
 }
 

@@ -4,6 +4,8 @@ import { useRouter } from "next/router";
 import { useOnClickOutside } from "~/helpers/windowEvents";
 import { SettingsOne } from "./Icons";
 
+//TODO - add shadow/blur or darken content "under" this component
+
 interface DashboardDropdownWrapProps {
   dropTitle: string;
   secondTitle?: string;

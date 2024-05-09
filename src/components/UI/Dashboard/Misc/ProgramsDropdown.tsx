@@ -8,6 +8,7 @@ import {
   ROUTE_DASHBOARD_CREATE_LP,
 } from "~/configs/routes";
 import DashboardDropdownWrap from "../DashboardDropdownWrap";
+import { DashboardLoadingSpinner } from "../../Misc/Spinners";
 import { AddIcon, FolderIcon, WalletIcon } from "../Icons";
 
 interface ProgramsDropdownProps {
@@ -22,7 +23,9 @@ export default function ProgramsDropdown({
   const { address } = router.query;
   const loyaltyAddress = String(address);
 
-  const { data: programs } =
+  const is = true;
+
+  const { data: programs, isLoading } =
     api.loyaltyPrograms.getAllProgramsBasicInfo.useQuery(
       {
         creatorId: session?.user.id ?? "",
@@ -51,7 +54,12 @@ export default function ProgramsDropdown({
       actionIcon={<AddIcon size={12} color="currentColor" />}
       setIsDropdownOpen={setIsDropdownOpen}
     >
-      {recentPrograms.length > 0 &&
+      {isLoading ? (
+        <div className="focus:text-primary group flex cursor-pointer items-center justify-center gap-4 py-2 pl-4 pr-4 text-dashboardLight-secondary focus:bg-gray-50 focus:outline-none">
+          <DashboardLoadingSpinner size={16} />
+        </div>
+      ) : (
+        recentPrograms.length > 0 &&
         recentPrograms.map((program) => {
           return (
             <div key={program.id}>
@@ -68,7 +76,8 @@ export default function ProgramsDropdown({
               </Link>
             </div>
           );
-        })}
+        })
+      )}
     </DashboardDropdownWrap>
   );
 }
