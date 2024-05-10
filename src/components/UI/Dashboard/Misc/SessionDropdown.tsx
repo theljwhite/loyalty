@@ -3,9 +3,12 @@ import { useSession, signOut } from "next-auth/react";
 import { useAccount } from "wagmi";
 import { useConnectModal, useAccountModal } from "@rainbow-me/rainbowkit";
 import shortenEthereumAddress from "~/helpers/shortenEthAddress";
-import { ROUTE_DASHBOARD_CREATOR_PROFILE } from "~/configs/routes";
+import {
+  ROUTE_DASHBOARD_CREATOR_PROFILE,
+  ROUTE_DASHBOARD_MAIN,
+} from "~/configs/routes";
 import DashboardDropdownWrap from "../DashboardDropdownWrap";
-import { ChainIcon, EditPencil, SignOutCircle } from "../Icons";
+import { ChainIcon, EditPencil, HomeIcon, SignOutCircle } from "../Icons";
 
 interface SessionDropdownProps {
   setIsDropdownOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -27,6 +30,11 @@ export default function SessionDropdown({
   const { openAccountModal } = useAccountModal();
 
   const menuItems: SessionMenuItem[] = [
+    {
+      name: "Dashboard Main",
+      icon: <HomeIcon size={16} color="currentColor" />,
+      path: ROUTE_DASHBOARD_MAIN,
+    },
     {
       name: "Edit my profile",
       icon: <EditPencil size={16} color="currentColor" />,
