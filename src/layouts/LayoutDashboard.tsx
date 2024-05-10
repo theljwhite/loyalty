@@ -14,7 +14,6 @@ import {
 } from "@rainbow-me/rainbowkit";
 import { api } from "~/utils/api";
 import {
-  ROUTE_DASHBOARD_MAIN,
   ROUTE_DASHBOARD_HOME,
   ROUTE_DASHBOARD_ANALYTICS,
   ROUTE_DASHBOARD_BALANCES,
@@ -250,7 +249,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
     },
     {
       onSuccess(data) {
-        if (data.stepsNeeded) {
+        if (data.stepsNeeded && loyaltyAddress) {
           const linksWithActionsNeeded = navLinks.map((link) => {
             const stepsThatMatch = data.stepsNeeded.filter(
               (step) => link.label === step.actionNeededHere,
@@ -259,7 +258,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
               return { ...link, actionNeeded: true };
             } else return link;
           });
-
+          console.log("l", linksWithActionsNeeded);
           setNavLinksState(linksWithActionsNeeded);
         }
       },
