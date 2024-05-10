@@ -4,8 +4,7 @@ import { useRouter } from "next/router";
 import { useOnClickOutside } from "~/helpers/windowEvents";
 import { SettingsOne } from "./Icons";
 
-//TODO - add shadow/blur or darken content "under" this component
-//TODO - can make this more dynamic/reusable w/ styles
+//TODO - can still make this more dynamic stylistically if need to be more reusable in future
 
 interface DashboardDropdownWrapProps {
   dropTitle: string;
@@ -18,6 +17,7 @@ interface DashboardDropdownWrapProps {
   actionTitle?: string;
   actionIcon?: JSX.Element;
   children: React.ReactNode;
+  customDropShadow?: string;
   setIsDropdownOpen:
     | React.Dispatch<React.SetStateAction<boolean>>
     | ((isOpen: boolean) => any);
@@ -34,6 +34,7 @@ export default function DashboardDropdownWrap({
   actionTitle,
   actionIcon,
   children,
+  customDropShadow,
   setIsDropdownOpen,
 }: DashboardDropdownWrapProps) {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -55,8 +56,9 @@ export default function DashboardDropdownWrap({
   return (
     <div
       ref={dropdownRef}
-      className="relative -top-[calc(48px-0.0625rem)] isolate w-[256px] animate-[fade-in_100ms_ease-in-out] space-y-px rounded-xl border border-black/5 bg-dashboardLight-body bg-clip-padding leading-5 text-dashboard-activeTab shadow-xl"
-      // className="relative isolate w-[272px] animate-[fade-in_100ms_ease-in-out] rounded-[0.75rem] border border-[rgba(19,_19,_22,_.05)] bg-dashboardLight-body leading-5 text-dashboard-activeTab outline-none [box-shadow:0_20px_25px_-5px_rgba(0,0,0,.1),0_8px_10px_-6px_rgba(0,0,0,.1)]"
+      className={`${
+        customDropShadow ?? "shadow-xl"
+      } relative -top-[calc(48px-0.0625rem)] isolate w-[256px] animate-[fade-in_100ms_ease-in-out] space-y-px rounded-xl border border-black/5 bg-dashboardLight-body bg-clip-padding leading-5 text-dashboard-activeTab`}
     >
       <div className="border-black/4 shadow-black/3 rounded-b-lg rounded-t-xl border-b bg-white bg-clip-padding text-dashboardLight-secondary">
         <div className="p-3">

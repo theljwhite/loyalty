@@ -757,7 +757,7 @@ export const SignOutCircle = ({ size, color }: IconProps): JSX.Element => (
   <svg
     width={size}
     height={size}
-    fill={color ?? "none"}
+    fill={color}
     viewBox="0 0 32 32"
     xmlns="http://www.w3.org/2000/svg"
   >
