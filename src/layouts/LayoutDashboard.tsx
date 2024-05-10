@@ -258,7 +258,6 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
               return { ...link, actionNeeded: true };
             } else return link;
           });
-          console.log("l", linksWithActionsNeeded);
           setNavLinksState(linksWithActionsNeeded);
         }
       },
