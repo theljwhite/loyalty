@@ -1,5 +1,6 @@
 import React from "react";
 import { type EscrowState, type ProgramState } from "@prisma/client";
+import { ClockIcon, WarningIcon, SelectedCheck } from "./Icons";
 
 interface DashboardStateStatusProps {
   programState?: ProgramState;
@@ -9,7 +10,7 @@ interface DashboardStateStatusProps {
 
 export const loyaltyStateDisplay = new Map<
   ProgramState,
-  { message: string; color: string }
+  { message: string; color: string; icon: JSX.Element }
 >([
   [
     "Idle",
@@ -17,6 +18,7 @@ export const loyaltyStateDisplay = new Map<
       message:
         "Loyalty program contract is currently idling, awaiting further setup",
       color: "bg-neutral-100",
+      icon: <ClockIcon size={16} color="currentColor" />,
     },
   ],
   [
@@ -25,6 +27,7 @@ export const loyaltyStateDisplay = new Map<
       message:
         "Loyalty contract is waiting for escrow contract to be deployed or set up",
       color: "bg-orange-100",
+      icon: <WarningIcon size={16} color="currentColor" />,
     },
   ],
   [
@@ -33,6 +36,7 @@ export const loyaltyStateDisplay = new Map<
       message:
         "Loyalty contract is currently active, tracking objectives and/or tiers",
       color: "bg-green-100",
+      icon: <SelectedCheck size={16} color="currentColor" />,
     },
   ],
   [
@@ -40,6 +44,7 @@ export const loyaltyStateDisplay = new Map<
     {
       message: "Loyalty contract has been canceled by its creator",
       color: "bg-red-100",
+      icon: <WarningIcon size={16} color="currentColor" />,
     },
   ],
   [
@@ -47,13 +52,14 @@ export const loyaltyStateDisplay = new Map<
     {
       message: "Loyalty program has concluded",
       color: "bg-green-100",
+      icon: <SelectedCheck size={16} color="currentColor" />,
     },
   ],
 ]);
 
 export const escrowStateDisplay = new Map<
   EscrowState,
-  { message: string; color: string }
+  { message: string; color: string; icon: JSX.Element }
 >([
   [
     "Idle",
@@ -61,6 +67,7 @@ export const escrowStateDisplay = new Map<
       message:
         "Escrow contract is currently idling, awaiting loyalty program to be started",
       color: "bg-neutral-100",
+      icon: <ClockIcon size={16} color="currentColor" />,
     },
   ],
   [
@@ -69,6 +76,7 @@ export const escrowStateDisplay = new Map<
       message:
         "Escrow contract is waiting for sender approval, reward approval, or deposit key to be set",
       color: "bg-orange-100",
+      icon: <WarningIcon size={16} color="currentColor" />,
     },
   ],
   [
@@ -76,6 +84,7 @@ export const escrowStateDisplay = new Map<
     {
       message: "Escrow contract is waiting for its customization settings",
       color: "bg-orange-100",
+      icon: <WarningIcon size={16} color="currentColor" />,
     },
   ],
   [
@@ -83,6 +92,7 @@ export const escrowStateDisplay = new Map<
     {
       message: "Escrow contract is currently in its rewards deposit period",
       color: "bg-orange-100",
+      icon: <WarningIcon size={16} color="currentColor" />,
     },
   ],
   [
@@ -91,6 +101,7 @@ export const escrowStateDisplay = new Map<
       message:
         "Your escrow contract is currently in issuance, rewarding users for their progress",
       color: "bg-green-100",
+      icon: <SelectedCheck size={16} color="currentColor" />,
     },
   ],
   [
@@ -98,6 +109,7 @@ export const escrowStateDisplay = new Map<
     {
       message: "Your escrow contract has been canceled",
       color: "bg-red-100",
+      icon: <WarningIcon size={16} color="currentColor" />,
     },
   ],
   [
@@ -106,6 +118,7 @@ export const escrowStateDisplay = new Map<
       message:
         "Escrow contract has exhausted all of its funds or loyalty program has concluded",
       color: "bg-green-100",
+      icon: <SelectedCheck size={16} color="currentColor" />,
     },
   ],
   [
@@ -113,6 +126,7 @@ export const escrowStateDisplay = new Map<
     {
       message: "Escrow contract is frozen and is not issuing any tokens",
       color: "bg-red-100",
+      icon: <WarningIcon size={16} color="currentColor" />,
     },
   ],
 ]);
