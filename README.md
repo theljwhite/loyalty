@@ -32,6 +32,9 @@ Connecting wallet:
 Dashboard 1:
 ![Dashboard 1](https://i.ibb.co/3SVtRz6/dashboard-New.png)
 
+Another Take on Dashboard 1:
+![Dashboard 1 (Another Take)](https://i.ibb.co/Gs4fMqF/dashboard-One-New.png)
+
 Creating Loyalty Program 1:
 ![Creating Loyalty Program 1](https://i.ibb.co/s6tNT1m/create-Obj.png)
 
