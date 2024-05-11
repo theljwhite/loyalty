@@ -1,6 +1,6 @@
 import { type Session } from "next-auth";
-import { type ReactNode } from "react";
 import Head from "next/head";
+import dynamic from "next/dynamic";
 import { SessionProvider } from "next-auth/react";
 import { type AppType } from "next/app";
 import { WagmiConfig } from "wagmi";
@@ -8,11 +8,15 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { chains, configForWagmi } from "~/configs/wagmi";
 import { api } from "~/utils/api";
 import { customRainbowTheme } from "~/configs/rainbowkit";
-import { ToastContainer } from "react-toastify";
 import Base from "~/layouts/Base";
 import "node_modules/@rainbow-me/rainbowkit/dist/index.css";
 import "~/styles/globals.css";
 import "react-toastify/dist/ReactToastify.min.css";
+
+const ToastContainer = dynamic(
+  () => import("react-toastify").then((mod) => mod.ToastContainer),
+  { ssr: false },
+);
 
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
@@ -24,7 +28,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
   return (
     <>
       <Head>
-        <title>loyalty</title>
+        <title>{process.env.NEXT_PUBLIC_PROJECT_NAME}</title>
         <meta
           name="description"
           content={process.env.NEXT_PUBLIC_PROJECT_NAME}

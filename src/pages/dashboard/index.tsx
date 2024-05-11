@@ -6,6 +6,7 @@ import { type NextPage } from "next";
 import Head from "next/head";
 import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
 import FancierProgramsList from "~/components/UI/Dashboard/LoyaltyProgram/FancierProgramList";
+
 // import ProgramsList from "~/components/UI/Dashboard/LoyaltyProgram/ProgramsList";
 
 export const getServerSideProps: GetServerSideProps = async (
@@ -14,7 +15,7 @@ export const getServerSideProps: GetServerSideProps = async (
   return handleServerAuth(ctx);
 };
 
-const Dashboard: NextPage = (props) => {
+const Dashboard: NextPage = () => {
   const { data: session } = useSession();
   const dashboardTitle = session?.user.name ?? "Programs";
 
