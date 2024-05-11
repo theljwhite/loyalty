@@ -8,7 +8,7 @@ import {
   ROUTE_DASHBOARD_MAIN,
 } from "~/configs/routes";
 import DashboardDropdownWrap from "../DashboardDropdownWrap";
-import { ChainIcon, EditPencil, HomeIcon, SignOutCircle } from "../Icons";
+import { ChainIcon, EditSquare, HomeIcon, SignOutSquare } from "../Icons";
 
 interface SessionDropdownProps {
   setIsDropdownOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -37,7 +37,7 @@ export default function SessionDropdown({
     },
     {
       name: "Edit my profile",
-      icon: <EditPencil size={16} color="currentColor" />,
+      icon: <EditSquare size={16} color="currentColor" />,
       path: ROUTE_DASHBOARD_CREATOR_PROFILE,
     },
   ];
@@ -59,7 +59,7 @@ export default function SessionDropdown({
         secondTitleAction={connected ? openAccountModal : openConnectModal}
         additionalAction={signOut}
         actionTitle="Sign out of account"
-        actionIcon={<SignOutCircle size={16} color="currentColor" />}
+        actionIcon={<SignOutSquare size={16} color="currentColor" />}
         setIsDropdownOpen={setIsDropdownOpen}
       >
         {menuItems.map((item, index) => {
