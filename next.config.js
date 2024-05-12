@@ -8,7 +8,26 @@ await import("./src/env.js");
 const config = {
   reactStrictMode: true,
   images: {
-    domains: ["cdn.discordapp.com", "cdn.moralis.io", "logo.moralis.io"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cdn.discordapp.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.moralis.io",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "logo.moralis.io",
+        port: "",
+        pathname: "/**",
+      },
+    ],
   },
   /**
    * If you are using `appDir` then you must comment the below `i18n` config out.
