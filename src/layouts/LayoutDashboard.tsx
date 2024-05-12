@@ -30,6 +30,8 @@ import {
   ROUTE_DASHBOARD_PATHS,
   ROUTE_DASHBOARD_DEV_CONSOLE,
   ROUTE_DASHBOARD_USER_SETTINGS,
+  ROUTE_DASHBOARD_MAIN,
+  ROUTE_DASHBOARD_CREATE_LP,
 } from "~/configs/routes";
 import {
   HomeIcon,
@@ -284,8 +286,15 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
   const sectionNameClass = `${
     testLightMode ? "text-dashboard-lightGray2" : "text-gray-400"
   } pl-3 text-xs font-medium`;
+
+  const blurRoutesPaths = [
+    ROUTE_DASHBOARD_MAIN,
+    ROUTE_DASHBOARD_CREATE_LP,
+    ROUTE_DASHBOARD_ANALYTICS,
+  ];
+
   const blurRoutesClass =
-    asPath === "/dashboard" && "blur-sm pointer-events-none";
+    blurRoutesPaths.includes(asPath) && "blur-sm pointer-events-none";
 
   return (
     <>
