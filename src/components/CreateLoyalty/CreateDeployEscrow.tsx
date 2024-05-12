@@ -176,7 +176,7 @@ export default function CreateDeployEscrow() {
             </div>
           )}
           {isLoading ? (
-            <div className="flex h-full w-full justify-start">
+            <div className="flex h-auto w-auto justify-start">
               <Image
                 width={300}
                 height={300}

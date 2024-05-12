@@ -6,7 +6,6 @@ import { type NextPage } from "next";
 import Head from "next/head";
 import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
 import FancierProgramsList from "~/components/UI/Dashboard/LoyaltyProgram/FancierProgramList";
-
 // import ProgramsList from "~/components/UI/Dashboard/LoyaltyProgram/ProgramsList";
 
 export const getServerSideProps: GetServerSideProps = async (

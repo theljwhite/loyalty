@@ -46,7 +46,7 @@ export default function CommonNFTBalances({
       {balances.map((item: ChainNFTGroupedByCollection, index: number) => (
         <div key={index} className="mt-4 whitespace-nowrap leading-[1.8]">
           <div>
-            <span className="text-lg uppercase text-blue-400">
+            <span className="text-md uppercase text-blue-400">
               {item.chainName}
             </span>
             <section className="relative flex w-full flex-col">

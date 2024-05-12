@@ -13,8 +13,17 @@ export type EvmChainImage = {
   image: JSX.Element;
 };
 
+const EvmChainAmoy = EvmChain.create(80002);
+
+export const manualEvmChains: Record<
+  number,
+  { name: string; evmChain: EvmChain }
+> = {
+  80002: { name: "Polygon Amoy", evmChain: EvmChainAmoy },
+};
+
 export const moralisEvmChains = {
-  Common: [EvmChain.ETHEREUM, EvmChain.POLYGON, EvmChain.MUMBAI],
+  Common: [EvmChain.ETHEREUM, EvmChain.POLYGON, EvmChainAmoy],
   Secondary: [
     EvmChain.ARBITRUM,
     EvmChain.AVALANCHE,
@@ -51,7 +60,7 @@ export const evmChainImages: Record<string, JSX.Element> = {
       src="/chainImages/polygon.svg"
     />
   ),
-  Mumbai: (
+  Amoy: (
     <Image
       width={20}
       height={20}
@@ -118,6 +127,11 @@ export const allEvmChainsSelectOptions: AllEvmChainsSelectOption[] =
     title: item.name ?? item.hex,
     evmChain: item,
   }));
+
+export const evmChainIdsAndNames = allMoralisEvmChains.map((item) => ({
+  chainId: Number(item.hex),
+  name: item.name ?? manualEvmChains[Number(item.hex)]?.name ?? item.display(),
+}));
 
 export const findIfMoralisEvmChain = (
   deployedChainId: number,

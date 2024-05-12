@@ -1,6 +1,6 @@
 import { useAccount } from "wagmi";
 import Moralis from "moralis";
-import { moralisEvmChains } from "~/configs/moralis";
+import { moralisEvmChains, manualEvmChains } from "~/configs/moralis";
 import {
   EvmChain,
   type Erc20Value,
@@ -42,7 +42,10 @@ export function useTokenBalances() {
             chain,
           });
           allBalances.push({
-            chainName: chain.name ?? "",
+            chainName:
+              chain.name ??
+              manualEvmChains[Number(chain.hex)]?.name ??
+              chain.display(),
             balance: response.result,
           });
         }
@@ -115,7 +118,10 @@ export function useTokenBalances() {
           limit,
         });
         allBalances.push({
-          chainName: chain.name ?? "",
+          chainName:
+            chain.name ??
+            manualEvmChains[Number(chain.hex)]?.name ??
+            chain.display(),
           balance: response.result,
         });
       }
