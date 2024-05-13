@@ -53,6 +53,7 @@ import {
   ClipboardOne,
 } from "~/components/UI/Dashboard/Icons/index";
 import ProgramsDropdown from "~/components/UI/Dashboard/Misc/ProgramsDropdown";
+import OffchainAccountDropdown from "~/components/UI/Dashboard/Misc/OffchainAccountDropdown";
 
 interface LayoutDashboardSidebarProps {
   children: React.ReactNode;
@@ -74,6 +75,8 @@ type NavLink = {
 };
 
 //1-31 - added a test light mode to this, so it's temporarily sloppy code now
+//5-12 - needs subtle box shadow when scrolling sidebar
+//can clean this up in the future so its not 500+ lines
 
 const NavLink: React.FC<NavLinkProps> = ({
   link,
@@ -241,6 +244,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
   const { openChainModal } = useChainModal();
   const [isClient, setIsClient] = useState<boolean>();
   const [isProgramDropOpen, setIsProgramDropOpen] = useState<boolean>(false);
+  const [isAccountDropOpen, setIsAccountDropOpen] = useState<boolean>(false);
   const [testLightMode, _] = useState<boolean>(false);
 
   const connected = isConnected && address && isClient;
@@ -473,6 +477,44 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                 </div>
               </nav>
             </div>
+            <div className="mt-auto min-h-[4rem]">
+              <div className="relative flex w-full p-4">
+                <button
+                  onClick={() => setIsAccountDropOpen(!isAccountDropOpen)}
+                  type="button"
+                  className="bg-unset h-unset w-unset min-h-unset relative isolate inline-flex cursor-pointer items-center justify-center rounded-md leading-[1.38] text-dashboard-secondary "
+                >
+                  <span className="flex items-center justify-start gap-2 [flex-flow:row]">
+                    <span
+                      className={`${
+                        testLightMode
+                          ? "text-dashboardLight-primary"
+                          : "text-dashboard-secondary"
+                      } order-1 pr-2 text-base !antialiased`}
+                    >
+                      {session?.user.name}
+                    </span>
+                    <span className="relative flex h-7 w-7 shrink-0 items-stretch justify-start overflow-hidden rounded-full [flex-flow:row]">
+                      {session?.user.image ? (
+                        <Image
+                          width={28}
+                          height={28}
+                          alt="user avatar"
+                          src={session?.user.image}
+                        />
+                      ) : (
+                        <Image
+                          width={28}
+                          height={28}
+                          alt="default avatar"
+                          src={"/utilityImages/blankAvatar.svg"}
+                        />
+                      )}
+                    </span>
+                  </span>
+                </button>
+              </div>
+            </div>
           </aside>
           <main className={testLightMode ? lightMainClass : darkMainClass}>
             <div className="mx-auto h-full min-w-[42rem] max-w-6xl overflow-y-auto rounded-[inherit] p-10 pb-20 font-lunch">
@@ -481,6 +523,11 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
           </main>
         </div>
       </div>
+      {isAccountDropOpen && (
+        <div className="absolute bottom-0 left-8 z-[1400] min-w-max">
+          <OffchainAccountDropdown setIsDropdownOpen={setIsAccountDropOpen} />
+        </div>
+      )}
     </>
   );
 };

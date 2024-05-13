@@ -37,4 +37,18 @@ export const userRouter = createTRPCRouter({
       if (!user || !user.esUpdatedAt) return null;
       return user.esUpdatedAt;
     }),
+  getCreatorLinkedAccountProviders: protectedProcedure
+    .input(z.object({ creatorId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const user = await ctx.db.user.findUnique({
+        where: { id: input.creatorId },
+        select: { accounts: true },
+      });
+
+      if (!user || !user.accounts) return null;
+
+      const providerNames = user.accounts.map((account) => account.provider);
+
+      return providerNames;
+    }),
 });
