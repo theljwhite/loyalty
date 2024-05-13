@@ -35,6 +35,9 @@ Dashboard 1:
 Another Take on Dashboard 1:
 ![Dashboard 1 (Another Take)](https://i.ibb.co/Gs4fMqF/dashboard-One-New.png)
 
+Another Take on Dashboard 1 but experimenting with light version:
+![Dashboard 1 (Another Take Light Version)](https://i.ibb.co/6Dm0MWn/dashboard-One-Light.png)
+
 Creating Loyalty Program 1:
 ![Creating Loyalty Program 1](https://i.ibb.co/s6tNT1m/create-Obj.png)
 
