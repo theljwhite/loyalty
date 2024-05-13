@@ -1,11 +1,30 @@
 import { z } from "zod";
-import {
-  createTRPCRouter,
-  protectedProcedure,
-  publicProcedure,
-} from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 export const userRouter = createTRPCRouter({
+  updateBasicCreatorProfile: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().max(32).optional(),
+        email: z.string().email(),
+        creatorId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { name, email, creatorId } = input;
+      const update = await ctx.db.user.update({
+        where: { id: creatorId },
+        data: { name, email },
+      });
+
+      if (!update) return null;
+      return { name: update.name, email: update.email };
+    }),
+  updateProfileImage: protectedProcedure
+    .input(z.object({ imageFile: z.instanceof(File), creatorId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      //TODO logic to upload a profile pic and retrieve URL
+    }),
   giveCreatorRole: protectedProcedure
     .input(z.object({ userId: z.string() }))
     .mutation(async ({ ctx, input }) => {

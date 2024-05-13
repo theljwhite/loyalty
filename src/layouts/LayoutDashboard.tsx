@@ -245,7 +245,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
   const [isClient, setIsClient] = useState<boolean>();
   const [isProgramDropOpen, setIsProgramDropOpen] = useState<boolean>(false);
   const [isAccountDropOpen, setIsAccountDropOpen] = useState<boolean>(false);
-  const [testLightMode, _] = useState<boolean>(false);
+  const [testLightMode, _] = useState<boolean>(true);
 
   const connected = isConnected && address && isClient;
 
