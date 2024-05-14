@@ -20,11 +20,7 @@ export const userRouter = createTRPCRouter({
       if (!update) return null;
       return { name: update.name, email: update.email };
     }),
-  updateProfileImage: protectedProcedure
-    .input(z.object({ imageFile: z.instanceof(File), creatorId: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      //TODO logic to upload a profile pic and retrieve URL
-    }),
+
   giveCreatorRole: protectedProcedure
     .input(z.object({ userId: z.string() }))
     .mutation(async ({ ctx, input }) => {
