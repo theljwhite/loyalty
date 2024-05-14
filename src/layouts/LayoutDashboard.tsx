@@ -54,6 +54,7 @@ import {
 } from "~/components/UI/Dashboard/Icons/index";
 import ProgramsDropdown from "~/components/UI/Dashboard/Misc/ProgramsDropdown";
 import OffchainAccountDropdown from "~/components/UI/Dashboard/Misc/OffchainAccountDropdown";
+import LightModeSwitch from "~/components/UI/Misc/LightModeSwitch";
 
 interface LayoutDashboardSidebarProps {
   children: React.ReactNode;
@@ -245,7 +246,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
   const [isClient, setIsClient] = useState<boolean>();
   const [isProgramDropOpen, setIsProgramDropOpen] = useState<boolean>(false);
   const [isAccountDropOpen, setIsAccountDropOpen] = useState<boolean>(false);
-  const [testLightMode, _] = useState<boolean>(true);
+  const [lightMode, setLightMode] = useState<boolean>(false);
 
   const connected = isConnected && address && isClient;
 
@@ -288,7 +289,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
   const lightDividerClass =
     "relative border-b px-4 pb-6 pt-5 shadow-[0_1px_0] border-gray-150/80 shadow-white";
   const sectionNameClass = `${
-    testLightMode ? "text-dashboard-lightGray2" : "text-gray-400"
+    lightMode ? "text-dashboard-lightGray2" : "text-gray-400"
   } pl-3 text-xs font-medium`;
 
   const blurRoutesPaths = [
@@ -304,16 +305,12 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
     <>
       <div
         className={`${
-          testLightMode ? "bg-dashboardLight-body" : "bg-dashboard-body2"
+          lightMode ? "bg-dashboardLight-body" : "bg-dashboard-body2"
         } relative m-0 min-h-full font-lunch text-base antialiased`}
       >
         <div className="flex h-[100dvh]">
-          <aside
-            className={testLightMode ? lightModeAsideClass : darkAsideClass}
-          >
-            <div
-              className={testLightMode ? lightDividerClass : darkDividerClass}
-            >
+          <aside className={lightMode ? lightModeAsideClass : darkAsideClass}>
+            <div className={lightMode ? lightDividerClass : darkDividerClass}>
               <button
                 onClick={() => setIsProgramDropOpen(!isProgramDropOpen)}
                 type="button"
@@ -340,7 +337,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                   <div>
                     <span
                       className={`${
-                        testLightMode ? "text-dashboardLight-secondary" : ""
+                        lightMode ? "text-dashboardLight-secondary" : ""
                       } truncate font-lunch text-lg font-medium`}
                     >
                       Dashboard
@@ -349,7 +346,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                 </span>
                 <span
                   className={`${
-                    testLightMode
+                    lightMode
                       ? "text-dashboardLight-secondary"
                       : "text-neutral-2"
                   } opacity-60 transition-opacity group-hover:opacity-100`}
@@ -370,7 +367,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                 >
                   <span
                     className={`${
-                      testLightMode
+                      lightMode
                         ? "text-dashboardLight-secondary"
                         : "text-dashboard-secondary"
                     } flex items-center gap-3 px-3 py-1.5`}
@@ -385,7 +382,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                     </span>
                     <span
                       className={`${
-                        testLightMode ? "text-dashboardLight-secondary" : ""
+                        lightMode ? "text-dashboardLight-secondary" : ""
                       } truncate text-sm`}
                     >
                       {connected
@@ -402,7 +399,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                 >
                   <span
                     className={`${
-                      testLightMode
+                      lightMode
                         ? "text-dashboardLight-secondary"
                         : "text-dashboard-secondary"
                     } flex items-center gap-3 px-3 py-1.5`}
@@ -425,7 +422,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                         key={link.id}
                         link={link}
                         pathname={asPath}
-                        lightMode={testLightMode}
+                        lightMode={lightMode}
                       />
                     );
                   })}
@@ -439,7 +436,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                           key={link.id}
                           link={link}
                           pathname={asPath}
-                          lightMode={testLightMode}
+                          lightMode={lightMode}
                         />
                       );
                     })}
@@ -454,7 +451,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                           key={link.id}
                           link={link}
                           pathname={asPath}
-                          lightMode={testLightMode}
+                          lightMode={lightMode}
                         />
                       );
                     })}
@@ -469,7 +466,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                           key={link.id}
                           link={link}
                           pathname={asPath}
-                          lightMode={testLightMode}
+                          lightMode={lightMode}
                         />
                       );
                     })}
@@ -487,7 +484,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                   <span className="flex items-center justify-start gap-2 [flex-flow:row]">
                     <span
                       className={`${
-                        testLightMode
+                        lightMode
                           ? "text-dashboardLight-primary"
                           : "text-dashboard-secondary"
                       } order-1 pr-2 text-base !antialiased`}
@@ -513,10 +510,16 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                     </span>
                   </span>
                 </button>
+                <div className="pl-14">
+                  <LightModeSwitch
+                    checked={lightMode}
+                    onChange={() => setLightMode(!lightMode)}
+                  />
+                </div>
               </div>
             </div>
           </aside>
-          <main className={testLightMode ? lightMainClass : darkMainClass}>
+          <main className={lightMode ? lightMainClass : darkMainClass}>
             <div className="mx-auto h-full min-w-[42rem] max-w-6xl overflow-y-auto rounded-[inherit] p-10 pb-20 font-lunch">
               {children}
             </div>

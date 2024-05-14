@@ -855,3 +855,94 @@ export const SignOutSquare = ({ size, color }: IconProps): JSX.Element => (
     />
   </svg>
 );
+
+export const MoonOne = ({ size, color }: IconProps): JSX.Element => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 256 256"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <rect fill="none" height="256" width="256" />
+    <path
+      d="M216.7,152.6A91.9,91.9,0,0,1,103.4,39.3h0A92,92,0,1,0,216.7,152.6Z"
+      opacity="0.2"
+    />
+    <line
+      fill="none"
+      stroke={color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
+      x1="216"
+      x2="216"
+      y1="112"
+      y2="64"
+    />
+    <line
+      fill="none"
+      stroke={color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
+      x1="240"
+      x2="192"
+      y1="88"
+      y2="88"
+    />
+    <line
+      fill="none"
+      stroke={color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
+      x1="168"
+      x2="168"
+      y1="24"
+      y2="56"
+    />
+    <line
+      fill="none"
+      stroke={color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
+      x1="184"
+      x2="152"
+      y1="40"
+      y2="40"
+    />
+    <path
+      d="M216.7,152.6A91.9,91.9,0,0,1,103.4,39.3h0A92,92,0,1,0,216.7,152.6Z"
+      fill={color}
+      stroke={color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="16"
+    />
+  </svg>
+);
+
+export const SunOne = ({ size, color }: IconProps): JSX.Element => (
+  <svg
+    width={size}
+    height={size}
+    fill={color}
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <circle cx="12" cy="12" r="5" />
+    <line x1="12" x2="12" y1="1" y2="3" />
+    <line x1="12" x2="12" y1="21" y2="23" />
+    <line x1="4.22" x2="5.64" y1="4.22" y2="5.64" />
+    <line x1="18.36" x2="19.78" y1="18.36" y2="19.78" />
+    <line x1="1" x2="3" y1="12" y2="12" />
+    <line x1="21" x2="23" y1="12" y2="12" />
+    <line x1="4.22" x2="5.64" y1="19.78" y2="18.36" />
+    <line x1="18.36" x2="19.78" y1="5.64" y2="4.22" />
+  </svg>
+);
