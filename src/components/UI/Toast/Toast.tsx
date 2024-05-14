@@ -16,21 +16,14 @@ const defaultSettings = {
 
 const makeToast = (type: any, content: JSX.Element, moreSettings: any = {}) => {
   const settings = { ...defaultSettings, ...moreSettings, type };
-  if (toastId) {
-    setTimeout(() => {
-      toast.dismiss(toastId);
-    }, 400);
-  }
-
+  if (toastId) toast.dismiss(toastId);
   toastId = toast(content, settings);
 };
 
 export const dismissToast = () => {
   if (toastId) {
-    setTimeout(() => {
-      toast.dismiss(toastId);
-      toastId = null;
-    }, 400);
+    toast.dismiss(toastId);
+    toastId = null;
   }
 };
 
