@@ -28,8 +28,6 @@ export default function ERC20EscrowStats() {
   );
 
   useEffect(() => {
-    //TODO - refetch on deposit success - wait a bit first so that
-    //results are updated?
     fetchEscrowBalance();
   }, [depositSuccess]);
 

@@ -56,6 +56,9 @@ import ProgramsDropdown from "~/components/UI/Dashboard/Misc/ProgramsDropdown";
 import OffchainAccountDropdown from "~/components/UI/Dashboard/Misc/OffchainAccountDropdown";
 import LightModeSwitch from "~/components/UI/Misc/LightModeSwitch";
 
+//1-31 - added a test light mode to this, so it's temporarily sloppy code now
+//5-12 - needs subtle box shadow when scrolling sidebar
+//can clean this up in the future so its not 500+ lines
 interface LayoutDashboardSidebarProps {
   children: React.ReactNode;
 }
@@ -65,6 +68,7 @@ interface NavLinkProps {
   pathname: string;
   lightMode?: boolean;
   actionNeeded?: boolean;
+  loyaltyAddress?: string | string[];
 }
 
 type NavLink = {
@@ -75,14 +79,13 @@ type NavLink = {
   actionNeeded?: boolean;
 };
 
-//1-31 - added a test light mode to this, so it's temporarily sloppy code now
-//5-12 - needs subtle box shadow when scrolling sidebar
-//can clean this up in the future so its not 500+ lines
+type SidebarLinks = Record<string, NavLink[]>;
 
 const NavLink: React.FC<NavLinkProps> = ({
   link,
   pathname,
   lightMode,
+  loyaltyAddress,
 }): JSX.Element => {
   const activeTabClass =
     "text-dashboard-primary flex items-center justify-between rounded-md bg-dashboard-activeTab px-3 py-2 shadow-[inset_0_1px_0_theme(colors.white/4%),inset_0_0_0_1px_theme(colors.white/2%),0_0_0_1px_theme(colors.black/20%),0_2px_2px_-1px_theme(colors.black/20%),0_4px_4px_-2px_theme(colors.black/20%)]";
@@ -114,7 +117,7 @@ const NavLink: React.FC<NavLinkProps> = ({
           >
             <span className="flex items-center justify-between gap-3">
               {link.icon}
-              {link.actionNeeded && (
+              {link.actionNeeded && loyaltyAddress && (
                 <span
                   className={`${"bg-orange-400"} absolute right-2  size-2.5 rounded-full border-2 border-gray-900 shadow-[inset_0_0.5px_0_theme(colors.white/10%),inset_0_0_0_0.5px_theme(colors.white/10%)]`}
                 />
@@ -133,111 +136,127 @@ const NavLink: React.FC<NavLinkProps> = ({
 const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
   const { children } = props;
   const { data: session } = useSession();
-
   const { query, asPath } = useRouter();
   const { address: loyaltyAddress } = query;
   const loyaltyAddressString = String(loyaltyAddress);
 
-  const navLinks: NavLink[] = [
-    {
-      id: 0,
-      label: "Home",
-      href: ROUTE_DASHBOARD_HOME(loyaltyAddressString),
-      icon: <HomeIcon size={16} color="currentColor" />,
-    },
-    {
-      id: 1,
-      label: "Balances",
-      href: ROUTE_DASHBOARD_BALANCES,
-      icon: <WalletIcon size={16} color="currentColor" />,
-    },
-    {
-      id: 2,
-      label: "Analytics",
-      href: ROUTE_DASHBOARD_ANALYTICS,
-      icon: <AnalyticsIconOne size={16} color="currentColor" />,
-    },
-    {
-      id: 3,
-      label: "Overview",
-      href: ROUTE_DASHBOARD_OVERVIEW(loyaltyAddressString),
-      icon: <EyeballIcon size={16} color="currentColor" />,
-    },
-    {
-      id: 4,
-      label: "Objectives",
-      href: ROUTE_DASHBOARD_OBJECTIVES,
-      icon: <ObjectivesIconOne size={16} color="currentColor" />,
-    },
-    {
-      id: 5,
-      label: "Tiers",
-      href: ROUTE_DASHBOARD_TIERS,
-      icon: <TiersIconOne size={16} color="currentColor" />,
-    },
-    {
-      id: 6,
-      label: "Escrow Overview",
-      href: ROUTE_DASHBOARD_ESCROW_OVERVIEW(loyaltyAddressString),
-      icon: <ShieldIconOne size={16} color="currentColor" />,
-    },
-    {
-      id: 7,
-      label: "Escrow Wallet",
-      href: ROUTE_DASHBOARD_ESCROW_WALLET(loyaltyAddressString),
-      icon: <WalletIcon size={16} color="currentColor" />,
-    },
-    {
-      id: 8,
-      label: "Escrow Settings",
-      href: ROUTE_DASHBOARD_ESCROW_SETTINGS(loyaltyAddressString),
-      icon: <SettingsOne size={16} color="currentColor" />,
-    },
-    {
-      id: 9,
-      label: "User Settings",
-      href: ROUTE_DASHBOARD_USER_SETTINGS(loyaltyAddressString),
-      icon: <ClipboardOne size={16} color="currentColor" />,
-    },
-    {
-      id: 10,
-      label: "User Objectives",
-      href: ROUTE_DASHBOARD_USER_COMPLETION,
-      icon: <ChecklistIcon size={16} color="currentColor" />,
-    },
-    {
-      id: 11,
-      label: "User Points",
-      href: ROUTE_DASHBOARD_USER_POINTS,
-      icon: <PointsIcon size={16} color="currentColor" />,
-    },
-    {
-      id: 12,
-      label: "User Rewards",
-      href: ROUTE_DASHBOARD_USER_REWARDS,
-      icon: <CoinsOne size={16} color="currentColor" />,
-    },
-    {
-      id: 13,
-      label: "API Keys",
-      href: ROUTE_DASHBOARD_API_KEY(loyaltyAddressString),
-      icon: <KeyIcon size={16} color="currentColor" />,
-    },
-    {
-      id: 14,
-      label: "Paths",
-      href: ROUTE_DASHBOARD_PATHS(loyaltyAddressString),
-      icon: <DomainIcon size={16} color="currentColor" />,
-    },
-    {
-      id: 15,
-      label: "Developer Console",
-      href: ROUTE_DASHBOARD_DEV_CONSOLE(loyaltyAddressString),
-      icon: <EditPencil size={16} color="currentColor" />,
-    },
-  ];
+  const sidebarLinks = {
+    Main: [
+      {
+        id: 0,
+        label: "Home",
+        href: ROUTE_DASHBOARD_HOME(loyaltyAddressString),
+        icon: <HomeIcon size={16} color="currentColor" />,
+      },
+      {
+        id: 1,
+        label: "Balances",
+        href: ROUTE_DASHBOARD_BALANCES,
+        icon: <WalletIcon size={16} color="currentColor" />,
+      },
+      {
+        id: 2,
+        label: "Analytics",
+        href: ROUTE_DASHBOARD_ANALYTICS,
+        icon: <AnalyticsIconOne size={16} color="currentColor" />,
+      },
+    ],
+    "Loyalty Program": [
+      {
+        id: 3,
+        label: "Overview",
+        href: ROUTE_DASHBOARD_OVERVIEW(loyaltyAddressString),
+        icon: <EyeballIcon size={16} color="currentColor" />,
+      },
+      {
+        id: 4,
+        label: "Objectives",
+        href: ROUTE_DASHBOARD_OBJECTIVES,
+        icon: <ObjectivesIconOne size={16} color="currentColor" />,
+      },
+      {
+        id: 5,
+        label: "Tiers",
+        href: ROUTE_DASHBOARD_TIERS,
+        icon: <TiersIconOne size={16} color="currentColor" />,
+      },
+      {
+        id: 6,
+        label: "Escrow Overview",
+        href: ROUTE_DASHBOARD_ESCROW_OVERVIEW(loyaltyAddressString),
+        icon: <ShieldIconOne size={16} color="currentColor" />,
+      },
+      {
+        id: 7,
+        label: "Escrow Wallet",
+        href: ROUTE_DASHBOARD_ESCROW_WALLET(loyaltyAddressString),
+        icon: <WalletIcon size={16} color="currentColor" />,
+      },
+      {
+        id: 8,
+        label: "Escrow Settings",
+        href: ROUTE_DASHBOARD_ESCROW_SETTINGS(loyaltyAddressString),
+        icon: <SettingsOne size={16} color="currentColor" />,
+      },
+    ],
+    "Program Users": [
+      {
+        id: 9,
+        label: "User Settings",
+        href: ROUTE_DASHBOARD_USER_SETTINGS(loyaltyAddressString),
+        icon: <ClipboardOne size={16} color="currentColor" />,
+      },
+      {
+        id: 10,
+        label: "User Objectives",
+        href: ROUTE_DASHBOARD_USER_COMPLETION,
+        icon: <ChecklistIcon size={16} color="currentColor" />,
+      },
+      {
+        id: 11,
+        label: "User Points",
+        href: ROUTE_DASHBOARD_USER_POINTS,
+        icon: <PointsIcon size={16} color="currentColor" />,
+      },
+      {
+        id: 12,
+        label: "User Rewards",
+        href: ROUTE_DASHBOARD_USER_REWARDS,
+        icon: <CoinsOne size={16} color="currentColor" />,
+      },
+    ],
+    Developers: [
+      {
+        id: 13,
+        label: "API Keys",
+        href: ROUTE_DASHBOARD_API_KEY(loyaltyAddressString),
+        icon: <KeyIcon size={16} color="currentColor" />,
+      },
+      {
+        id: 14,
+        label: "Paths",
+        href: ROUTE_DASHBOARD_PATHS(loyaltyAddressString),
+        icon: <DomainIcon size={16} color="currentColor" />,
+      },
+      {
+        id: 15,
+        label: "Developer Console",
+        href: ROUTE_DASHBOARD_DEV_CONSOLE(loyaltyAddressString),
+        icon: <EditPencil size={16} color="currentColor" />,
+      },
+    ],
+  };
 
-  const [navLinksState, setNavLinksState] = useState<NavLink[]>(navLinks);
+  const nonProgramPaths = [
+    ROUTE_DASHBOARD_MAIN,
+    ROUTE_DASHBOARD_CREATE_LP,
+    ROUTE_DASHBOARD_BALANCES,
+    ROUTE_DASHBOARD_ANALYTICS,
+  ];
+  const isNonProgramPath = nonProgramPaths.includes(asPath);
+
+  const [sidebarLinksState, setSidebarLinksState] =
+    useState<SidebarLinks>(sidebarLinks);
   const { isConnected, address } = useAccount();
   const { chain } = useNetwork();
   const { openAccountModal } = useAccountModal();
@@ -256,16 +275,29 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
     },
     {
       onSuccess(data) {
-        if (data.stepsNeeded && loyaltyAddress) {
-          const linksWithActionsNeeded = navLinks.map((link) => {
-            const stepsThatMatch = data.stepsNeeded.filter(
-              (step) => link.label === step.actionNeededHere,
-            );
-            if (stepsThatMatch.length > 0) {
-              return { ...link, actionNeeded: true };
-            } else return link;
-          });
-          setNavLinksState(linksWithActionsNeeded);
+        if (data.stepsNeeded && !isNonProgramPath) {
+          const filteredByRewardType = Object.fromEntries(
+            Object.entries(sidebarLinks).map(([section, linksArr]) => [
+              section,
+              linksArr.filter((link) =>
+                data.rewardType === "Points" && link.label.includes("Escrow")
+                  ? false
+                  : true,
+              ),
+            ]),
+          );
+          const linksWithActionsNeeded = Object.fromEntries(
+            Object.entries(filteredByRewardType).map(([section, linksArr]) => [
+              section,
+              linksArr.map((link) => {
+                const actionNeeded = data.stepsNeeded.some(
+                  (step) => link.label === step.actionNeededHere,
+                );
+                return { ...link, actionNeeded };
+              }),
+            ]),
+          );
+          setSidebarLinksState(linksWithActionsNeeded);
         }
       },
       refetchOnWindowFocus: false,
@@ -282,6 +314,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
     "before:z-2 relative isolate flex h-full w-[17.5rem] shrink-0 flex-col text-dashboard-primary before:pointer-events-none before:absolute before:inset-x-0 before:bottom-0 before:h-[6.25rem] before:bg-gradient-to-t before:from-gray-900/90";
   const lightMainClass =
     "relative isolate h-[calc(100%-0.5rem)] flex-1 self-end rounded-tl-2xl bg-white shadow-[0px_0px_2px_0px_rgba(0,0,0,0.08),_0px_1px_2px_0px_rgba(25,28,33,0.06),_0px_0px_0px_1px_rgba(25,28,33,0.04)]";
+
   const darkMainClass =
     "relative isolate h-[calc(100%-0.5rem)] flex-1 self-end rounded-tl-2xl bg-white shadow-[0_0_0_1px,-2px_0_2px_-1px,-4px_0_4px_-2px] shadow-black/60";
   const darkDividerClass =
@@ -292,14 +325,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
     lightMode ? "text-dashboard-lightGray2" : "text-gray-400"
   } pl-3 text-xs font-medium`;
 
-  const blurRoutesPaths = [
-    ROUTE_DASHBOARD_MAIN,
-    ROUTE_DASHBOARD_CREATE_LP,
-    ROUTE_DASHBOARD_ANALYTICS,
-  ];
-
-  const blurRoutesClass =
-    blurRoutesPaths.includes(asPath) && "blur-sm pointer-events-none";
+  const blurRoutesClass = isNonProgramPath && "blur-sm pointer-events-none";
 
   return (
     <>
@@ -416,62 +442,36 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
             <div className="flex-1 overflow-y-auto">
               <nav className={`${blurRoutesClass} space-y-8 py-5`}>
                 <div className="space-y-xs isolate px-4">
-                  {navLinksState.slice(0, 3).map((link) => {
+                  {sidebarLinks.Main.map((link) => {
                     return (
                       <NavLink
                         key={link.id}
                         link={link}
                         pathname={asPath}
                         lightMode={lightMode}
+                        loyaltyAddress={loyaltyAddress}
                       />
                     );
                   })}
                 </div>
-                <div className="space-y-2 px-3">
-                  <span className={sectionNameClass}>Loyalty Program</span>
-                  <div className="space-y-xs">
-                    {navLinksState.slice(3, 9).map((link) => {
-                      return (
-                        <NavLink
-                          key={link.id}
-                          link={link}
-                          pathname={asPath}
-                          lightMode={lightMode}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-                <div className="space-y-2 px-3">
-                  <span className={sectionNameClass}>Program Users</span>
-                  <div className="space-y-xs">
-                    {navLinksState.slice(9, 13).map((link) => {
-                      return (
-                        <NavLink
-                          key={link.id}
-                          link={link}
-                          pathname={asPath}
-                          lightMode={lightMode}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-                <div className="space-y-2 px-3">
-                  <span className={sectionNameClass}>Developers</span>
-                  <div className="space-y-xs">
-                    {navLinksState.slice(13, 16).map((link) => {
-                      return (
-                        <NavLink
-                          key={link.id}
-                          link={link}
-                          pathname={asPath}
-                          lightMode={lightMode}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
+                {Object.entries(sidebarLinksState)
+                  .filter(([sectionName]) => sectionName !== "Main")
+                  .map(([sectionName, linksArr]) => (
+                    <div key={sectionName} className="space-y-2 px-3">
+                      <span className={sectionNameClass}>{sectionName}</span>
+                      <div className="space-y-xs">
+                        {linksArr.map((link) => (
+                          <NavLink
+                            key={link.id}
+                            link={link}
+                            pathname={asPath}
+                            lightMode={lightMode}
+                            loyaltyAddress={loyaltyAddress}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
               </nav>
             </div>
             <div className="mt-auto min-h-[4rem]">
