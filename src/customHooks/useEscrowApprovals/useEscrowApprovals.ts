@@ -10,7 +10,6 @@ import { supportsInterfaceAbi } from "~/contractsAndAbis/ERC721Utilities/support
 import { useEscrowApprovalsStore } from "./store";
 import { useEscrowAbi } from "~/customHooks/useContractAbi/useContractAbi";
 import { useError } from "~/customHooks/useError";
-import { handleEscrowContractError } from "~/utils/error";
 import { encodeBytes32String, hexlify } from "ethers";
 
 export function useEscrowApprovals() {
@@ -29,7 +28,7 @@ export function useEscrowApprovals() {
   } = useEscrowApprovalsStore((state) => state);
   const { abi: latestAbi } = useEscrowAbi(escrowType);
   const { abi: abiVersion0_01 } = useEscrowAbi(escrowType, "0.01");
-  const { error, handleErrorFlow } = useError();
+  const { error, handleErrorFlow, handleEscrowError } = useError();
 
   const approveRewards = async (escrowAddress: string): Promise<void> => {
     setIsLoading(true);
@@ -155,7 +154,7 @@ export function useEscrowApprovals() {
       }
     } catch (e) {
       setIsLoading(false);
-      setError(handleEscrowContractError(e));
+      handleEscrowError(e, "Failed to set deposit key");
     }
   };
 

@@ -95,10 +95,7 @@ export function isKnownErrorCodeMessage(message: string): boolean {
 }
 
 //TEMP until better way found to handle custom errors thrown in contract reverts
-export const handleEscrowContractError = (
-  error: any,
-  fallbackMsg?: string,
-): string => {
+export const handleEscrowContractError = (error: any): string => {
   const errorMessage = JSON.stringify(error);
   if (errorMessage.includes("ContractFunctionExecutionError")) {
     const wagmiErrorRegex = /Error: ([\w\d]+)\(\)/;
@@ -114,5 +111,5 @@ export const handleEscrowContractError = (
     }
   }
 
-  return fallbackMsg ?? "Failed to perform contract action";
+  return "";
 };
