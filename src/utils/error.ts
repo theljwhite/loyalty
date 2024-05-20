@@ -33,6 +33,24 @@ const errorMessages: { [key in CommonErrorCodes]?: string } = {
     "Execution reverted, which could be due to the function call failing its requirements or the transaction running out of gas.",
 };
 
+export enum SharedEscrowError {
+  DepositPeriodMustBeAtLeastOneHour = "DepositPeriodMustBeAtLeastOneHour",
+  DepositEndDateExceedsProgramEnd = "DepositEndDateExceedsProgramEnd",
+  DepositPeriodNotActive = "DepositPeriodNotActive",
+  DepositPeriodMustBeFinished = "DepositPeriodMustBeFinished",
+  CannotBeEmptyAmount = "CannotBeEmptyAmount",
+  InsuffEscrowBal = "InsuffEscrowBal",
+}
+
+const commonEscrowErrorMessages: { [key in SharedEscrowError]?: string } = {
+  [SharedEscrowError.DepositPeriodMustBeAtLeastOneHour]:
+    "Please specify a deposit period end date of at least one hour in the future",
+  [SharedEscrowError.DepositEndDateExceedsProgramEnd]:
+    "You chose a deposit end date that exceeds your program end date",
+  [SharedEscrowError.DepositPeriodNotActive]:
+    "Your contract is not in its deposit period - cannot perform this action",
+};
+
 export const didUserReject = (error: any): boolean => {
   const errorCode = error?.code ?? error.cause?.code;
   return errorCode === 4001 || errorCode === "ACTION_REJECTED";
@@ -75,3 +93,26 @@ export const handleError = (
 export function isKnownErrorCodeMessage(message: string): boolean {
   return Object.values(errorMessages).includes(message);
 }
+
+//TEMP until better way found to handle custom errors thrown in contract reverts
+export const handleEscrowContractError = (
+  error: any,
+  fallbackMsg?: string,
+): string => {
+  const errorMessage = JSON.stringify(error);
+  if (errorMessage.includes("ContractFunctionExecutionError")) {
+    const wagmiErrorRegex = /Error: ([\w\d]+)\(\)/;
+    const errorMatch = errorMessage.match(wagmiErrorRegex);
+
+    if (errorMatch && errorMatch[1]) {
+      if (errorMatch[1] in SharedEscrowError) {
+        return commonEscrowErrorMessages[
+          errorMatch[1] as keyof typeof SharedEscrowError
+        ]!;
+      }
+      return errorMatch[1];
+    }
+  }
+
+  return fallbackMsg ?? "Failed to perform contract action";
+};

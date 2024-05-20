@@ -10,6 +10,7 @@ import { supportsInterfaceAbi } from "~/contractsAndAbis/ERC721Utilities/support
 import { useEscrowApprovalsStore } from "./store";
 import { useEscrowAbi } from "~/customHooks/useContractAbi/useContractAbi";
 import { useError } from "~/customHooks/useError";
+import { handleEscrowContractError } from "~/utils/error";
 import { encodeBytes32String, hexlify } from "ethers";
 
 export function useEscrowApprovals() {
@@ -153,10 +154,8 @@ export function useEscrowApprovals() {
         setIsSuccess(true);
       }
     } catch (e) {
-      console.log("e", e);
-      handleErrorFlow(e, "Setting deposit key failed");
       setIsLoading(false);
-      setError(error);
+      setError(handleEscrowContractError(e));
     }
   };
 

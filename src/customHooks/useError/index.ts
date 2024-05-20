@@ -18,7 +18,6 @@ export function useError(): {
 
     if (handledError.codeFound) {
       toastError(handledError.message);
-      console.log("error code found", handledError.message);
     } else {
       toastError(message);
     }
