@@ -21,6 +21,9 @@ export default function ERC20EscrowStats() {
     },
     { refetchOnWindowFocus: false },
   );
+  const activeDepositPeriod =
+    data?.loyaltyProgram?.programEnd &&
+    data.loyaltyProgram.programEnd < new Date();
 
   const { getERC20EscrowBalance } = useEscrowContractRead(
     data?.escrow?.address ?? "",
@@ -33,6 +36,7 @@ export default function ERC20EscrowStats() {
 
   const fetchEscrowBalance = async (): Promise<void> => {
     const erc20ContractBalance = await getERC20EscrowBalance();
+    console.log("e", erc20ContractBalance);
     setERC20BalanceDisplay(erc20ContractBalance);
   };
 
@@ -44,8 +48,14 @@ export default function ERC20EscrowStats() {
         stat={erc20BalanceDisplay}
       />
       <WalletStatsCard
-        title="Deposit Period"
-        info={"Deposit period is active until"}
+        title={
+          activeDepositPeriod ? "Deposit Period" : "Deposit Period (Ended)"
+        }
+        info={
+          activeDepositPeriod
+            ? "Deposit period is active until"
+            : "Deposit period ENDED on"
+        }
         stat={
           `${data?.escrow?.depositEndDate?.toLocaleTimeString()} on ${data?.escrow?.depositEndDate?.toLocaleDateString()}` ??
           ""
