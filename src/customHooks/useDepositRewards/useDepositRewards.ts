@@ -14,6 +14,7 @@ import {
   toastError,
   dismissToast,
 } from "~/components/UI/Toast/Toast";
+import { handleEscrowContractError } from "~/utils/error";
 
 export default function useDepositRewards(
   rewardAddress: string,
@@ -300,26 +301,12 @@ export default function useDepositRewards(
   const handleDepositErrors = (error: Error): void => {
     dismissToast();
     const errorMessage = error.message.toLowerCase();
-    const errorName = error.name;
-    const errorCause = error.cause;
-    let toastErrorMessage: string = "";
 
     if (errorMessage.includes("insufficient allowance")) {
-      toastErrorMessage = "Insufficient allowance for reward token";
+      toastError("Insufficient allowance for reward token");
+      return;
     }
-    if (errorMessage.includes("user rejected the request")) {
-      toastErrorMessage = "You rejected the wallet request";
-    }
-    if (
-      errorName === "ContractFunctionExecutionError" &&
-      String(errorCause).includes("DepositPeriodNotActive")
-    ) {
-      toastErrorMessage = "Your escrow contract is not in its deposit period";
-    }
-
-    toastError(
-      toastErrorMessage ?? "Error depositing. Please try again later.",
-    );
+    handleEscrowContractError(error);
   };
 
   return {

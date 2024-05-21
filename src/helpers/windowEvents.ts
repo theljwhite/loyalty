@@ -15,7 +15,7 @@ export function useWindowEvent<Event extends keyof WindowEventMap>(
   });
 }
 
-export function useOnClickOutside<T>(
+export function useOnClickOutside(
   ref: MutableRefObject<HTMLDivElement | null>,
   handler: (...args: any[]) => any,
 ): void {

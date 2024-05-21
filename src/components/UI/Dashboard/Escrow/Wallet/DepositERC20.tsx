@@ -3,6 +3,8 @@ import { useRouter } from "next/router";
 import { useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { api } from "~/utils/api";
+import { LEADING_ZERO_REGEX } from "~/constants/regularExpressions";
+import { ensureSameChainSameCreator } from "~/utils/ensureSameChain";
 import DashboardSimpleInputModal from "../../DashboardSimpleInputModal";
 import { CoinsOne } from "../../Icons";
 import useDepositRewards from "~/customHooks/useDepositRewards/useDepositRewards";
@@ -15,6 +17,7 @@ import DashboardSummaryTable from "../../DashboardSummaryTable";
 
 export default function DepositERC20() {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState<boolean>(false);
+  const [depositBtnDisabled, setDepositBtnDisabled] = useState<boolean>(true);
   const {
     isSuccess,
     isDepositReceiptOpen,
@@ -46,12 +49,25 @@ export default function DepositERC20() {
     e: React.ChangeEvent<HTMLInputElement>,
   ): Promise<void> => {
     const { value } = e.target;
+
     setERC20DepositAmount(value);
+    const hasLeadingZero = LEADING_ZERO_REGEX.test(value);
+
+    if (value === "0" || hasLeadingZero) {
+      setDepositBtnDisabled(true);
+    } else setDepositBtnDisabled(false);
   };
 
   const handleDeposit = async (): Promise<void> => {
-    setIsDepositModalOpen(false);
-    await handleApproveAndDeposit();
+    const mismatchError = await ensureSameChainSameCreator(
+      contractsDb?.loyaltyProgram?.chainId ?? 0,
+      address as string,
+    );
+    if (!mismatchError) {
+      console.log("ran");
+      setIsDepositModalOpen(false);
+      await handleApproveAndDeposit();
+    }
   };
 
   return (
@@ -89,7 +105,7 @@ export default function DepositERC20() {
           inputDisabled={false}
           inputValid={true}
           btnTitle="Deposit My Tokens"
-          btnDisabled={false}
+          btnDisabled={depositBtnDisabled}
           onActionBtnClick={handleDeposit}
           bannerInfo="Learn more about deposits and how tokens are managed"
           setIsModalOpen={setIsDepositModalOpen}
