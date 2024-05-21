@@ -120,7 +120,6 @@ export function useEscrowContractRead(
       const balanceToString = formatEther(escrowBalance);
       return balanceToString;
     } catch (error) {
-      console.error("e", error);
       setReadContractError(JSON.stringify(error).slice(0, 50));
       return "";
     }

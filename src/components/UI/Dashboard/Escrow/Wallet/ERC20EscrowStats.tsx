@@ -36,7 +36,6 @@ export default function ERC20EscrowStats() {
 
   const fetchEscrowBalance = async (): Promise<void> => {
     const erc20ContractBalance = await getERC20EscrowBalance();
-    console.log("e", erc20ContractBalance);
     setERC20BalanceDisplay(erc20ContractBalance);
   };
 

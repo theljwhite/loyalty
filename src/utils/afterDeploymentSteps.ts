@@ -53,13 +53,19 @@ const withSDKSteps: AfterDeploymentStep[] = [
   },
 ];
 
+//TODO - clean this func up, there is prob a more organized approach lols
 export const getAfterDeploymentStepsNeeded = (
   rewardType: RewardType,
   loyaltyState: string,
   escrowState?: string,
+  depositEndDate?: Date,
   escrowAddress?: string,
 ): AfterDeploymentStep[] => {
   const onlyLastStep = afterDeploymentSteps.slice(-1);
+  const timeNow = new Date().getTime();
+  const depositEndMs = depositEndDate?.getTime();
+  const depositPeriodEnded = depositEndMs && timeNow > depositEndMs;
+  const depositPeriodNow = depositEndMs && depositEndMs > timeNow;
 
   if (rewardType !== RewardType.Points && !escrowAddress) {
     const deployAction = {
@@ -70,14 +76,24 @@ export const getAfterDeploymentStepsNeeded = (
   }
 
   if (rewardType !== RewardType.Points && escrowAddress) {
-    if (loyaltyState === "Idle" && escrowState === "DepositPeriod") {
+    if (
+      loyaltyState === "AwaitingEscrowSetup" &&
+      escrowState === "DepositPeriod" &&
+      depositPeriodNow
+    ) {
       const sliceFirstStep = afterDeploymentSteps.slice(1);
       return sliceFirstStep;
     }
-    if (loyaltyState === "Idle" && escrowState === "AwaitingEscrowSettings") {
+
+    if (
+      loyaltyState === "AwaitingEscrowSetup" &&
+      escrowState === "DepositPeriod" &&
+      depositPeriodEnded
+    ) {
       const sliceFirstTwo = afterDeploymentSteps.slice(2);
       return sliceFirstTwo;
     }
+
     if (loyaltyState === "AwaitingEscrowSetup" && escrowState === "Idle") {
       return onlyLastStep;
     }
@@ -97,12 +113,14 @@ export const getDeploymentStepsWithSDKSteps = (
   rewardType: RewardType,
   loyaltyState: string,
   escrowState?: string,
+  depositEndDate?: Date,
   escrowAddress?: string,
 ): AfterDeploymentStep[] => {
   const deploymentSteps = getAfterDeploymentStepsNeeded(
     rewardType,
     loyaltyState,
     escrowState,
+    depositEndDate,
     escrowAddress,
   );
   return [...deploymentSteps, ...withSDKSteps];

@@ -157,6 +157,7 @@ export const loyaltyProgramsRouter = createTRPCRouter({
         loyaltyProgram?.rewardType ?? "Points",
         loyaltyProgram?.state ?? "Idle",
         loyaltyProgram?.escrow?.state,
+        loyaltyProgram?.escrow?.depositEndDate ?? undefined,
         loyaltyProgram?.escrowAddress ?? "",
       );
 
