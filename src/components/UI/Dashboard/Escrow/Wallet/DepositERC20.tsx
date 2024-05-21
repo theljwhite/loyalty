@@ -5,15 +5,12 @@ import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { api } from "~/utils/api";
 import { LEADING_ZERO_REGEX } from "~/constants/regularExpressions";
 import { ensureSameChainSameCreator } from "~/utils/ensureSameChain";
-import DashboardSimpleInputModal from "../../DashboardSimpleInputModal";
-import { CoinsOne } from "../../Icons";
 import useDepositRewards from "~/customHooks/useDepositRewards/useDepositRewards";
 import { useDepositRewardsStore } from "~/customHooks/useDepositRewards/store";
+import DashboardSimpleInputModal from "../../DashboardSimpleInputModal";
 import DashboardModalStatus from "../../DashboardModalStatus";
 import DashboardSummaryTable from "../../DashboardSummaryTable";
-
-//TODO - validate user connected to deployed loyalty program chain
-//prob need to make a global util for this
+import { CoinsOne } from "../../Icons";
 
 export default function DepositERC20() {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState<boolean>(false);
