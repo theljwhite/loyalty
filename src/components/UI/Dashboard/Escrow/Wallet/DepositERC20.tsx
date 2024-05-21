@@ -64,7 +64,6 @@ export default function DepositERC20() {
       address as string,
     );
     if (!mismatchError) {
-      console.log("ran");
       setIsDepositModalOpen(false);
       await handleApproveAndDeposit();
     }
