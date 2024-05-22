@@ -2,7 +2,9 @@ import { useEscrowAbi } from "../useContractAbi/useContractAbi";
 import { useEscrowSettingsStore } from "./store";
 import { useLoyaltyContractRead } from "../useLoyaltyContractRead/useLoyaltyContractRead";
 import { useEscrowContractRead } from "../useEscrowContractRead/useEscrowContractRead";
-import { waitForTransaction, writeContract } from "wagmi/actions";
+import { useError } from "../useError";
+import { waitForTransaction, writeContract, fetchToken } from "wagmi/actions";
+import { parseUnits } from "ethers";
 import { api } from "~/utils/api";
 import {
   ERC20RewardCondition,
@@ -45,6 +47,8 @@ export default function useEscrowSettings(
     setPayoutEstimate,
   } = useEscrowSettingsStore((state) => state);
 
+  const { handleEscrowError, handleERC20EscrowError } = useError();
+
   const { abi: erc20EscrowAbi } = useEscrowAbi("ERC20");
   const { abi: erc721EscrowAbi } = useEscrowAbi("ERC721");
   const { abi: erc1155EscrowAbi } = useEscrowAbi("ERC1155");
@@ -61,14 +65,22 @@ export default function useEscrowSettings(
   const { mutate: updateEscrowStateDb } =
     api.escrow.updateEscrowState.useMutation();
 
-  const setERC20EscrowSettingsBasic = async (): Promise<void> => {
+  const setERC20EscrowSettingsBasic = async (
+    rewardAddress: string,
+  ): Promise<void> => {
     handleSetLoadingState();
     try {
+      const parsedPayouts = await parsePayoutsToTokenDecimal(rewardAddress);
+
+      if (!parsedPayouts) throw new Error();
+
+      const [payout] = parsedPayouts;
+
       const setSettingsBasic = await writeContract({
         abi: erc20EscrowAbi,
         address: escrowAddress as `0x${string}`,
         functionName: "setEscrowSettingsBasic",
-        args: [erc20RewardCondition, rewardGoal, parseFloat(payoutAmount)],
+        args: [erc20RewardCondition, rewardGoal, payout],
       });
 
       const setSettingsReceipt = await waitForTransaction({
@@ -80,22 +92,24 @@ export default function useEscrowSettings(
         updateEscrowStateDb({ escrowAddress, newEscrowState: "Idle" });
       }
     } catch (error) {
-      handleSettingsErrors(error as Error);
+      handleERC20EscrowError(error, "Failed to set escrow settings");
     }
   };
 
-  const setERC20EscrowSettingsAdvanced = async (): Promise<void> => {
+  const setERC20EscrowSettingsAdvanced = async (
+    rewardAddress: string,
+  ): Promise<void> => {
     handleSetLoadingState();
     try {
-      const payouts = payoutAmounts
-        .split(",")
-        .map((amount) => parseFloat(amount));
+      const parsedPayouts = await parsePayoutsToTokenDecimal(rewardAddress);
+
+      if (!parsedPayouts) throw new Error();
 
       const setSettingsAdvanced = await writeContract({
         abi: erc20EscrowAbi,
         address: escrowAddress as `0x${string}`,
         functionName: "setEscrowSettingsAdvanced",
-        args: [erc20RewardCondition, payouts],
+        args: [erc20RewardCondition, parsedPayouts],
       });
 
       const setSettingsReceipt = await waitForTransaction({
@@ -107,8 +121,23 @@ export default function useEscrowSettings(
         updateEscrowStateDb({ escrowAddress, newEscrowState: "InIssuance" });
       }
     } catch (error) {
-      handleSettingsErrors(error as Error);
+      handleERC20EscrowError(error, "Failed to set escrow settings");
     }
+  };
+
+  const parsePayoutsToTokenDecimal = async (
+    rewardAddress: string,
+  ): Promise<bigint[] | null> => {
+    const tokenData = await fetchToken({
+      address: rewardAddress as `0x${string}`,
+    });
+    if (!tokenData) return null;
+
+    const parsedAmounts = payoutAmounts
+      .split(",")
+      .map((amount) => parseUnits(amount, tokenData.decimals));
+
+    return parsedAmounts;
   };
 
   const setERC721EscrowSettings = async (): Promise<void> => {
@@ -126,7 +155,7 @@ export default function useEscrowSettings(
         updateEscrowStateDb({ escrowAddress, newEscrowState: "InIssuance" });
       }
     } catch (error) {
-      handleSettingsErrors(error as Error);
+      handleEscrowError(error, "Failed to set escrow settings");
     }
   };
 
@@ -141,7 +170,7 @@ export default function useEscrowSettings(
       });
       if (setERC1155Settings.hash) handleSetSuccessState();
     } catch (error) {
-      handleSettingsErrors(error as Error);
+      handleEscrowError(error, "Failed to set escrow settings");
     }
   };
 
@@ -158,7 +187,7 @@ export default function useEscrowSettings(
       });
       if (setSettingsAdvanced.hash) handleSetSuccessState();
     } catch (error) {
-      handleSettingsErrors(error as Error);
+      handleEscrowError(error, "Failed to set escrow settings");
     }
   };
 
@@ -482,25 +511,6 @@ export default function useEscrowSettings(
     setIsSuccess(true);
     toastSuccess("Successfully set escrow settings");
     setIsLoading(false);
-  };
-
-  const handleSettingsErrors = (error: Error): void => {
-    console.log("error", error);
-    //TODO - error handle escrow settings
-    let toastErrorMessage: string = "";
-    const errorMessage = error.message.toLowerCase();
-    const errorCause = String(error.cause);
-    dismissToast();
-    setIsLoading(false);
-    if (errorMessage.includes("user rejected the request")) {
-      toastErrorMessage = "You rejected the wallet request";
-    }
-    if (errorCause.includes("DepositPeriodMustBeFinished()")) {
-      toastErrorMessage =
-        "Cannot set escrow settings. Either your deposit period is still active, or you have already set escrow settings before.";
-    }
-    setError(JSON.stringify(error).slice(0, 50));
-    toastError(toastErrorMessage);
   };
 
   return {

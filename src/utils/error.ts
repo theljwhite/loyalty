@@ -109,23 +109,41 @@ export const handleError = (
   return { message: error.message ?? error.reason, codeFound: false };
 };
 
-//TEMP until better way found to handle custom errors thrown in contract reverts
-export const handleEscrowContractError = (error: any): string => {
+export const handleEscrowContractError = (
+  error: any,
+): {
+  message: string;
+  codeFound: boolean;
+} => {
   const matchingCustomError = extractCustomContractErrorFromThrown(error);
 
   if (matchingCustomError && matchingCustomError in SharedEscrowErrorCodes) {
-    return commonEscrowErrorMessages[
-      matchingCustomError as keyof typeof SharedEscrowErrorCodes
-    ]!;
+    const errorMessage =
+      commonEscrowErrorMessages[
+        matchingCustomError as keyof typeof SharedEscrowErrorCodes
+      ]!;
+
+    return {
+      message: errorMessage,
+      codeFound: true,
+    };
   }
 
-  return "";
+  return { message: "Escrow contract call failed", codeFound: false };
 };
 
-export const handleERC20EscrowContractError = (error: any): string => {
-  const commonEscrowError = handleERC20EscrowContractError(error);
+export const handleERC20EscrowContractError = (
+  error: any,
+  fallbackMsg: string,
+): {
+  message: string;
+  codeFound: boolean;
+} => {
+  const commonEscrowError = handleEscrowContractError(error);
 
-  if (commonEscrowError) return commonEscrowError;
+  if (commonEscrowError.codeFound) {
+    return { message: commonEscrowError.message, codeFound: true };
+  }
 
   const matchingERC20EscrowError = extractCustomContractErrorFromThrown(error);
 
@@ -133,12 +151,15 @@ export const handleERC20EscrowContractError = (error: any): string => {
     matchingERC20EscrowError &&
     matchingERC20EscrowError in ERC20EscrowErrorCodes
   ) {
-    return erc20EscrowErrorMessages[
-      matchingERC20EscrowError as keyof typeof ERC20EscrowErrorCodes
-    ]!;
+    const errorMessage =
+      erc20EscrowErrorMessages[
+        matchingERC20EscrowError as keyof typeof ERC20EscrowErrorCodes
+      ]!;
+
+    return { message: errorMessage, codeFound: true };
   }
 
-  return "";
+  return { message: fallbackMsg, codeFound: false };
 };
 
 export function isKnownErrorCodeMessage(message: string): boolean {

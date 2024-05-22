@@ -89,9 +89,13 @@ export default function ERC20EscrowSettings() {
       erc20RewardCondition === ERC20RewardCondition.RewardPerObjective ||
       erc20RewardCondition === ERC20RewardCondition.RewardPerTier
     ) {
-      await setERC20EscrowSettingsAdvanced();
+      await setERC20EscrowSettingsAdvanced(
+        "0xf181093a85e1507efa1e1c7fdafe9f6e22d344a7",
+      );
     } else {
-      await setERC20EscrowSettingsBasic();
+      await setERC20EscrowSettingsBasic(
+        "0xf181093a85e1507efa1e1c7fdafe9f6e22d344a7",
+      );
     }
   };
 
