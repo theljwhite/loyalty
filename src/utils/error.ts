@@ -28,6 +28,7 @@ export enum ERC20EscrowErrorCodes {
   ObjectivesAndPayoutLengthMismatch = "ObjectivesAndPayoutLengthMismatch",
   TiersAndPayoutLengthMismatch = "TiersAndPayoutLengthMismatch",
   TierIndex0CannotPayout = "TierIndex0CannotPayout",
+  InsufficientFunds = "InsufficientFunds",
 }
 
 const errorMessages: { [key in CommonErrorCodes]?: string } = {
@@ -59,15 +60,29 @@ const commonEscrowErrorMessages: { [key in SharedEscrowErrorCodes]?: string } =
       "You chose a deposit end date that exceeds your program end date.",
     [SharedEscrowErrorCodes.DepositPeriodNotActive]:
       "Your contract is not in its deposit period - cannot perform this action.",
+    [SharedEscrowErrorCodes.DepositPeriodMustBeFinished]:
+      "Deposit period must be finished to set escrow settings",
+    [SharedEscrowErrorCodes.CannotBeEmptyAmount]:
+      "You entered an amount of 0. Cannot be 0.",
+    [SharedEscrowErrorCodes.InsuffEscrowBal]:
+      "Insufficient escrow token balance to use an inputted amount",
+    [SharedEscrowErrorCodes.TiersMustBeActive]:
+      "Tiers must be active to perform this action",
   };
 
 const erc20EscrowErrorMessages: { [key in ERC20EscrowErrorCodes]?: string } = {
   [ERC20EscrowErrorCodes.MustUseValidObjectiveIndex]:
     "Invalid objective. Objectives are zero index based.",
   [ERC20EscrowErrorCodes.MustUseValidTierIndex]:
+    "Inputted tier index is out of range or 0.",
+  [ERC20EscrowErrorCodes.TierIndex0CannotPayout]:
     "Invalid tier. Tiers are zero index based, but tier 0 cannot be used.",
   [ERC20EscrowErrorCodes.ObjectivesAndPayoutLengthMismatch]:
     "Must use the same number of amounts as number of objectives.",
+  [ERC20EscrowErrorCodes.TiersAndPayoutLengthMismatch]:
+    "For the selected reward condition, must have save amount of payouts as tiers",
+  [ERC20EscrowErrorCodes.InsufficientFunds]:
+    "Your balance is insufficient to withdraw this amount",
 };
 
 export const didUserReject = (error: any): boolean => {

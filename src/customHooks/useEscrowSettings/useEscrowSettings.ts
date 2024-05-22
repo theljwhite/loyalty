@@ -42,7 +42,6 @@ export default function useEscrowSettings(
     payoutAmounts,
     setIsLoading,
     setIsSuccess,
-    setError,
     setIsConfirmModalOpen,
     setPayoutEstimate,
   } = useEscrowSettingsStore((state) => state);
