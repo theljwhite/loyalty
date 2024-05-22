@@ -485,6 +485,7 @@ export default function useEscrowSettings(
   };
 
   const handleSettingsErrors = (error: Error): void => {
+    console.log("error", error);
     //TODO - error handle escrow settings
     let toastErrorMessage: string = "";
     const errorMessage = error.message.toLowerCase();

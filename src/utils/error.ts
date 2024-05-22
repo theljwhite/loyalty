@@ -12,6 +12,24 @@ export enum CommonErrorCodes {
   EXECUTION_REVERTED = "EXECUTION_REVERTED",
 }
 
+export enum SharedEscrowErrorCodes {
+  DepositPeriodMustBeAtLeastOneHour = "DepositPeriodMustBeAtLeastOneHour",
+  DepositEndDateExceedsProgramEnd = "DepositEndDateExceedsProgramEnd",
+  DepositPeriodNotActive = "DepositPeriodNotActive",
+  DepositPeriodMustBeFinished = "DepositPeriodMustBeFinished",
+  CannotBeEmptyAmount = "CannotBeEmptyAmount",
+  InsuffEscrowBal = "InsuffEscrowBal",
+  TiersMustBeActive = "TiersMustBeActive",
+}
+
+export enum ERC20EscrowErrorCodes {
+  MustUseValidObjectiveIndex = "MustUseValidObjectiveIndex",
+  MustUseValidTierIndex = "MustUseValidTierIndex",
+  ObjectivesAndPayoutLengthMismatch = "ObjectivesAndPayoutLengthMismatch",
+  TiersAndPayoutLengthMismatch = "TiersAndPayoutLengthMismatch",
+  TierIndex0CannotPayout = "TierIndex0CannotPayout",
+}
+
 const errorMessages: { [key in CommonErrorCodes]?: string } = {
   [CommonErrorCodes.CALL_EXCEPTION]:
     "A contract call failed. Check the contract's conditions or requirements.",
@@ -33,22 +51,23 @@ const errorMessages: { [key in CommonErrorCodes]?: string } = {
     "Execution reverted, which could be due to the function call failing its requirements or the transaction running out of gas.",
 };
 
-export enum SharedEscrowError {
-  DepositPeriodMustBeAtLeastOneHour = "DepositPeriodMustBeAtLeastOneHour",
-  DepositEndDateExceedsProgramEnd = "DepositEndDateExceedsProgramEnd",
-  DepositPeriodNotActive = "DepositPeriodNotActive",
-  DepositPeriodMustBeFinished = "DepositPeriodMustBeFinished",
-  CannotBeEmptyAmount = "CannotBeEmptyAmount",
-  InsuffEscrowBal = "InsuffEscrowBal",
-}
+const commonEscrowErrorMessages: { [key in SharedEscrowErrorCodes]?: string } =
+  {
+    [SharedEscrowErrorCodes.DepositPeriodMustBeAtLeastOneHour]:
+      "Please specify a deposit period end date of at least one hour in the future.",
+    [SharedEscrowErrorCodes.DepositEndDateExceedsProgramEnd]:
+      "You chose a deposit end date that exceeds your program end date.",
+    [SharedEscrowErrorCodes.DepositPeriodNotActive]:
+      "Your contract is not in its deposit period - cannot perform this action.",
+  };
 
-const commonEscrowErrorMessages: { [key in SharedEscrowError]?: string } = {
-  [SharedEscrowError.DepositPeriodMustBeAtLeastOneHour]:
-    "Please specify a deposit period end date of at least one hour in the future",
-  [SharedEscrowError.DepositEndDateExceedsProgramEnd]:
-    "You chose a deposit end date that exceeds your program end date",
-  [SharedEscrowError.DepositPeriodNotActive]:
-    "Your contract is not in its deposit period - cannot perform this action",
+const erc20EscrowErrorMessages: { [key in ERC20EscrowErrorCodes]?: string } = {
+  [ERC20EscrowErrorCodes.MustUseValidObjectiveIndex]:
+    "Invalid objective. Objectives are zero index based.",
+  [ERC20EscrowErrorCodes.MustUseValidTierIndex]:
+    "Invalid tier. Tiers are zero index based, but tier 0 cannot be used.",
+  [ERC20EscrowErrorCodes.ObjectivesAndPayoutLengthMismatch]:
+    "Must use the same number of amounts as number of objectives.",
 };
 
 export const didUserReject = (error: any): boolean => {
@@ -90,26 +109,50 @@ export const handleError = (
   return { message: error.message ?? error.reason, codeFound: false };
 };
 
+//TEMP until better way found to handle custom errors thrown in contract reverts
+export const handleEscrowContractError = (error: any): string => {
+  const matchingCustomError = extractCustomContractErrorFromThrown(error);
+
+  if (matchingCustomError && matchingCustomError in SharedEscrowErrorCodes) {
+    return commonEscrowErrorMessages[
+      matchingCustomError as keyof typeof SharedEscrowErrorCodes
+    ]!;
+  }
+
+  return "";
+};
+
+export const handleERC20EscrowContractError = (error: any): string => {
+  const commonEscrowError = handleERC20EscrowContractError(error);
+
+  if (commonEscrowError) return commonEscrowError;
+
+  const matchingERC20EscrowError = extractCustomContractErrorFromThrown(error);
+
+  if (
+    matchingERC20EscrowError &&
+    matchingERC20EscrowError in ERC20EscrowErrorCodes
+  ) {
+    return erc20EscrowErrorMessages[
+      matchingERC20EscrowError as keyof typeof ERC20EscrowErrorCodes
+    ]!;
+  }
+
+  return "";
+};
+
 export function isKnownErrorCodeMessage(message: string): boolean {
   return Object.values(errorMessages).includes(message);
 }
 
-//TEMP until better way found to handle custom errors thrown in contract reverts
-export const handleEscrowContractError = (error: any): string => {
+export const extractCustomContractErrorFromThrown = (
+  error: any,
+): string | undefined => {
   const errorMessage = JSON.stringify(error);
   if (errorMessage.includes("ContractFunctionExecutionError")) {
     const wagmiErrorRegex = /Error: ([\w\d]+)\(\)/;
     const errorMatch = errorMessage.match(wagmiErrorRegex);
 
-    if (errorMatch && errorMatch[1]) {
-      if (errorMatch[1] in SharedEscrowError) {
-        return commonEscrowErrorMessages[
-          errorMatch[1] as keyof typeof SharedEscrowError
-        ]!;
-      }
-      return errorMatch[1];
-    }
+    return errorMatch ? errorMatch[1] : undefined;
   }
-
-  return "";
 };
