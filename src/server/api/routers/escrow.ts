@@ -157,4 +157,13 @@ export const escrowRouter = createTRPCRouter({
 
       return { escrow, loyaltyProgram };
     }),
+  getEscrowAndRewardsAddressByLoyalty: protectedProcedure
+    .input(z.object({ loyaltyAddress: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const escrowDetails = await ctx.db.escrow.findUnique({
+        where: { loyaltyAddress: input.loyaltyAddress },
+        select: { address: true, rewardAddress: true },
+      });
+      return escrowDetails;
+    }),
 });

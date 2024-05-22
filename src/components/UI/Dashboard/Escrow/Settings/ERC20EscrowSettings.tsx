@@ -68,9 +68,11 @@ export default function ERC20EscrowSettings() {
     },
     { refetchOnWindowFocus: false },
   );
-  const { data: escrowAddress } =
-    api.loyaltyPrograms.getOnlyEscrowAddressByLoyaltyAddress.useQuery(
-      { loyaltyAddress: String(loyaltyAddress) },
+  const { data: escrow } =
+    api.escrow.getEscrowAndRewardsAddressByLoyalty.useQuery(
+      {
+        loyaltyAddress: String(loyaltyAddress),
+      },
       { refetchOnWindowFocus: false },
     );
 
@@ -82,20 +84,16 @@ export default function ERC20EscrowSettings() {
     setERC20EscrowSettingsAdvanced,
     validateERC20PayoutsAndRunEstimate,
     validateERC20SinglePayoutAndEstimate,
-  } = useEscrowSettings(escrowAddress ?? "", String(loyaltyAddress));
+  } = useEscrowSettings(escrow?.address ?? "", String(loyaltyAddress));
 
   const handleSetERC20EscrowSettings = async (): Promise<void> => {
     if (
       erc20RewardCondition === ERC20RewardCondition.RewardPerObjective ||
       erc20RewardCondition === ERC20RewardCondition.RewardPerTier
     ) {
-      await setERC20EscrowSettingsAdvanced(
-        "0xf181093a85e1507efa1e1c7fdafe9f6e22d344a7",
-      );
+      await setERC20EscrowSettingsAdvanced(escrow?.rewardAddress ?? "");
     } else {
-      await setERC20EscrowSettingsBasic(
-        "0xf181093a85e1507efa1e1c7fdafe9f6e22d344a7",
-      );
+      await setERC20EscrowSettingsBasic(escrow?.rewardAddress ?? "");
     }
   };
 
