@@ -77,9 +77,11 @@ export default function ERC1155EscrowSettings() {
     },
     { refetchOnWindowFocus: false },
   );
-  const { data: escrowAddress } =
-    api.loyaltyPrograms.getOnlyEscrowAddressByLoyaltyAddress.useQuery(
-      { loyaltyAddress: String(loyaltyAddress) },
+  const { data: escrow } =
+    api.escrow.getEscrowAndRewardsAddressByLoyalty.useQuery(
+      {
+        loyaltyAddress: String(loyaltyAddress),
+      },
       { refetchOnWindowFocus: false },
     );
 
@@ -91,7 +93,7 @@ export default function ERC1155EscrowSettings() {
     setERC1155EscrowSettingsAdvanced,
     validateERC1155Basic,
     validateERC1155Advanced,
-  } = useEscrowSettings(escrowAddress ?? "", String(loyaltyAddress));
+  } = useEscrowSettings(escrow?.address ?? "", String(loyaltyAddress));
 
   const isSingleGoalCondition =
     erc1155RewardCondition === ERC1155RewardCondition.SingleObjective ||
@@ -183,15 +185,14 @@ export default function ERC1155EscrowSettings() {
 
   return (
     <>
-     
-        {isConfirmModalOpen && (
-          <ConfirmERC1155EscrowSettings
-            objectives={objectives}
-            tiers={tiers}
-            setERC1155EscrowSettings={handleSetERC1155EscrowSettings}
-          />
-        )}
-    
+      {isConfirmModalOpen && (
+        <ConfirmERC1155EscrowSettings
+          objectives={objectives}
+          tiers={tiers}
+          setERC1155EscrowSettings={handleSetERC1155EscrowSettings}
+        />
+      )}
+
       <div className="space-y-8">
         <DashboardSelectBox
           title="ERC1155 Reward Condition"
@@ -347,7 +348,7 @@ export default function ERC1155EscrowSettings() {
       {isReviewBalancesOpen && (
         <ReviewBalances
           setIsOpen={setIsReviewBalancesOpen}
-          escrowAddress={escrowAddress ?? ""}
+          escrowAddress={escrow?.address ?? ""}
           escrowType="ERC1155"
         />
       )}

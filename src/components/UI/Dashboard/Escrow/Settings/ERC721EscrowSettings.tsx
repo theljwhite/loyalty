@@ -81,14 +81,16 @@ export default function ERC721EscrowSettings() {
     },
     { refetchOnWindowFocus: false },
   );
-  const { data: escrowAddress } =
-    api.loyaltyPrograms.getOnlyEscrowAddressByLoyaltyAddress.useQuery(
-      { loyaltyAddress: String(loyaltyAddress) },
+  const { data: escrow } =
+    api.escrow.getEscrowAndRewardsAddressByLoyalty.useQuery(
+      {
+        loyaltyAddress: String(loyaltyAddress),
+      },
       { refetchOnWindowFocus: false },
     );
 
   const { setERC721EscrowSettings, validateERC721Settings } = useEscrowSettings(
-    escrowAddress ?? "",
+    escrow?.address ?? "",
     String(loyaltyAddress),
   );
 
