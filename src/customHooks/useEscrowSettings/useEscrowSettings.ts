@@ -104,8 +104,6 @@ export default function useEscrowSettings(
 
       if (!parsedPayouts) throw new Error();
 
-      console.log("pp", parsedPayouts);
-
       const setSettingsAdvanced = await writeContract({
         abi: erc20EscrowAbi,
         address: escrowAddress as `0x${string}`,
