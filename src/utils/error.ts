@@ -1,3 +1,4 @@
+import { deserialize, serialize } from "wagmi";
 import { EstimateGasExecutionError } from "viem";
 
 export enum CommonErrorCodes {
@@ -184,7 +185,7 @@ export function isKnownErrorCodeMessage(message: string): boolean {
 export const extractCustomContractErrorFromThrown = (
   error: any,
 ): string | undefined => {
-  const errorMessage = JSON.stringify(error);
+  const errorMessage = String(error);
   if (errorMessage.includes("ContractFunctionExecutionError")) {
     const wagmiErrorRegex = /Error: ([\w\d]+)\(\)/;
     const errorMatch = errorMessage.match(wagmiErrorRegex);
