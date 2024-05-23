@@ -130,9 +130,11 @@ export default function useEscrowSettings(
     const tokenData = await fetchToken({
       address: rewardAddress as `0x${string}`,
     });
+
     if (!tokenData) return null;
 
     const parsedAmounts = payoutAmounts
+      .replace(/\s/g, "")
       .split(",")
       .map((amount) => parseUnits(amount, tokenData.decimals));
 

@@ -72,11 +72,11 @@ const commonEscrowErrorMessages: { [key in SharedEscrowErrorCodes]?: string } =
 
 const erc20EscrowErrorMessages: { [key in ERC20EscrowErrorCodes]?: string } = {
   [ERC20EscrowErrorCodes.MustUseValidObjectiveIndex]:
-    "Invalid objective. Objectives are zero index based.",
+    "Objective is out of range. Objectives are zero index based, but index cannot exceed length of objectives.",
   [ERC20EscrowErrorCodes.MustUseValidTierIndex]:
     "Inputted tier index is out of range or 0.",
   [ERC20EscrowErrorCodes.TierIndex0CannotPayout]:
-    "Invalid tier. Tiers are zero index based, but tier 0 cannot be used.",
+    "Invalid tier. Tiers are zero index based, but tier 0 cannot be used to payout.",
   [ERC20EscrowErrorCodes.ObjectivesAndPayoutLengthMismatch]:
     "Must use the same number of amounts as number of objectives.",
   [ERC20EscrowErrorCodes.TiersAndPayoutLengthMismatch]:
