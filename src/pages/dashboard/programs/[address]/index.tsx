@@ -16,6 +16,10 @@ import {
   WarningIcon,
 } from "~/components/UI/Dashboard/Icons";
 import { type Url } from "next/dist/shared/lib/router/router";
+import {
+  type AfterDeploymentStep,
+  withSDKSteps,
+} from "~/utils/afterDeploymentSteps";
 import { ROUTE_DOCS_QUICKSTART } from "~/configs/routes";
 import DashboardStateStatus from "~/components/UI/Dashboard/DashboardStateStatus";
 import DashboardAnalyticsStatus from "~/components/UI/Dashboard/DashboardAnalyticsStatus";
@@ -24,8 +28,7 @@ import DashboardBreadcrumb from "~/components/UI/Dashboard/DashboardBreadcrumb";
 import DashboardInfoBox from "~/components/UI/Dashboard/DashboardInfoBox";
 import DashboardPageError from "~/components/UI/Dashboard/DashboardPageError";
 
-//TODO - the JSX can be cleaned up a bit here, lol. all of this component can tbh.
-//TODO - styling fixes (clean it up and responsiveness)
+//TODO - refactor this at some point for cleanliness
 
 type QuickStartOptions = {
   id: number;
@@ -81,6 +84,7 @@ export default function DashboardHome() {
   const [quickStartOptions, setQuickStartOptions] = useState<
     QuickStartOptions[]
   >(quickStartOptionsData);
+  const [stepsNeeded, setStepsNeeded] = useState<AfterDeploymentStep[]>([]);
   const [didSelect, setDidSelect] = useState<boolean>(false);
 
   const router = useRouter();
@@ -95,7 +99,14 @@ export default function DashboardHome() {
     {
       contractAddress: loyaltyAddress,
     },
-    { refetchOnWindowFocus: false },
+    {
+      onSuccess(data) {
+        if (data.escrowState === "InIssuance" && data.state === "Active") {
+          setStepsNeeded([...data.stepsNeeded, ...withSDKSteps]);
+        } else setStepsNeeded(data.stepsNeeded);
+      },
+      refetchOnWindowFocus: false,
+    },
   );
 
   const selectQuickStartOption = (id: number): void => {
@@ -218,24 +229,22 @@ export default function DashboardHome() {
                             </p>
                             <div className="mt-2">
                               {loyaltyProgram.escrowAddress ? (
-                                loyaltyProgram.stepsNeeded.map(
-                                  (item, index) => {
-                                    return (
-                                      <div key={index}>
-                                        <div className="mb-2 flex items-start gap-[0.5rem] rounded-md bg-neutral-2 p-3 text-sm font-[0.8125rem] leading-[1.125rem] text-dashboard-lightGray">
-                                          <WarningIcon
-                                            size={16}
-                                            color="currentColor"
-                                          />
+                                stepsNeeded.slice(0, 5).map((item, index) => {
+                                  return (
+                                    <div key={index}>
+                                      <div className="mb-2 flex items-start gap-[0.5rem] rounded-md bg-neutral-2 p-3 text-sm font-[0.8125rem] leading-[1.125rem] text-dashboard-lightGray">
+                                        <WarningIcon
+                                          size={16}
+                                          color="currentColor"
+                                        />
 
-                                          <div className="break-word inline-block">
-                                            {item.step}
-                                          </div>
+                                        <div className="break-word inline-block">
+                                          {item.step}
                                         </div>
                                       </div>
-                                    );
-                                  },
-                                )
+                                    </div>
+                                  );
+                                })
                               ) : (
                                 <div>
                                   <p className="mb-2 text-[13px] font-normal text-dashboard-lightGray">

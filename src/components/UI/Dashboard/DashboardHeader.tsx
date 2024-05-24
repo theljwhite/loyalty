@@ -46,7 +46,7 @@ export default function DashboardHeader({ title, info }: DashboardHeaderProps) {
                     <Image
                       width={32}
                       height={32}
-                      src={"utilityImages/blankAvatar.svg"}
+                      src="/utilityImages/blankAvatar.svg"
                       alt="default avatar"
                       className="h-auto max-w-full object-cover align-middle"
                     />

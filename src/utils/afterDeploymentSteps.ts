@@ -1,11 +1,11 @@
 import { RewardType } from "@prisma/client";
 
-type AfterDeploymentStep = {
+export type AfterDeploymentStep = {
   actionNeededHere: string;
   step: string;
 };
 
-const afterDeploymentSteps: AfterDeploymentStep[] = [
+export const afterDeploymentSteps: AfterDeploymentStep[] = [
   {
     actionNeededHere: "Escrow Wallet",
     step: "Specify how long you need to deposit reward tokens in Escrow Wallet",
@@ -24,7 +24,7 @@ const afterDeploymentSteps: AfterDeploymentStep[] = [
   },
 ];
 
-const withSDKSteps: AfterDeploymentStep[] = [
+export const withSDKSteps: AfterDeploymentStep[] = [
   {
     actionNeededHere: "API Keys",
     step: "Generate a once-seen API key in API Keys",
@@ -33,8 +33,6 @@ const withSDKSteps: AfterDeploymentStep[] = [
     actionNeededHere: "API Keys",
     step: "Generate an Entity Secret in API Keys",
   },
-  { actionNeededHere: "", step: "Secure your API Key and Entity Secret" },
-
   {
     actionNeededHere: "Developer Console",
     step: "Register your Entity Secret Ciphertext in Developer Console",
@@ -45,7 +43,7 @@ const withSDKSteps: AfterDeploymentStep[] = [
   },
   {
     actionNeededHere: "User Settings",
-    step: "If you have users who do not have crypto wallets, you can create a Wallet Set in User Settings so that these users can earn on-chain rewards.",
+    step: "Optionallly, create a Wallet Set in User Settings to support your non crypto savvy users",
   },
   {
     actionNeededHere: "",
