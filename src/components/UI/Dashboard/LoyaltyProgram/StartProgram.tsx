@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLoyaltyAbi } from "~/customHooks/useContractAbi/useContractAbi";
 import { useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useError } from "~/customHooks/useError";
 import { api } from "~/utils/api";
 import { writeContract, waitForTransaction } from "wagmi/actions";
 import { toastSuccess, toastLoading, toastError } from "../../Toast/Toast";
@@ -19,6 +20,7 @@ export default function StartProgram({ loyaltyAddress }: StartProgramProps) {
   const [isConfirmValid, setIsConfirmValid] = useState<boolean>(false);
   const [confirm, setConfirm] = useState<string>("");
 
+  const { handleLoyaltyError } = useError();
   const { abi } = useLoyaltyAbi();
   const loyaltyContractConfig = {
     address: loyaltyAddress as `0x${string}`,
@@ -96,9 +98,7 @@ export default function StartProgram({ loyaltyAddress }: StartProgramProps) {
         toastError("Transaction reverted. Try again later.");
       }
     } catch (error) {
-      console.error("error from make active", error);
-      //TODO handle contract errors caught here
-      toastError("Failed to set program as active. Try again later.");
+      handleLoyaltyError(error, "Failed to set program to active.");
     }
   };
 

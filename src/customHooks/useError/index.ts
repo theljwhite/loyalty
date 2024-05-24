@@ -4,17 +4,21 @@ import {
   handleError,
   handleEscrowContractError,
   handleERC20EscrowContractError,
+  handleLoyaltyContractError,
 } from "~/utils/error";
 import { dismissToast, toastError } from "~/components/UI/Toast/Toast";
 
 //TODO: some of this can be made less repetitive but works for now,
 //allows them all to be called standalone based on what needs accounted for
 
+type ErrorHandler = (e: any, message: string) => void;
+
 export function useError(): {
   error: string;
-  handleErrorFlow: (e: any, message: string) => void;
-  handleEscrowError: (e: any, message: string) => void;
-  handleERC20EscrowError: (e: any, message: string) => void;
+  handleErrorFlow: ErrorHandler;
+  handleLoyaltyError: ErrorHandler;
+  handleEscrowError: ErrorHandler;
+  handleERC20EscrowError: ErrorHandler;
 } {
   const [error, setError] = useState<string>("");
 
@@ -31,6 +35,32 @@ export function useError(): {
     } else {
       toastError(message);
     }
+  };
+
+  const handleLoyaltyError = (e: any, message: string) => {
+    if (didUserReject(e)) {
+      dismissToast();
+      return;
+    }
+
+    const handledError = handleError(e);
+
+    if (handledError.codeFound) {
+      setError(handledError.message);
+      toastError(handledError.message);
+      return;
+    }
+
+    const loyaltyContractError = handleLoyaltyContractError(e, message);
+
+    if (loyaltyContractError.codeFound) {
+      setError(loyaltyContractError.message);
+      toastError(loyaltyContractError.message);
+      return;
+    }
+
+    setError(message);
+    toastError(message);
   };
 
   const handleEscrowError = (e: any, message: string) => {
@@ -85,5 +115,11 @@ export function useError(): {
     toastError(message);
   };
 
-  return { error, handleErrorFlow, handleEscrowError, handleERC20EscrowError };
+  return {
+    error,
+    handleErrorFlow,
+    handleLoyaltyError,
+    handleEscrowError,
+    handleERC20EscrowError,
+  };
 }

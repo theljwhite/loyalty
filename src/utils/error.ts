@@ -1,4 +1,3 @@
-import { deserialize, serialize } from "wagmi";
 import { EstimateGasExecutionError } from "viem";
 
 export enum CommonErrorCodes {
@@ -21,6 +20,14 @@ export enum SharedEscrowErrorCodes {
   CannotBeEmptyAmount = "CannotBeEmptyAmount",
   InsuffEscrowBal = "InsuffEscrowBal",
   TiersMustBeActive = "TiersMustBeActive",
+}
+
+export enum LoyaltyProgramErrorCodes {
+  ProgramMustBeActive = "ProgramMustBeActive",
+  ProgramDurationTooShort = "ProgramDurationTooShort",
+  OnlyCreatorCanCall = "OnlyCreatorCanCall",
+  OnlyCreatorOrRelay = "OnlyCreatorOrRelay",
+  ConstructorArrMismatch = "ConstructorArrMismatch",
 }
 
 export enum ERC20EscrowErrorCodes {
@@ -51,6 +58,21 @@ const errorMessages: { [key in CommonErrorCodes]?: string } = {
     "Gas estimation failed. Consider setting a gas limit manually, or ensure the transaction is valid.",
   [CommonErrorCodes.EXECUTION_REVERTED]:
     "Execution reverted, which could be due to the function call failing its requirements or the transaction running out of gas.",
+};
+
+const loyaltyContractErrorMessages: {
+  [key in LoyaltyProgramErrorCodes]?: string;
+} = {
+  [LoyaltyProgramErrorCodes.ProgramMustBeActive]:
+    "Program state must be Active to perform this action",
+  [LoyaltyProgramErrorCodes.ProgramDurationTooShort]:
+    "Program length must be at least 1 day",
+  [LoyaltyProgramErrorCodes.OnlyCreatorCanCall]:
+    "Must be the contract creator to perform this action. Are you on the correct wallet account?",
+  [LoyaltyProgramErrorCodes.OnlyCreatorOrRelay]:
+    "Unauthorized to perform this action. Must be the contract creator or verified relayer to perform this action.",
+  [LoyaltyProgramErrorCodes.ConstructorArrMismatch]:
+    "Deployment failed. Points and objectives arrays must be the same length.",
 };
 
 const commonEscrowErrorMessages: { [key in SharedEscrowErrorCodes]?: string } =
@@ -125,8 +147,32 @@ export const handleError = (
   return { message: error.message ?? error.reason, codeFound: false };
 };
 
+export const handleLoyaltyContractError = (
+  error: any,
+  fallbackMsg?: string,
+): { message: string; codeFound: boolean } => {
+  const matchingCustomError = extractCustomContractErrorFromThrown(error);
+
+  if (matchingCustomError && matchingCustomError in LoyaltyProgramErrorCodes) {
+    const errorMessage =
+      loyaltyContractErrorMessages[
+        matchingCustomError as keyof typeof LoyaltyProgramErrorCodes
+      ]!;
+
+    return {
+      message: errorMessage,
+      codeFound: true,
+    };
+  }
+  return {
+    message: fallbackMsg ?? "Loyalty contract call failed",
+    codeFound: false,
+  };
+};
+
 export const handleEscrowContractError = (
   error: any,
+  fallbackMsg?: string,
 ): {
   message: string;
   codeFound: boolean;
@@ -145,7 +191,10 @@ export const handleEscrowContractError = (
     };
   }
 
-  return { message: "Escrow contract call failed", codeFound: false };
+  return {
+    message: fallbackMsg ?? "Escrow contract call failed",
+    codeFound: false,
+  };
 };
 
 export const handleERC20EscrowContractError = (
