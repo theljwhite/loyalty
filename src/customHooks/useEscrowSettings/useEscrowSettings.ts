@@ -117,7 +117,7 @@ export default function useEscrowSettings(
 
       if (setSettingsReceipt.status === "success") {
         handleSetSuccessState();
-        updateEscrowStateDb({ escrowAddress, newEscrowState: "InIssuance" });
+        updateEscrowStateDb({ escrowAddress, newEscrowState: "Idle" });
       }
     } catch (error) {
       handleERC20EscrowError(error, "Failed to set escrow settings");
