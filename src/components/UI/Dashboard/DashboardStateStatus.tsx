@@ -1,5 +1,6 @@
 import React from "react";
 import { type EscrowState, type ProgramState } from "@prisma/client";
+import { SPACE_BETWEEN_CAPITALS_REPLACE } from "~/constants/regularExpressions";
 import { ClockIcon, WarningIcon, SelectedCheck } from "./Icons";
 
 interface DashboardStateStatusProps {
@@ -152,7 +153,7 @@ export default function DashboardStateStatus({
                   className={`${loyaltyStateDisplay.get(programState)
                     ?.color} inline-block whitespace-nowrap rounded pe-1.5 ps-1.5 align-middle text-[13px] font-normal text-black/80`}
                 >
-                  {programState}
+                  {SPACE_BETWEEN_CAPITALS_REPLACE(programState)}
                 </span>
               ) : (
                 escrowState && (
@@ -160,7 +161,7 @@ export default function DashboardStateStatus({
                     className={`${escrowStateDisplay.get(escrowState)
                       ?.color} inline-block whitespace-nowrap rounded pe-1.5 ps-1.5 align-middle text-[13px] font-normal text-black/80`}
                   >
-                    {escrowState}
+                    {SPACE_BETWEEN_CAPITALS_REPLACE(escrowState)}
                   </span>
                 )
               )}

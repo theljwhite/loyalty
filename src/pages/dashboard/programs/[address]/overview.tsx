@@ -20,6 +20,7 @@ import {
   ShieldIconOne,
   WalletIcon,
 } from "~/components/UI/Dashboard/Icons";
+import DashboardStateStatus from "~/components/UI/Dashboard/DashboardStateStatus";
 
 interface OverviewCardProps {
   href: string;
@@ -92,6 +93,7 @@ const Overview: NextPage = () => {
             icon={<ObjectivesIconOne size={32} color="currentColor" />}
           />
         </div>
+
         <div className="flex items-stretch gap-3">
           <WalletStatsCard
             title="TODO stat here"
@@ -103,6 +105,18 @@ const Overview: NextPage = () => {
             info="TODO a stat description here"
             stat={"0"}
           />
+        </div>
+        <div className="space-y-8">
+          <DashboardStateStatus
+            programState={data.state}
+            containerBg="bg-white"
+          />
+          {data.escrowAddress && (
+            <DashboardStateStatus
+              escrowState={data.escrowState}
+              containerBg="bg-white"
+            />
+          )}
         </div>
         {programState !== "Active" && (
           <StartProgram loyaltyAddress={String(loyaltyAddress)} />

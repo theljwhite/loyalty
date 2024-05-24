@@ -43,7 +43,7 @@ export const withSDKSteps: AfterDeploymentStep[] = [
   },
   {
     actionNeededHere: "User Settings",
-    step: "Optionallly, create a Wallet Set in User Settings to support your non crypto savvy users",
+    step: "Optionally, create a Wallet Set in User Settings to support your non crypto savvy users",
   },
   {
     actionNeededHere: "",
