@@ -59,7 +59,6 @@ export default function DashboardFileDrop({
         </button>
         <label />
         <input
-          id="recovery-file-input"
           onChange={onFileChange}
           ref={inputRef}
           className="hidden"
