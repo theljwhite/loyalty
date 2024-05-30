@@ -12,29 +12,32 @@ datasource db {
 }
 
 model LoyaltyProgram {
-    id             String       @id @unique @default(cuid())
-    address        String       @unique
-    creatorId      String
-    creator        User         @relation(fields: [creatorId], references: [id])
-    name           String
-    description    String?
-    objectives     Objective[]
-    tiers          Tier[]
-    state          ProgramState
-    chain          String
-    chainId        Int
-    tiersActive    Boolean      @default(false)
-    programStart   DateTime
-    programEnd     DateTime
-    rewardType     RewardType
-    escrowAddress  String?      @unique
-    escrow         Escrow?
-    version        String       @default("0.03")
-    createdAt      DateTime     @default(now())
-    updatedAt      DateTime     @updatedAt
-    contractEvents Boolean?
-    wallets        Wallet[]
-    walletSetId    String?      @unique
+    id                String                   @id @unique @default(cuid())
+    address           String                   @unique
+    creatorId         String
+    creator           User                     @relation(fields: [creatorId], references: [id])
+    name              String
+    description       String?
+    objectives        Objective[]
+    tiers             Tier[]
+    state             ProgramState
+    chain             String
+    chainId           Int
+    tiersActive       Boolean                  @default(false)
+    programStart      DateTime
+    programEnd        DateTime
+    rewardType        RewardType
+    escrowAddress     String?                  @unique
+    escrow            Escrow?
+    version           String                   @default("0.03")
+    createdAt         DateTime                 @default(now())
+    updatedAt         DateTime                 @updatedAt
+    contractEvents    Boolean?
+    wallets           Wallet[]
+    walletSetId       String?                  @unique
+    analyticsSummary  ProgramAnalyticsSummary?
+    progressionEvents ProgressionEvent[]
+    rewardEvents      RewardEvent[]
 }
 
 model Escrow {
@@ -139,6 +142,67 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+//TEMP - below may be moved to a diff data source.
+//but provides an outline at least for optional aggregate analytics
+//since these types of things are expensive on-chain.
+//the smart contracts provide lookup for stats by address,
+//but in order to aggregate data, the contracts emit events which...
+//...are listened for off-chain and can be stored off-chain here (or elsewhere) 
+model ProgressionEvent {
+    id              String         @id @default(cuid())
+    eventName       EventName
+    loyaltyAddress  String
+    transactionHash String
+    userAddress     String
+    objectiveIndex  Int?
+    timestamp       DateTime
+    pointsChange    Int?
+    userPointsTotal String
+    loyaltyProgram  LoyaltyProgram @relation(fields: [loyaltyAddress], references: [address], onDelete: Cascade)
+}
+
+model RewardEvent {
+    id              String         @id @default(cuid())
+    eventName       EventName
+    loyaltyAddress  String
+    transactionHash String
+    userAddress     String
+    timestamp       DateTime
+    tokenId         String?
+    tokenAmount     Int?
+    erc20Amount     BigInt
+    escrowType      EscrowType
+    loyaltyProgram  LoyaltyProgram @relation(fields: [loyaltyAddress], references: [address], onDelete: Cascade)
+}
+
+model ProgramAnalyticsSummary {
+    id                       String         @id @default(cuid())
+    loyaltyAddress           String         @unique
+    totalObjectivesCompleted Int            @default(0)
+    totalUniqueUsers         Int            @default(0)
+    totalUniqueRewarded      Int            @default(0)
+    totalTokensWithdrawn     Int            @default(0)
+    totalERC20Withdrawn      BigInt         @default(0)
+    totalUnclaimedTokens     Int            @default(0)
+    totalUnclaimedERC20      BigInt         @default(0)
+    avgUserWithdrawTime      Int            @default(0)
+    dailyAverageUsers        Decimal        @default(0)
+    monthlyAverageUsers      Decimal        @default(0)
+    retentionRate            Decimal        @default(0)
+    createdAt                DateTime       @default(now())
+    updatedAt                DateTime       @updatedAt
+    loyaltyProgram           LoyaltyProgram @relation(fields: [loyaltyAddress], references: [address], onDelete: Cascade)
+}
+
+enum EventName {
+    ObjectiveCompleted
+    PointsUpdate
+    ERC20Rewarded
+    ERC721Rewarded
+    ERC1155Rewarded
+    UserWithdraw
 }
 
 enum UserRole {

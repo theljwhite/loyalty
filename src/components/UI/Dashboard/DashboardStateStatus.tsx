@@ -35,7 +35,7 @@ export const loyaltyStateDisplay = new Map<
     "Active",
     {
       message:
-        "Loyalty contract is currently active, tracking objectives and/or tiers",
+        "Loyalty contract is currently active, tracking user progression",
       color: "bg-green-100",
       icon: <SelectedCheck size={16} color="currentColor" />,
     },
