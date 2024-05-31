@@ -159,7 +159,7 @@ model ProgressionEvent {
     objectiveIndex  Int?
     timestamp       DateTime
     pointsChange    Int?
-    userPointsTotal String
+    userPointsTotal Int
     loyaltyProgram  LoyaltyProgram @relation(fields: [loyaltyAddress], references: [address], onDelete: Cascade)
 }
 
@@ -170,9 +170,9 @@ model RewardEvent {
     transactionHash String
     userAddress     String
     timestamp       DateTime
-    tokenId         String?
+    tokenId         Int?
     tokenAmount     Int?
-    erc20Amount     BigInt
+    erc20Amount     BigInt?
     escrowType      EscrowType
     loyaltyProgram  LoyaltyProgram @relation(fields: [loyaltyAddress], references: [address], onDelete: Cascade)
 }
@@ -190,7 +190,7 @@ model ProgramAnalyticsSummary {
     avgUserWithdrawTime      Int            @default(0)
     dailyAverageUsers        Decimal        @default(0)
     monthlyAverageUsers      Decimal        @default(0)
-    retentionRate            Decimal        @default(0)
+    returningUsers           Int            @default(0)
     createdAt                DateTime       @default(now())
     updatedAt                DateTime       @updatedAt
     loyaltyProgram           LoyaltyProgram @relation(fields: [loyaltyAddress], references: [address], onDelete: Cascade)

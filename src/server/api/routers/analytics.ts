@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
+import { formatUnits } from "ethers";
 
 export const analyticsRouter = createTRPCRouter({
   initAnalyticsSummary: protectedProcedure
@@ -69,5 +70,15 @@ export const analyticsRouter = createTRPCRouter({
 
       if (!averages) throw new TRPCError({ code: "NOT_FOUND" });
       return averages;
+    }),
+
+  updateRetentionRate: protectedProcedure
+    .input(z.object({ userAddress: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const existingInteraction = await ctx.db.progressionEvent.findFirst({
+        where: { userAddress: input.userAddress },
+      });
+
+      if (!existingInteraction) return null;
     }),
 });
