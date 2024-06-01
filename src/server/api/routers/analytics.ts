@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { formatUnits } from "ethers";
 
 export const analyticsRouter = createTRPCRouter({
   initAnalyticsSummary: protectedProcedure
@@ -64,21 +63,90 @@ export const analyticsRouter = createTRPCRouter({
           avgUserWithdrawTime: true,
           dailyAverageUsers: true,
           monthlyAverageUsers: true,
-          retentionRate: true,
         },
       });
 
       if (!averages) throw new TRPCError({ code: "NOT_FOUND" });
       return averages;
     }),
-
-  updateRetentionRate: protectedProcedure
-    .input(z.object({ userAddress: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const existingInteraction = await ctx.db.progressionEvent.findFirst({
-        where: { userAddress: input.userAddress },
+  getRetentionRate: protectedProcedure
+    .input(z.object({ userAddress: z.string(), loyaltyAddress: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const analytics = await ctx.db.programAnalyticsSummary.findUnique({
+        where: { loyaltyAddress: input.loyaltyAddress },
+        select: { totalUniqueUsers: true, returningUsers: true },
       });
 
-      if (!existingInteraction) return null;
+      if (!analytics) return null;
+
+      const retentionRate =
+        (analytics.returningUsers / analytics.totalUniqueUsers) * 100;
+
+      return retentionRate;
+    }),
+  updateTotalsFromEvents: protectedProcedure
+    .input(
+      z.object({
+        eventName: z.enum(["ObjectiveCompleted", "PointsUpdate"]),
+        userAddress: z.string(),
+        loyaltyAddress: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { eventName, userAddress, loyaltyAddress } = input;
+
+      const isObjectiveEvent = eventName === "ObjectiveCompleted";
+
+      await ctx.db.$transaction(async (tx) => {
+        const userProgEventsCount = await tx.progressionEvent.count({
+          where: { loyaltyAddress, userAddress },
+        });
+
+        let returningUsersIncrement = 0;
+        let totalUniqueUsersIncrement = 0;
+
+        if (userProgEventsCount === 0) totalUniqueUsersIncrement = 1;
+        if (userProgEventsCount === 1) returningUsersIncrement = 1;
+
+        await tx.programAnalyticsSummary.update({
+          where: { loyaltyAddress },
+          data: {
+            totalUniqueUsers: { increment: totalUniqueUsersIncrement },
+            returningUsers: { increment: returningUsersIncrement },
+            totalObjectivesCompleted: { increment: isObjectiveEvent ? 1 : 0 },
+          },
+        });
+      });
+    }),
+  calculateUserAveragesStandalone: protectedProcedure
+    .input(z.object({ loyaltyAddress: z.string() }))
+    .query(async ({ ctx, input }) => {
+      //this is possibly temporary
+      const now = new Date();
+
+      const startOfToday = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+      );
+      const startOfMonth = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+      );
+      startOfMonth.setDate(startOfMonth.getDate() - 30);
+
+      const dailyUsers = await ctx.db.progressionEvent.groupBy({
+        by: ["userAddress"],
+        where: {
+          loyaltyAddress: input.loyaltyAddress,
+          timestamp: { gte: startOfToday },
+        },
+        _count: {
+          userAddress: true,
+        },
+      });
+
+      //...TODO finish
     }),
 });
