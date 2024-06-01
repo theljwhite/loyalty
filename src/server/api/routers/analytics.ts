@@ -118,7 +118,7 @@ export const analyticsRouter = createTRPCRouter({
         });
       });
     }),
-  calculateUserAveragesStandalone: protectedProcedure
+  getMonthlyAndDailyUsers: protectedProcedure
     .input(z.object({ loyaltyAddress: z.string() }))
     .query(async ({ ctx, input }) => {
       //this is possibly temporary
@@ -137,7 +137,7 @@ export const analyticsRouter = createTRPCRouter({
       startOfMonth.setDate(startOfMonth.getDate() - 30);
 
       const dailyUsers = await ctx.db.progressionEvent.groupBy({
-        by: ["userAddress"],
+        by: "userAddress",
         where: {
           loyaltyAddress: input.loyaltyAddress,
           timestamp: { gte: startOfToday },
@@ -147,6 +147,15 @@ export const analyticsRouter = createTRPCRouter({
         },
       });
 
-      //...TODO finish
+      const monthlyUsers = await ctx.db.progressionEvent.groupBy({
+        by: "userAddress",
+        where: {
+          loyaltyAddress: input.loyaltyAddress,
+          timestamp: { gte: startOfMonth },
+        },
+        _count: { userAddress: true },
+      });
+
+      return { dailyUsers, monthlyUsers };
     }),
 });
