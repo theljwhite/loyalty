@@ -2,6 +2,17 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 
+const rewardEventUpdateInputSchema = z.object({
+  eventName: z.enum(["ERC20Rewarded", "ERC721Rewarded", "ERC1155Rewarded"]),
+  userAddress: z.string(),
+  loyaltyAddress: z.string(),
+  topics: z.object({
+    erc20Amount: z.bigint().optional(),
+    tokenId: z.number().optional(),
+    tokenAmount: z.number().optional(),
+  }),
+});
+
 export const analyticsRouter = createTRPCRouter({
   initAnalyticsSummary: protectedProcedure
     .input(z.object({ loyaltyAddress: z.string() }))
@@ -84,7 +95,7 @@ export const analyticsRouter = createTRPCRouter({
 
       return retentionRate;
     }),
-  updateTotalsFromEvents: protectedProcedure
+  updateTotalsFromProgressionEvents: protectedProcedure
     .input(
       z.object({
         eventName: z.enum(["ObjectiveCompleted", "PointsUpdate"]),
@@ -113,7 +124,47 @@ export const analyticsRouter = createTRPCRouter({
           data: {
             totalUniqueUsers: { increment: totalUniqueUsersIncrement },
             returningUsers: { increment: returningUsersIncrement },
-            totalObjectivesCompleted: { increment: isObjectiveEvent ? 1 : 0 },
+            totalObjectivesCompleted: isObjectiveEvent
+              ? { increment: 1 }
+              : undefined,
+          },
+        });
+      });
+    }),
+  updateTotalsFromRewardEvents: protectedProcedure
+    .input(rewardEventUpdateInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      //this is possibly temporary
+      const { eventName, userAddress, loyaltyAddress, topics } = input;
+      const { erc20Amount, tokenAmount, tokenId } = topics;
+
+      const isERC20Event = eventName === "ERC20Rewarded" && erc20Amount;
+      const isERC721Event = eventName === "ERC721Rewarded" && !tokenAmount;
+      const isERC1155Event =
+        eventName === "ERC1155Rewarded" && tokenAmount && tokenId;
+
+      await ctx.db.$transaction(async (tx) => {
+        const userRewardEventsCount = await tx.rewardEvent.count({
+          where: { loyaltyAddress, userAddress },
+        });
+
+        const totalUniqueRewardedIncrement =
+          userRewardEventsCount === 0 ? 1 : 0;
+
+        const unclaimedTokensIncrement = isERC721Event
+          ? 1
+          : isERC1155Event
+            ? tokenAmount
+            : 0;
+
+        await tx.programAnalyticsSummary.update({
+          where: { loyaltyAddress },
+          data: {
+            totalUniqueRewarded: { increment: totalUniqueRewardedIncrement },
+            totalUnclaimedERC20: isERC20Event
+              ? { increment: erc20Amount }
+              : undefined,
+            totalUnclaimedTokens: { increment: unclaimedTokensIncrement },
           },
         });
       });
