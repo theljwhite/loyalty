@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { isAddress } from "ethers";
+import { TRPCError } from "@trpc/server";
 
 export const receivedEventBase = z.object({
   loyaltyAddress: z.string().refine(isAddress, "Invalid loyalty address"),
@@ -41,6 +42,13 @@ export const eventsRouter = createTRPCRouter({
         timestamp,
       } = input;
 
+      if (
+        (pointsChange && objectiveIndex) ||
+        (!pointsChange && !objectiveIndex)
+      ) {
+        throw new TRPCError({ code: "BAD_REQUEST" });
+      }
+
       const event = await ctx.db.progressionEvent.create({
         data: {
           objectiveIndex: objectiveIndex ?? undefined,
@@ -70,6 +78,10 @@ export const eventsRouter = createTRPCRouter({
         erc20Amount,
         escrowType,
       } = input;
+
+      if ((tokenAmount && erc20Amount) || (!tokenAmount && !erc20Amount)) {
+        throw new TRPCError({ code: "BAD_REQUEST" });
+      }
 
       const event = await ctx.db.rewardEvent.create({
         data: {
@@ -107,7 +119,32 @@ export const eventsRouter = createTRPCRouter({
 
       return userRewardEvents;
     }),
-  getCompletionsForEachObjective: protectedProcedure
+  getOnlyObjectiveEvents: protectedProcedure
+    .input(z.object({ loyaltyAddress: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const objectiveEvents = await ctx.db.progressionEvent.findMany({
+        where: {
+          loyaltyAddress: input.loyaltyAddress,
+          objectiveIndex: { not: null },
+          pointsChange: null,
+        },
+      });
+      return objectiveEvents;
+    }),
+  getOnlyPointsUpdateEvents: protectedProcedure
+    .input(z.object({ loyaltyAddress: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const pointsUpdateEvents = await ctx.db.progressionEvent.findMany({
+        where: {
+          loyaltyAddress: input.loyaltyAddress,
+          pointsChange: { not: null },
+          objectiveIndex: null,
+        },
+      });
+      return pointsUpdateEvents;
+    }),
+
+  getCompletionCountForEachObjective: protectedProcedure
     .input(z.object({ loyaltyAddress: z.string() }))
     .query(async ({ ctx, input }) => {
       //TEMP this is probably temporary
@@ -137,5 +174,54 @@ export const eventsRouter = createTRPCRouter({
       );
 
       return objInteractions;
+    }),
+  getCompletionsByObjective: protectedProcedure
+    .input(z.object({ loyaltyAddress: z.string(), objectiveIndex: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const objectiveEvents = await ctx.db.progressionEvent.findMany({
+        where: {
+          loyaltyAddress: input.loyaltyAddress,
+          objectiveIndex: input.objectiveIndex,
+        },
+        select: { userAddress: true, transactionHash: true, timestamp: true },
+      });
+      return objectiveEvents;
+    }),
+  getTopUsersFromEvents: protectedProcedure
+    .input(z.object({ loyaltyAddress: z.string(), limit: z.number().max(25) }))
+    .query(async ({ ctx, input }) => {
+      //TEMP: possibly temporary and experimental.
+      //the smart contracts, when they emit events, are set up to
+      //return the user's updated points total stored in the contracts.
+      //so the users' most recent events will contain their up to date points total.
+
+      const { loyaltyAddress, limit } = input;
+
+      const topUsers = await ctx.db.$queryRaw<
+        { userAddress: string; userPointsTotal: number }[]
+      >`
+      WITH LatestEvents AS (
+        SELECT 
+          userAddress, 
+          userPointsTotal,
+          ROW_NUMBER() OVER (PARTITION BY userAddress ORDER BY timestamp DESC) as rn
+        FROM 
+          "ProgressionEvent"
+        WHERE 
+          loyaltyAddress = ${loyaltyAddress}
+      )
+      SELECT 
+        userAddress, 
+        userPointsTotal
+      FROM 
+        LatestEvents
+      WHERE 
+        rn = 1
+      ORDER BY 
+        userPointsTotal DESC
+      LIMIT ${limit}
+      `;
+
+      return topUsers;
     }),
 });
