@@ -86,4 +86,56 @@ export const eventsRouter = createTRPCRouter({
       });
       return event;
     }),
+  getAllProgEventsByUser: protectedProcedure
+    .input(z.object({ userAddress: z.string(), loyaltyAddress: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const { userAddress, loyaltyAddress } = input;
+      const userProgEvents = await ctx.db.progressionEvent.findMany({
+        where: { userAddress, loyaltyAddress },
+      });
+
+      return userProgEvents;
+    }),
+  getAllRewardEventsByUser: protectedProcedure
+    .input(z.object({ userAddress: z.string(), loyaltyAddress: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const { userAddress, loyaltyAddress } = input;
+
+      const userRewardEvents = await ctx.db.rewardEvent.findMany({
+        where: { userAddress, loyaltyAddress },
+      });
+
+      return userRewardEvents;
+    }),
+  getCompletionsForEachObjective: protectedProcedure
+    .input(z.object({ loyaltyAddress: z.string() }))
+    .query(async ({ ctx, input }) => {
+      //TEMP this is probably temporary
+      //even tho temp, there may also be a way to do this directly with prisma and no post process.
+      //this is also wonky for some reason cause the prisma query casts progressionEvents,
+      //as {objectiveIndex: number | null}[] even after the "not null" is used.
+      //i'll fix it, but it isnt important right now. for now the generic works.
+
+      const progressionEvents = (await ctx.db.progressionEvent.findMany({
+        where: {
+          loyaltyAddress: input.loyaltyAddress,
+          objectiveIndex: { not: null },
+        },
+        select: { objectiveIndex: true },
+      })) as { objectiveIndex: number }[];
+
+      type ObjectiveCompletions = { [key: number]: number };
+
+      const objInteractions = progressionEvents.reduce<ObjectiveCompletions>(
+        (prev, curr) => {
+          const objIndex = curr.objectiveIndex;
+          return (
+            prev[objIndex] ? ++prev[objIndex] : (prev[objIndex] = 1), prev, prev
+          );
+        },
+        {},
+      );
+
+      return objInteractions;
+    }),
 });
