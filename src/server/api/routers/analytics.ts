@@ -50,7 +50,7 @@ export const analyticsRouter = createTRPCRouter({
   getAllCreatorProgramsBasicStats: protectedProcedure
     .input(z.object({ creatorId: z.string() }))
     .query(async ({ ctx, input }) => {
-      const programs = await ctx.db.loyaltyProgram.findMany({
+      const programStats = await ctx.db.loyaltyProgram.findMany({
         where: { creatorId: input.creatorId },
         select: {
           address: true,
@@ -64,7 +64,7 @@ export const analyticsRouter = createTRPCRouter({
           },
         },
       });
-      return programs;
+      return programStats;
     }),
   getTotals: protectedProcedure
     .input(z.object({ loyaltyAddress: z.string() }))
