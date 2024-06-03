@@ -14,17 +14,18 @@ const rewardEventUpdateInputSchema = z.object({
 });
 
 export const analyticsRouter = createTRPCRouter({
-  initAnalyticsSummary: protectedProcedure
+  initAnalyticsSummaryAndEvents: protectedProcedure
     .input(z.object({ loyaltyAddress: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const program = await ctx.db.loyaltyProgram.findUnique({
-        where: { address: input.loyaltyAddress },
-      });
+      await ctx.db.$transaction(async (tx) => {
+        await tx.loyaltyProgram.update({
+          where: { address: input.loyaltyAddress },
+          data: { contractEvents: true },
+        });
 
-      if (!program) throw new TRPCError({ code: "NOT_FOUND" });
-
-      await ctx.db.programAnalyticsSummary.create({
-        data: { loyaltyAddress: input.loyaltyAddress },
+        await tx.programAnalyticsSummary.create({
+          data: { loyaltyAddress: input.loyaltyAddress },
+        });
       });
     }),
 
@@ -45,6 +46,25 @@ export const analyticsRouter = createTRPCRouter({
       return await ctx.db.programAnalyticsSummary.findUnique({
         where: { id: input.summaryId },
       });
+    }),
+  getAllCreatorProgramsBasicStats: protectedProcedure
+    .input(z.object({ creatorId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const programs = await ctx.db.loyaltyProgram.findMany({
+        where: { creatorId: input.creatorId },
+        select: {
+          address: true,
+          name: true,
+          analyticsSummary: {
+            select: {
+              totalUniqueUsers: true,
+              totalUniqueRewarded: true,
+              monthlyAverageUsers: true,
+            },
+          },
+        },
+      });
+      return programs;
     }),
   getTotals: protectedProcedure
     .input(z.object({ loyaltyAddress: z.string() }))

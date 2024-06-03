@@ -9,6 +9,8 @@ import { toastSuccess, toastError } from "../../Toast/Toast";
 import DashboardContentBox from "../DashboardContentBox";
 import DashboardToggleSwitch from "../DashboardToggleSwitch";
 
+//TODO - can maybe retructure the stream/event updates
+
 export default function AggregateAnalytics() {
   const [isChecked, setIsChecked] = useState<boolean>(false);
   const [isDisabled, setIsDisabled] = useState<boolean>(false);
@@ -25,6 +27,9 @@ export default function AggregateAnalytics() {
     );
   const { mutate: updateContractEvents } =
     api.loyaltyPrograms.updateContractEventListening.useMutation();
+
+  const { mutate: initAnalyticsSummaryAndEvents } =
+    api.analytics.initAnalyticsSummaryAndEvents.useMutation();
 
   const onToggleSwitch = async (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -49,10 +54,16 @@ export default function AggregateAnalytics() {
 
     if (didStreamUpdate) {
       toastSuccess(`${checked ? "Enabled" : "Disabled"} aggregate analytics`);
-      updateContractEvents({
-        loyaltyAddress: String(loyaltyAddress),
-        isEnabled: checked,
-      });
+      if (checked) {
+        initAnalyticsSummaryAndEvents({
+          loyaltyAddress: String(loyaltyAddress),
+        });
+      } else {
+        updateContractEvents({
+          loyaltyAddress: String(loyaltyAddress),
+          isEnabled: checked,
+        });
+      }
     }
 
     if (!didStreamUpdate) {
