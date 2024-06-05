@@ -1,6 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
+//TODO 6/4 - add indexing and sort, other ops
 generator client {
     provider = "prisma-client-js"
 }
@@ -161,6 +159,11 @@ model ProgressionEvent {
     pointsChange    Int?
     userPointsTotal Int
     loyaltyProgram  LoyaltyProgram @relation(fields: [loyaltyAddress], references: [address], onDelete: Cascade)
+
+    @@index([loyaltyAddress])
+    @@index([userAddress])
+    @@index([timestamp])
+    @@index([loyaltyAddress, userAddress])
 }
 
 model RewardEvent {
@@ -175,6 +178,25 @@ model RewardEvent {
     erc20Amount     BigInt?
     escrowType      EscrowType
     loyaltyProgram  LoyaltyProgram @relation(fields: [loyaltyAddress], references: [address], onDelete: Cascade)
+
+    @@index([eventName])
+    @@index([loyaltyAddress])
+    @@index([timestamp])
+    @@index([loyaltyAddress, userAddress])
+}
+
+model WalletEscrowEvent {
+    id                String                @id @default(cuid())
+    eventName         WalletEscrowEventName
+    loyaltyAddress    String
+    transactionHash   String
+    transactorAddress String //refers to user if a user event or creator if a creator event
+    erc20Amount       BigInt?
+    tokenId           Int?
+    tokenAmount       Int?
+    erc721Batch       Json?
+    erc1155Batch      Json?
+    timestamp         DateTime
 }
 
 model ProgramAnalyticsSummary {
@@ -194,15 +216,6 @@ model ProgramAnalyticsSummary {
     createdAt                DateTime       @default(now())
     updatedAt                DateTime       @updatedAt
     loyaltyProgram           LoyaltyProgram @relation(fields: [loyaltyAddress], references: [address], onDelete: Cascade)
-}
-
-enum EventName {
-    ObjectiveCompleted
-    PointsUpdate
-    ERC20Rewarded
-    ERC721Rewarded
-    ERC1155Rewarded
-    UserWithdraw
 }
 
 enum UserRole {
@@ -246,4 +259,27 @@ enum EscrowState {
 enum Authority {
     USER
     CREATOR
+}
+
+enum EventName {
+    ObjectiveCompleted
+    PointsUpdate
+    ERC20Rewarded
+    ERC721Rewarded
+    ERC1155Rewarded
+}
+
+enum WalletEscrowEventName {
+    ERC20UserWithdraw
+    ERC20CreatorWithdraw
+    ERC20Deposit
+    ERC721TokenReceived
+    ERC721BatchReceived
+    ERC721UserWithdraw
+    ERC721CreatorWithdraw
+    ERC1155TokenReceived
+    ERC1155BatchReceived
+    ERC1155CreatorWithdraw
+    ERC1155CreatorWithdrawAll
+    ERC1155UserWithdrawAll
 }
