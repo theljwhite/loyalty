@@ -10,22 +10,83 @@ export const receivedEventBase = z.object({
   timestamp: z.number().gt(1000000000),
 });
 
-export const progressionEventSchema = z.object({
-  eventName: z.enum(["ObjectiveCompleted", "PointsUpdate"]),
-  pointsChange: z.number().optional(),
-  objectiveIndex: z.number().optional(),
-  userPointsTotal: z.number(),
-  ...receivedEventBase.shape,
-});
+export const progressionEventSchema = z
+  .object({
+    eventName: z.enum(["ObjectiveCompleted", "PointsUpdate"]),
+    pointsChange: z.number().optional(),
+    objectiveIndex: z.number().optional(),
+    userPointsTotal: z.number(),
+    ...receivedEventBase.shape,
+  })
+  .superRefine((data, ctx) => {
+    if (
+      (data.pointsChange && data.objectiveIndex) ||
+      (!data.pointsChange && !data.objectiveIndex)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["pointsChange", "objectiveIndex"],
+        message: "Must pass one but only one of pointsChange or objectiveIndex",
+      });
+    }
+  });
 
-export const rewardEventSchema = z.object({
-  eventName: z.enum(["ERC20Rewarded", "ERC721Rewarded", "ERC1155Rewarded"]),
-  escrowType: z.enum(["ERC20", "ERC721", "ERC1155"]),
-  tokenId: z.number().optional(),
-  tokenAmount: z.number().optional(),
-  erc20Amount: z.bigint().optional(),
-  ...receivedEventBase.shape,
-});
+export const rewardEventSchema = z
+  .object({
+    eventName: z.enum(["ERC20Rewarded", "ERC721Rewarded", "ERC1155Rewarded"]),
+    escrowType: z.enum(["ERC20", "ERC721", "ERC1155"]),
+    tokenId: z.number().optional(),
+    tokenAmount: z.number().optional(),
+    erc20Amount: z.bigint().optional(),
+    ...receivedEventBase.shape,
+  })
+  .superRefine((data, ctx) => {
+    if (
+      (data.tokenAmount && data.erc20Amount) ||
+      (!data.tokenAmount && !data.erc20Amount)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["tokenAmount", "erc20Amount"],
+        message: "Must pass one but only one of tokenAmount or erc20amount",
+      });
+    }
+  });
+
+export const walletEventNameShape = z.enum([
+  "ERC20UserWithdraw",
+  "ERC20CreatorWithdraw",
+  "ERC20Deposit",
+  "ERC721TokenReceived",
+  "ERC721BatchReceived",
+  "ERC721UserWithdraw",
+  "ERC721CreatorWithdraw",
+  "ERC1155TokenReceived",
+  "ERC1155BatchReceived",
+  "ERC1155CreatorWithdraw",
+  "ERC1155CreatorWithdrawAll",
+  "ERC1155UserWithdrawAll",
+]);
+
+//TODO - finish wallet escrow event schema
+export const walletEscrowEventSchema = z
+  .object({
+    eventName: walletEventNameShape,
+    erc20Amount: z.bigint().optional(),
+    tokenId: z.number().optional(),
+    tokenAmount: z.number().optional(),
+    erc721Batch: z.array(z.any().optional()),
+    erc1155Batch: z.array(z.any()).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.eventName.includes("ERC20") && !data.erc20Amount) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["erc20Amount"],
+        message: "Missing ERC20 amount",
+      });
+    }
+  });
 
 export const eventsRouter = createTRPCRouter({
   createProgressionEvent: protectedProcedure
@@ -41,13 +102,6 @@ export const eventsRouter = createTRPCRouter({
         userAddress,
         timestamp,
       } = input;
-
-      if (
-        (pointsChange && objectiveIndex) ||
-        (!pointsChange && !objectiveIndex)
-      ) {
-        throw new TRPCError({ code: "BAD_REQUEST" });
-      }
 
       const event = await ctx.db.progressionEvent.create({
         data: {
@@ -78,10 +132,6 @@ export const eventsRouter = createTRPCRouter({
         erc20Amount,
         escrowType,
       } = input;
-
-      if ((tokenAmount && erc20Amount) || (!tokenAmount && !erc20Amount)) {
-        throw new TRPCError({ code: "BAD_REQUEST" });
-      }
 
       const event = await ctx.db.rewardEvent.create({
         data: {
@@ -143,7 +193,31 @@ export const eventsRouter = createTRPCRouter({
       });
       return pointsUpdateEvents;
     }),
-
+  getWalletEventsByTransactor: protectedProcedure
+    .input(
+      z.object({ transactorAddress: z.string(), loyaltyAddress: z.string() }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { transactorAddress, loyaltyAddress } = input;
+      const walletEvents = await ctx.db.walletEscrowEvent.findMany({
+        where: { transactorAddress, loyaltyAddress },
+      });
+      return walletEvents;
+    }),
+  getAllProgramUserWithdraws: protectedProcedure
+    .input(
+      z.object({
+        transactorAddress: z.string(),
+        loyaltyAddress: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { transactorAddress, loyaltyAddress } = input;
+      const withdraws = await ctx.db.walletEscrowEvent.findMany({
+        where: { transactorAddress, loyaltyAddress },
+      });
+      return withdraws;
+    }),
   getCompletionCountForEachObjective: protectedProcedure
     .input(z.object({ loyaltyAddress: z.string() }))
     .query(async ({ ctx, input }) => {
