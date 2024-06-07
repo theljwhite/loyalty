@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { isAddress } from "ethers";
-import { TRPCError } from "@trpc/server";
+
+//TODO 6/7 - move zod schemas to separate file?
 
 export const receivedEventBase = z.object({
   loyaltyAddress: z.string().refine(isAddress, "Invalid loyalty address"),
@@ -68,25 +69,58 @@ export const walletEventNameShape = z.enum([
   "ERC1155UserWithdrawAll",
 ]);
 
-//TODO - finish wallet escrow event schema
-export const walletEscrowEventSchema = z
+const erc1155BatchEventShape = z
   .object({
-    eventName: walletEventNameShape,
-    erc20Amount: z.bigint().optional(),
-    tokenId: z.number().optional(),
-    tokenAmount: z.number().optional(),
-    erc721Batch: z.array(z.any().optional()),
-    erc1155Batch: z.array(z.any()).optional(),
+    amounts: z.array(z.number()),
+    tokenIds: z.array(z.number()),
   })
-  .superRefine((data, ctx) => {
-    if (data.eventName.includes("ERC20") && !data.erc20Amount) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["erc20Amount"],
-        message: "Missing ERC20 amount",
+  .refine((batch) => batch.amounts.length === batch.tokenIds.length, {
+    message: "Token ids and amounts must be the same length",
+  });
+
+export const baseWalletEscrowEventSchema = z.object({
+  eventName: walletEventNameShape,
+  erc20Amount: z.bigint().optional(),
+  tokenId: z.number().optional(),
+  tokenAmount: z.number().optional(),
+  erc721Batch: z.array(z.number()).optional(),
+  erc1155Batch: erc1155BatchEventShape.optional(),
+  ...receivedEventBase.shape,
+});
+
+const requiredWalletEscrowEventFields: Record<
+  string,
+  (keyof typeof baseWalletEscrowEventSchema.shape)[]
+> = {
+  ERC20UserWithdraw: ["erc20Amount"],
+  ERC20CreatorWithdraw: ["erc20Amount"],
+  ERC20Deposit: ["erc20Amount"],
+  ERC721TokenReceived: ["tokenId"],
+  ERC721BatchReceived: ["erc721Batch"],
+  ERC721UserWithdraw: ["tokenId"],
+  ERC721CreatorWithdraw: ["tokenId"],
+  ERC1155TokenReceived: ["tokenId", "tokenAmount"],
+  ERC1155BatchReceived: ["erc1155Batch"],
+  ERC1155CreatorWithdrawAll: ["erc1155Batch"],
+  ERC1155UserWithdrawAll: ["erc1155Batch"],
+};
+
+export const walletEscrowEventSchema = baseWalletEscrowEventSchema.superRefine(
+  (data, ctx) => {
+    const requiredFields = requiredWalletEscrowEventFields[data.eventName];
+    if (requiredFields) {
+      requiredFields.forEach((field) => {
+        if (!data[field]) {
+          ctx.addIssue({
+            code: "custom",
+            path: [field],
+            message: `Missing required field ${field} for ${data.eventName} event`,
+          });
+        }
       });
     }
-  });
+  },
+);
 
 export const eventsRouter = createTRPCRouter({
   createProgressionEvent: protectedProcedure
