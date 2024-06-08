@@ -139,8 +139,8 @@ export const eventsRouter = createTRPCRouter({
 
       const event = await ctx.db.progressionEvent.create({
         data: {
-          objectiveIndex: objectiveIndex ?? undefined,
-          pointsChange: pointsChange ?? undefined,
+          objectiveIndex,
+          pointsChange,
           timestamp: new Date(timestamp * 1000),
           userPointsTotal,
           eventName,
@@ -169,15 +169,47 @@ export const eventsRouter = createTRPCRouter({
 
       const event = await ctx.db.rewardEvent.create({
         data: {
-          tokenId: tokenId ?? undefined,
-          tokenAmount: tokenAmount ?? undefined,
-          erc20Amount: erc20Amount ?? undefined,
+          tokenId: tokenId,
+          tokenAmount,
+          erc20Amount,
           timestamp: new Date(timestamp * 1000),
           escrowType,
           eventName,
           loyaltyAddress,
           transactionHash,
           userAddress,
+        },
+      });
+      return event;
+    }),
+  createWalletEscrowEvent: protectedProcedure
+    .input(walletEscrowEventSchema)
+    .mutation(async ({ ctx, input }) => {
+      const {
+        eventName,
+        loyaltyAddress,
+        transactionHash,
+        userAddress,
+        timestamp,
+        tokenId,
+        tokenAmount,
+        erc20Amount,
+        erc721Batch,
+        erc1155Batch,
+      } = input;
+
+      const event = await ctx.db.walletEscrowEvent.create({
+        data: {
+          timestamp: new Date(timestamp * 1000),
+          transactorAddress: userAddress,
+          eventName,
+          loyaltyAddress,
+          transactionHash,
+          tokenId,
+          tokenAmount,
+          erc20Amount,
+          erc721Batch,
+          erc1155Batch,
         },
       });
       return event;
