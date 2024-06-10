@@ -88,7 +88,7 @@ export const baseWalletEscrowEventSchema = z.object({
   ...receivedEventBase.shape,
 });
 
-const requiredWalletEscrowEventFields: Record<
+export const requiredWalletEscrowEventFields: Record<
   string,
   (keyof typeof baseWalletEscrowEventSchema.shape)[]
 > = {

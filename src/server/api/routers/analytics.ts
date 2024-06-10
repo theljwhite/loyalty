@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { walletEventNameShape } from "./events";
+import { requiredWalletEscrowEventFields } from "./events";
 
 const rewardEventUpdateInputSchema = z.object({
   eventName: z.enum(["ERC20Rewarded", "ERC721Rewarded", "ERC1155Rewarded"]),
@@ -197,7 +198,11 @@ export const analyticsRouter = createTRPCRouter({
         });
       });
     }),
-
+  updateTotalsFromWithdrawEvents: protectedProcedure
+    .input(withdrawEventUpdateInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      //TODO
+    }),
   getMonthlyAndDailyUsers: protectedProcedure
     .input(z.object({ loyaltyAddress: z.string() }))
     .query(async ({ ctx, input }) => {
