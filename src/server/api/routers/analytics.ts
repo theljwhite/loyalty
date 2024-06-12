@@ -1,8 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { walletEventNameShape } from "./events";
-import { requiredWalletEscrowEventFields } from "./events";
+import { walletEscrowEventSchema } from "./events";
 
 const rewardEventUpdateInputSchema = z.object({
   eventName: z.enum(["ERC20Rewarded", "ERC721Rewarded", "ERC1155Rewarded"]),
@@ -13,13 +12,6 @@ const rewardEventUpdateInputSchema = z.object({
     tokenId: z.number().optional(),
     tokenAmount: z.number().optional(),
   }),
-});
-
-//TODO - finish withdraw event update input schema
-const withdrawEventUpdateInputSchema = z.object({
-  transactorAddress: z.string(),
-  loyaltyAddress: z.string(),
-  eventName: walletEventNameShape,
 });
 
 export const analyticsRouter = createTRPCRouter({
@@ -199,9 +191,32 @@ export const analyticsRouter = createTRPCRouter({
       });
     }),
   updateTotalsFromWithdrawEvents: protectedProcedure
-    .input(withdrawEventUpdateInputSchema)
+    .input(walletEscrowEventSchema)
     .mutation(async ({ ctx, input }) => {
-      //TODO
+      const {
+        loyaltyAddress,
+        eventName,
+        erc20Amount,
+        erc721Batch,
+        erc1155Batch,
+      } = input;
+
+      let totalUserWithdrawnIncrement = 0;
+
+      //TODO increment ERC0
+
+      if (eventName === "ERC1155UserWithdrawAll") {
+        //TODO maybe track amounts too
+        totalUserWithdrawnIncrement = erc1155Batch?.tokenIds.length ?? 0;
+      }
+
+      if (eventName === "ERC721UserWithdraw") totalUserWithdrawnIncrement = 1;
+
+      const update = await ctx.db.programAnalyticsSummary.update({
+        where: { loyaltyAddress },
+        data: { totalTokensWithdrawn: totalUserWithdrawnIncrement },
+      });
+      return update.totalTokensWithdrawn;
     }),
   getMonthlyAndDailyUsers: protectedProcedure
     .input(z.object({ loyaltyAddress: z.string() }))
