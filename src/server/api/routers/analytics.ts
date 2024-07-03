@@ -193,20 +193,13 @@ export const analyticsRouter = createTRPCRouter({
   updateTotalsFromWithdrawEvents: protectedProcedure
     .input(walletEscrowEventSchema)
     .mutation(async ({ ctx, input }) => {
-      const {
-        loyaltyAddress,
-        eventName,
-        erc20Amount,
-        erc721Batch,
-        erc1155Batch,
-      } = input;
+      //possibly temp
+      const { loyaltyAddress, eventName, erc20Amount, erc1155Batch } = input;
 
       let totalUserWithdrawnIncrement = 0;
 
-      //TODO increment ERC0
-
       if (eventName === "ERC1155UserWithdrawAll") {
-        //TODO maybe track amounts too
+        //TODO maybe track amounts with tkn ids too for erc1155
         totalUserWithdrawnIncrement = erc1155Batch?.tokenIds.length ?? 0;
       }
 
@@ -214,7 +207,12 @@ export const analyticsRouter = createTRPCRouter({
 
       const update = await ctx.db.programAnalyticsSummary.update({
         where: { loyaltyAddress },
-        data: { totalTokensWithdrawn: totalUserWithdrawnIncrement },
+        data: {
+          ...(totalUserWithdrawnIncrement > 0 && {
+            totalTokensWithdrawn: totalUserWithdrawnIncrement,
+          }),
+          ...(erc20Amount && { totalERC20Withdrawn: erc20Amount }),
+        },
       });
       return update.totalTokensWithdrawn;
     }),
