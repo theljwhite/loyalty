@@ -18,8 +18,6 @@ import {
   ROUTE_DASHBOARD_ANALYTICS,
   ROUTE_DASHBOARD_BALANCES,
   ROUTE_DASHBOARD_OVERVIEW,
-  ROUTE_DASHBOARD_OBJECTIVES,
-  ROUTE_DASHBOARD_TIERS,
   ROUTE_DASHBOARD_ESCROW_OVERVIEW,
   ROUTE_DASHBOARD_ESCROW_SETTINGS,
   ROUTE_DASHBOARD_ESCROW_WALLET,
@@ -40,7 +38,6 @@ import {
   AnalyticsIconOne,
   EyeballIcon,
   ObjectivesIconOne,
-  TiersIconOne,
   ChecklistIcon,
   PointsIcon,
   ShieldIconOne,
@@ -54,7 +51,6 @@ import {
 } from "~/components/UI/Dashboard/Icons/index";
 import ProgramsDropdown from "~/components/UI/Dashboard/Misc/ProgramsDropdown";
 import OffchainAccountDropdown from "~/components/UI/Dashboard/Misc/OffchainAccountDropdown";
-import LightModeSwitch from "~/components/UI/Misc/LightModeSwitch";
 
 //1-31 - added a test light mode to this, so it's temporarily sloppy code now
 //5-12 - needs subtle box shadow when scrolling sidebar
@@ -144,9 +140,9 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
     Main: [
       {
         id: 0,
-        label: "Home",
-        href: ROUTE_DASHBOARD_HOME(loyaltyAddressString),
-        icon: <HomeIcon size={16} color="currentColor" />,
+        label: "My Programs",
+        href: ROUTE_DASHBOARD_MAIN,
+        icon: <ObjectivesIconOne size={16} color="currentColor" />,
       },
       {
         id: 1,
@@ -154,14 +150,14 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
         href: ROUTE_DASHBOARD_BALANCES,
         icon: <WalletIcon size={16} color="currentColor" />,
       },
-      {
-        id: 2,
-        label: "Analytics",
-        href: ROUTE_DASHBOARD_ANALYTICS,
-        icon: <AnalyticsIconOne size={16} color="currentColor" />,
-      },
     ],
     "Loyalty Program": [
+      {
+        id: 2,
+        label: "Home",
+        href: ROUTE_DASHBOARD_HOME(loyaltyAddressString),
+        icon: <HomeIcon size={16} color="currentColor" />,
+      },
       {
         id: 3,
         label: "Overview",
@@ -170,30 +166,24 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
       },
       {
         id: 4,
-        label: "Objectives",
-        href: ROUTE_DASHBOARD_OBJECTIVES,
-        icon: <ObjectivesIconOne size={16} color="currentColor" />,
+        label: "Analytics",
+        href: ROUTE_DASHBOARD_ANALYTICS(loyaltyAddressString),
+        icon: <AnalyticsIconOne size={16} color="currentColor" />,
       },
       {
         id: 5,
-        label: "Tiers",
-        href: ROUTE_DASHBOARD_TIERS,
-        icon: <TiersIconOne size={16} color="currentColor" />,
-      },
-      {
-        id: 6,
         label: "Escrow Overview",
         href: ROUTE_DASHBOARD_ESCROW_OVERVIEW(loyaltyAddressString),
         icon: <ShieldIconOne size={16} color="currentColor" />,
       },
       {
-        id: 7,
+        id: 6,
         label: "Escrow Wallet",
         href: ROUTE_DASHBOARD_ESCROW_WALLET(loyaltyAddressString),
         icon: <WalletIcon size={16} color="currentColor" />,
       },
       {
-        id: 8,
+        id: 7,
         label: "Escrow Settings",
         href: ROUTE_DASHBOARD_ESCROW_SETTINGS(loyaltyAddressString),
         icon: <SettingsOne size={16} color="currentColor" />,
@@ -201,25 +191,25 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
     ],
     "Program Users": [
       {
-        id: 9,
+        id: 8,
         label: "User Settings",
         href: ROUTE_DASHBOARD_USER_SETTINGS(loyaltyAddressString),
         icon: <ClipboardOne size={16} color="currentColor" />,
       },
       {
-        id: 10,
+        id: 9,
         label: "User Objectives",
         href: ROUTE_DASHBOARD_USER_COMPLETION,
         icon: <ChecklistIcon size={16} color="currentColor" />,
       },
       {
-        id: 11,
+        id: 10,
         label: "User Points",
         href: ROUTE_DASHBOARD_USER_POINTS,
         icon: <PointsIcon size={16} color="currentColor" />,
       },
       {
-        id: 12,
+        id: 11,
         label: "User Rewards",
         href: ROUTE_DASHBOARD_USER_REWARDS,
         icon: <CoinsOne size={16} color="currentColor" />,
@@ -227,19 +217,19 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
     ],
     Developers: [
       {
-        id: 13,
+        id: 12,
         label: "API Keys",
         href: ROUTE_DASHBOARD_API_KEY(loyaltyAddressString),
         icon: <KeyIcon size={16} color="currentColor" />,
       },
       {
-        id: 14,
+        id: 13,
         label: "Paths",
         href: ROUTE_DASHBOARD_PATHS(loyaltyAddressString),
         icon: <DomainIcon size={16} color="currentColor" />,
       },
       {
-        id: 15,
+        id: 14,
         label: "Developer Console",
         href: ROUTE_DASHBOARD_DEV_CONSOLE(loyaltyAddressString),
         icon: <EditPencil size={16} color="currentColor" />,
@@ -251,7 +241,6 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
     ROUTE_DASHBOARD_MAIN,
     ROUTE_DASHBOARD_CREATE_LP,
     ROUTE_DASHBOARD_BALANCES,
-    ROUTE_DASHBOARD_ANALYTICS,
   ];
   const isNonProgramPath = nonProgramPaths.includes(asPath);
 
@@ -265,7 +254,7 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
   const [isClient, setIsClient] = useState<boolean>();
   const [isProgramDropOpen, setIsProgramDropOpen] = useState<boolean>(false);
   const [isAccountDropOpen, setIsAccountDropOpen] = useState<boolean>(false);
-  const [lightMode, setLightMode] = useState<boolean>(false);
+  const [lightMode, _] = useState<boolean>(false);
 
   const connected = isConnected && address && isClient;
 
@@ -510,12 +499,6 @@ const LayoutDashboard = (props: LayoutDashboardSidebarProps) => {
                     </span>
                   </span>
                 </button>
-                <div className="pl-14">
-                  <LightModeSwitch
-                    checked={lightMode}
-                    onChange={() => setLightMode(!lightMode)}
-                  />
-                </div>
               </div>
             </div>
           </aside>

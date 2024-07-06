@@ -946,3 +946,57 @@ export const SunOne = ({ size, color }: IconProps): JSX.Element => (
     <line x1="18.36" x2="19.78" y1="5.64" y2="4.22" />
   </svg>
 );
+
+export const CaretOne = ({ rotate }: { rotate: string }): JSX.Element => (
+  <svg
+    className={`ms-1.5 h-2.5 w-2.5 rtl:rotate-${rotate}`}
+    aria-hidden="true"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 6 10"
+  >
+    <path
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      d="m1 9 4-4-4-4"
+    />
+  </svg>
+);
+
+export const DownCaretOne = (): JSX.Element => (
+  <svg
+    className="m-2.5 ms-1.5 w-2.5"
+    aria-hidden="true"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 10 6"
+  >
+    <path
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      d="m1 1 4 4 4-4"
+    />
+  </svg>
+);
+
+export const PercentArrow = ({ down }: { down?: boolean }): JSX.Element => (
+  <svg
+    className={`${down && "rotate-180"} ms-1 h-3 w-3`}
+    aria-hidden="true"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 10 14"
+  >
+    <path
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      d="M5 13V1m0 0L1 5m4-4 4 4"
+    />
+  </svg>
+);

@@ -3,7 +3,6 @@
 export const ROUTE_DASHBOARD_CREATOR_PROFILE = "/dashboard/creator";
 
 export const ROUTE_DASHBOARD_MAIN = "/dashboard";
-export const ROUTE_DASHBOARD_ANALYTICS = "/dashboard/analytics";
 export const ROUTE_DASHBOARD_BALANCES = "/dashboard/balances";
 export const ROUTE_DASHBOARD_CREATE_LP = "/dashboard/create";
 
@@ -38,6 +37,9 @@ export const ROUTE_DASHBOARD_DEV_CONSOLE = (loyaltyAddress: string) =>
 
 export const ROUTE_DASHBOARD_USER_SETTINGS = (loyaltyAddress: string) =>
   DASHBOARD_BASE + `/${loyaltyAddress}/user-settings`;
+
+export const ROUTE_DASHBOARD_ANALYTICS = (loyaltyAddress: string) =>
+  DASHBOARD_BASE + `/${loyaltyAddress}/analytics`;
 
 export const ROUTE_DASHBOARD_USER_POINTS = "/dashboard/users/points";
 export const ROUTE_DASHBOARD_USER_REWARDS = "/dashboard/users/rewards";

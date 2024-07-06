@@ -50,11 +50,6 @@ export default function WalletStats() {
         description="Number of wallets representing users"
         stat={counts?.assignedCount ?? "0"}
       />
-      <WalletsStatCard
-        title="Other Stats To Go Here"
-        description="TODO Update this with other stats"
-        stat="0"
-      />
     </div>
   );
 }

@@ -5,7 +5,6 @@ import { handleLoyaltyPathValidation } from "~/utils/handleServerAuth";
 import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
 import DashboardInfoBanner from "~/components/UI/Dashboard/DashboardInfoBanner";
 import WalletSetSettings from "~/components/UI/Dashboard/User/WalletSetSettings";
-import WalletStats from "~/components/UI/Dashboard/User/WalletStats";
 import AggregateAnalytics from "~/components/UI/Dashboard/User/AggregateAnalytics";
 
 export const getServerSideProps: GetServerSideProps = async (
@@ -26,7 +25,6 @@ const UserSettings: NextPage = () => {
         info="Learn more about wallet sets and how to support your non-crypto savvy users in your loyalty program before you make any changes."
       />
       <WalletSetSettings />
-      <WalletStats />
       <AggregateAnalytics />
     </div>
   );
