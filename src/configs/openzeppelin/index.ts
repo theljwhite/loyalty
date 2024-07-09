@@ -1,9 +1,9 @@
 export type RelayChainName =
-  | "Mumbai"
   | "Goerli"
   | "Sepolia"
   | "Ethereum"
-  | "Polygon";
+  | "Polygon"
+  | "Amoy";
 
 export type RelayChain = {
   name: RelayChainName;
@@ -15,10 +15,10 @@ export type RelayChain = {
 
 export const relayChains: RelayChain[] = [
   {
-    name: "Mumbai",
-    id: 80001,
-    relayerKey: process.env.OPEN_ZEPP_MUMBAI_API_KEY,
-    relayerSecret: process.env.OPEN_ZEPP_MUMBAI_SECRET_KEY,
+    name: "Amoy",
+    id: 80002,
+    relayerKey: process.env.OPEN_ZEPP_AMOY_API_KEY,
+    relayerSecret: process.env.OPEN_ZEPP_AMOY_SECRET_KEY,
     isTestChain: true,
   },
   {

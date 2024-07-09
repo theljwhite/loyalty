@@ -11,6 +11,8 @@ import { db } from "~/server/db";
 //most other DB operations. but for first pass, this works for now.
 
 //all of these prob dont need to go into individual try/catch's tho lol's.
+//this is a first pass, can be cleaned up later on
+//TODO: fix types
 
 export const createDbWallet = async (
   walletSetId: string,
@@ -384,7 +386,11 @@ export const assignWallet = async (externalUserId: string): Promise<string> => {
 
 export const createOpenZepRelayerClient = async (
   chainId: number,
-): Promise<any> => {
+): Promise<{
+  client: Defender;
+  signer: typeof signer;
+  provider: typeof defenderProvider;
+}> => {
   const [relayChain] = relayChains.filter((chain) => chain.id === chainId);
   const client = new Defender({
     relayerApiKey: relayChain?.relayerKey,
@@ -394,9 +400,10 @@ export const createOpenZepRelayerClient = async (
   const defenderProvider = client.relaySigner.getProvider();
   const signer = client.relaySigner.getSigner(defenderProvider, {
     speed: "fast",
+    validForSeconds: 300,
   });
 
-  return { signer, provider: defenderProvider };
+  return { client, signer, provider: defenderProvider };
 };
 
 export const relayerCompleteObjective = async (
@@ -404,71 +411,123 @@ export const relayerCompleteObjective = async (
   userAddress: string,
   loyaltyAddress: string,
   chainId: number,
-): Promise<TransactionReceipt | null> => {
+): Promise<TransactionReceipt | { error: string }> => {
   try {
     const { signer, provider } = await createOpenZepRelayerClient(chainId);
 
     const loyaltyProgramContract = new Contract(
       loyaltyAddress,
       LoyaltyObjectivesAbi,
-      signer,
+      signer as any,
     );
 
     const transaction =
       await loyaltyProgramContract.completeUserAuthorityObjective?.(
         objectiveIndex,
         userAddress,
-        { gasLimit: 900000 },
+        { gasLimit: 900_000 },
       );
-    const txDetails = await transaction.getTransaction();
-    const receipt = await provider.waitForTransaction(txDetails?.hash, 1);
 
-    console.log("receipt -->", receipt);
+    const receipt = await provider.waitForTransaction(transaction?.hash, 1);
 
-    if (receipt.status === 0) return null;
+    if (receipt.status === 0) return { error: "Transaction reverted" };
 
-    return receipt;
+    return receipt as unknown as TransactionReceipt;
   } catch (error) {
-    console.error("error from relay test -->", error);
-    return null;
+    const errorMessage = handleRelayTxErrors(error);
+    return { error: errorMessage };
   }
 };
 
-export const estimateRelayTransactionOutcome = async (
-  loyaltyAddress: string,
+export const listRelayerTransactions = async (
   chainId: number,
+  options?: {
+    sinceDate?: Date;
+    status?: "pending" | "mined" | "failed";
+    limit?: number;
+  },
+): Promise<typeof transactions> => {
+  const { client } = await createOpenZepRelayerClient(chainId);
+
+  const transactions = await client.relaySigner.listTransactions(
+    options && { ...options },
+  );
+
+  return transactions;
+};
+
+export const getRelayTransactionReceipt = async (
+  chainId: number,
+  transactionHash: string,
+): Promise<typeof txReceipt> => {
+  const { provider } = await createOpenZepRelayerClient(chainId);
+  const txReceipt = await provider.getTransactionReceipt(transactionHash);
+
+  return txReceipt;
+};
+
+export const queryRelayTransactionId = async (
+  chainId: number,
+  transactionId: string,
+): Promise<typeof transaction> => {
+  const { client } = await createOpenZepRelayerClient(chainId);
+  const transaction = await client.relaySigner.getTransaction(transactionId);
+
+  return transaction;
+};
+
+export const estimateRelayTransactionOutcome = async (
   objectiveIndex: number,
   userAddress: string,
-): Promise<string> => {
+  loyaltyAddress: string,
+  chainId: number,
+): Promise<any> => {
   try {
     const { signer } = await createOpenZepRelayerClient(chainId);
     const loyaltyProgramContract = new Contract(
       loyaltyAddress,
       LoyaltyObjectivesAbi,
-      signer,
+      signer as any,
     );
 
-    await loyaltyProgramContract.completeUserAuthorityObjective?.staticCall(
-      objectiveIndex,
-      userAddress,
-    );
-    //TODO
-    return "";
+    const transaction =
+      await loyaltyProgramContract.completeUserAuthorityObjective?.staticCall(
+        objectiveIndex,
+        userAddress,
+        { gasLimit: 900_000 },
+      );
+
+    return transaction;
   } catch (error) {
-    console.error("error from estimate tx outcome", error);
-    return handleRelayTxErrors(error);
+    return { error: handleRelayTxErrors(error) };
   }
 };
 
 export const handleRelayTxErrors = (error: any): string => {
-  const code: string = error.code;
-  const reason: string = error.reason;
+  //TODO in future, handle possible errors better here
+  const code = error?.code;
+  const reason = error?.reason;
+  const path = error?.request?.path;
+
+  const status = error?.response?.status;
+  const message = error?.response?.data?.message;
+
   let newErrorMessage: string = "";
+
   if (code === "CALL_EXCEPTION") {
     newErrorMessage = "Transaction likely would revert";
   }
+
   if (reason === "require(false)") {
     newErrorMessage = "Transaction would revert due to bad request";
+  }
+
+  if (
+    status === 400 &&
+    message.includes("Insufficient funds") &&
+    path === "/txs"
+  ) {
+    newErrorMessage = "Insufficient relayer funds";
   }
 
   return newErrorMessage;

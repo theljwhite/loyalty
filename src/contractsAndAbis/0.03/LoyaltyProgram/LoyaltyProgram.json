@@ -87,6 +87,11 @@
       "type": "error"
     },
     {
+      "inputs": [],
+      "name": "VerificationFailed",
+      "type": "error"
+    },
+    {
       "anonymous": false,
       "inputs": [
         {
@@ -153,9 +158,9 @@
         },
         {
           "indexed": false,
-          "internalType": "bytes32",
-          "name": "authority",
-          "type": "bytes32"
+          "internalType": "uint256",
+          "name": "totalPoints",
+          "type": "uint256"
         }
       ],
       "name": "ObjectiveCompleted",
@@ -173,7 +178,7 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "total",
+          "name": "totalPoints",
           "type": "uint256"
         },
         {
@@ -239,6 +244,19 @@
           "internalType": "string",
           "name": "",
           "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "amoyRelay",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
         }
       ],
       "stateMutability": "view",
@@ -540,19 +558,6 @@
     },
     {
       "inputs": [],
-      "name": "mumbaiRelay",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
       "name": "name",
       "outputs": [
         {
@@ -624,6 +629,19 @@
     {
       "inputs": [],
       "name": "setLoyaltyProgramActive",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_relayer",
+          "type": "address"
+        }
+      ],
+      "name": "setRelayer",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

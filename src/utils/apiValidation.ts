@@ -480,7 +480,9 @@ export const getProgramAndApiKey = async (
     ) {
       return null;
     }
-    const program = user.loyaltyPrograms[0];
+    const program = user.loyaltyPrograms.find(
+      (program) => program.address === loyaltyAddress,
+    );
 
     if (!program || !program.address || !program.chain || !program.chainId) {
       return null;

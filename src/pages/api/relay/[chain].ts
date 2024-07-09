@@ -8,7 +8,10 @@ import {
   type RelayTransactionResult,
   handleApiResponseWithIdempotency,
 } from "../../../utils/apiValidation";
-import { relayerCompleteObjective } from "~/utils/transactionRelayUtils";
+import {
+  estimateRelayTransactionOutcome,
+  relayerCompleteObjective,
+} from "~/utils/transactionRelayUtils";
 import { getEsHashByApiKey } from "~/utils/apiUtils";
 import { validateCipherTextFromEncryptedHash } from "~/utils/encryption";
 
@@ -143,8 +146,15 @@ export default async function handler(
       Number(chainId),
     );
 
-    if (!txReceipt) {
-      relayResult.errorMessage = `Transaction reverted. Details: TODO`;
+    // const txReceipt = await estimateRelayTransactionOutcome(
+    //   objectiveIndex,
+    //   completingObjectiveAddress,
+    //   loyaltyContractAddress,
+    //   Number(chainId),
+    // );
+
+    if ("error" in txReceipt) {
+      relayResult.errorMessage = txReceipt.error;
       relayResult.status = 500;
       const { data, status, errors } = await handleApiResponseWithIdempotency(
         idempotencyKey,
@@ -154,7 +164,7 @@ export default async function handler(
       return res.status(status).json({ data, error: errors });
     }
 
-    relayResult.contractWritten = txReceipt ? true : false;
+    relayResult.contractWritten = "error" in txReceipt ? false : true;
     relayResult.status = 200;
 
     const { data, status } = await handleApiResponseWithIdempotency(

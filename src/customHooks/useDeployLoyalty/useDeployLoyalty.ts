@@ -1,10 +1,11 @@
 import { useSession } from "next-auth/react";
 import { useAccount, useNetwork } from "wagmi";
-import { ContractFactory, encodeBytes32String } from "ethers";
+import { ContractFactory, encodeBytes32String, parseUnits } from "ethers";
 import { waitForTransaction } from "wagmi/actions";
 import { useDeployLoyaltyStore } from "./store";
 import { useContractFactoryStore } from "../useContractFactory";
 import { useEthersSigner } from "~/helpers/ethers";
+import { useLoyaltyAbi } from "../useContractAbi/useContractAbi";
 import { useError } from "../useError";
 import { api } from "~/utils/api";
 import { RewardType, Tier } from "./types";
@@ -13,7 +14,6 @@ import {
   toastLoading,
   dismissToast,
 } from "~/components/UI/Toast/Toast";
-import { useLoyaltyAbi } from "../useContractAbi/useContractAbi";
 
 export function useDeployLoyalty() {
   const { data: session } = useSession();
@@ -73,6 +73,7 @@ export function useDeployLoyalty() {
         tierSortingEnabled ? tierNamesBytes32 : [],
         tierSortingEnabled ? tierRewardsRequired : [],
       );
+
       const loyaltyContractAddress = await loyaltyContract.getAddress();
       const transaction = loyaltyContract.deploymentTransaction();
 
@@ -109,15 +110,16 @@ export function useDeployLoyalty() {
         });
 
         giveCreatorRole({ userId: session?.user.id ?? "" });
-
         loyaltyDeployState.setStatus("SUCCESS");
         setIsSuccess(true);
         toastSuccess("Loyalty program has successfully been deployed");
       }
     } catch (error) {
+      console.log("Error from deply", error);
       handleErrorFlow(error, "Loyalty program could not be deployed");
       loyaltyDeployState.setStatus("ERROR");
       loyaltyDeployState.setError(error as any);
+      setIsLoading(false);
     }
   };
 

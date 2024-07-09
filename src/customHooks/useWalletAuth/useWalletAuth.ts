@@ -35,8 +35,6 @@ export function useWalletAuth() {
       });
 
       // await signIn("email"); //TODO - turn email into "address" (wallet address?)
-
-      console.log("response", response);
     } catch (error) {
       console.error("error from usewalletauth", error);
     }
