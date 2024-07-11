@@ -21,11 +21,12 @@ export const polygonAmoy: Chain = {
   blockExplorers: {
     etherscan: {
       name: "Polygon Amoy Etherscan",
-      url: "https://www.oklink.com/amoy",
+      url: "https://amoy.polygonscan.com/",
     },
     default: {
       name: "Polygon Amoy Oklink",
-      url: "https://www.oklink.com/amoy",
+      // url: "https://www.oklink.com/amoy",
+      url: "https://amoy.polygonscan.com/",
     },
   },
   testnet: true,

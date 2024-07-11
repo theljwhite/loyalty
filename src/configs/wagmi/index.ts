@@ -13,7 +13,6 @@ import {
   walletConnectWallet,
   phantomWallet,
 } from "@rainbow-me/rainbowkit/wallets";
-
 import { configureChains, Chain, createConfig } from "wagmi";
 import { jsonRpcProvider } from "wagmi/providers/jsonRpc";
 import { polygonAmoy } from "./chains/polygonAmoy";

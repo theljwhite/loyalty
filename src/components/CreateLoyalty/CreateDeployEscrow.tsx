@@ -28,6 +28,8 @@ export default function CreateDeployEscrow() {
   const {
     isLoading,
     isSuccess,
+    error,
+    setError,
     deployEscrowData,
     reset: clearEscrowDeployData,
   } = useDeployEscrowStore((state) => state);
@@ -52,6 +54,13 @@ export default function CreateDeployEscrow() {
       }, 3000);
     }
   }, [deployEscrowData, isSuccess]);
+
+  useEffect(() => {
+    if (error) {
+      setIsDeployConfirmOpen(true);
+      setError("");
+    }
+  }, [error]);
 
   const handleDeployEscrow = async (): Promise<void> => {
     if (deployLoyaltyData.creator !== userAddress) {

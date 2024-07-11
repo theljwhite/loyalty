@@ -84,12 +84,12 @@ const Overview: NextPage = () => {
           />
           <OverviewCard
             href={ROUTE_DASHBOARD_USER_SETTINGS(String(loyaltyAddress))}
-            title="Create a Wallet Set for your non crypto savvy users"
+            title="Create a Wallet Set for your users"
             icon={<WalletIcon size={32} color="currentColor" />}
           />
           <OverviewCard
             href={ROUTE_DOCS_MAIN}
-            title="Read more about using your contracts on your own apps"
+            title="Usage in your own apps"
             icon={<ObjectivesIconOne size={32} color="currentColor" />}
           />
         </div>

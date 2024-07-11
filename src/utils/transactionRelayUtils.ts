@@ -2,7 +2,11 @@ import { circleChains, initiateCircleSdk } from "~/configs/circle";
 import { relayChains } from "~/configs/openzeppelin";
 import { Defender } from "@openzeppelin/defender-sdk";
 import LoyaltyObjectivesAbi from "../contractsAndAbis/0.03/LoyaltyProgram/LoyaltyObjectivesAbi.json";
-import { type TransactionReceipt, Contract } from "ethers";
+import {
+  type TransactionReceipt,
+  type JsonRpcProvider,
+  Contract,
+} from "ethers";
 import { type WalletResponse } from "@circle-fin/developer-controlled-wallets/dist/types/clients/developer-controlled-wallets";
 import { db } from "~/server/db";
 
@@ -397,7 +401,7 @@ export const createOpenZepRelayerClient = async (
     relayerApiSecret: relayChain?.relayerSecret,
   });
 
-  const defenderProvider = client.relaySigner.getProvider();
+  const defenderProvider = client.relaySigner.getProvider() as JsonRpcProvider;
   const signer = client.relaySigner.getSigner(defenderProvider, {
     speed: "fast",
     validForSeconds: 300,
@@ -430,9 +434,11 @@ export const relayerCompleteObjective = async (
 
     const receipt = await provider.waitForTransaction(transaction?.hash, 1);
 
-    if (receipt.status === 0) return { error: "Transaction reverted" };
+    if (!receipt || receipt.status === 0) {
+      return { error: "Transaction reverted" };
+    }
 
-    return receipt as unknown as TransactionReceipt;
+    return receipt;
   } catch (error) {
     const errorMessage = handleRelayTxErrors(error);
     return { error: errorMessage };

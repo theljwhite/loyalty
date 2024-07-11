@@ -22,8 +22,7 @@ export default function ERC20EscrowStats() {
     { refetchOnWindowFocus: false },
   );
   const activeDepositPeriod =
-    data?.loyaltyProgram?.programEnd &&
-    data.loyaltyProgram.programEnd < new Date();
+    data?.escrow?.depositEndDate && data.escrow.depositEndDate > new Date();
 
   const { getERC20EscrowBalance } = useEscrowContractRead(
     data?.escrow?.address ?? "",

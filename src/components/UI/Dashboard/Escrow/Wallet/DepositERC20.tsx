@@ -62,7 +62,7 @@ export default function DepositERC20() {
     );
     if (!mismatchError) {
       setIsDepositModalOpen(false);
-      await handleApproveAndDeposit();
+      await handleApproveAndDeposit(contractsDb?.escrow?.depositKey ?? "");
     }
   };
 

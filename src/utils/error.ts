@@ -103,7 +103,7 @@ const erc20EscrowErrorMessages: { [key in ERC20EscrowErrorCodes]?: string } = {
   [ERC20EscrowErrorCodes.ObjectivesAndPayoutLengthMismatch]:
     "Must use the same number of amounts as number of objectives.",
   [ERC20EscrowErrorCodes.TiersAndPayoutLengthMismatch]:
-    "For the selected reward condition, must have save amount of payouts as tiers",
+    "For the selected reward condition, must have same amount of payouts as tiers",
   [ERC20EscrowErrorCodes.InsufficientFunds]:
     "Your balance is insufficient to withdraw this amount",
 };

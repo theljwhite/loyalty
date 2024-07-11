@@ -83,7 +83,8 @@ export function useDeployEscrow() {
         });
       }
     } catch (e) {
-      setError(error);
+      console.error("ERROR FROM ESCROW DEPLOY", error);
+      setError("Escrow contract could not be deployed");
       handleErrorFlow(e, "Escrow contract could not be deployed");
     }
   };

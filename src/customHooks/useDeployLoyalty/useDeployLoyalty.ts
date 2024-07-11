@@ -115,7 +115,6 @@ export function useDeployLoyalty() {
         toastSuccess("Loyalty program has successfully been deployed");
       }
     } catch (error) {
-      console.log("Error from deply", error);
       handleErrorFlow(error, "Loyalty program could not be deployed");
       loyaltyDeployState.setStatus("ERROR");
       loyaltyDeployState.setError(error as any);

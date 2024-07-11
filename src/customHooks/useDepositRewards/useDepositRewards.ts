@@ -5,16 +5,19 @@ import { type FetchTokenResult } from "wagmi/actions";
 import { erc20ABI as standardERC20Abi } from "wagmi";
 import { useAccount } from "wagmi";
 import { waitForTransaction, writeContract, readContract } from "wagmi/actions";
-import { parseUnits } from "ethers";
+import { encodeBytes32String, parseUnits } from "ethers";
 import { findIfMoralisEvmChain } from "~/configs/moralis";
 import { useEscrowAbi } from "../useContractAbi/useContractAbi";
+import { useError } from "../useError";
 import { useDepositRewardsStore } from "./store";
 import {
   toastLoading,
   toastError,
   dismissToast,
 } from "~/components/UI/Toast/Toast";
-import { handleEscrowContractError } from "~/utils/error";
+
+//TODO - this needs cleaned up
+//TODO 7/10 - can change where deposit key comes from if decide to make user enter it
 
 export default function useDepositRewards(
   rewardAddress: string,
@@ -23,6 +26,7 @@ export default function useDepositRewards(
 ) {
   const { address: userConnectedAddress } = useAccount();
   const { abi: erc20Abi } = useEscrowAbi("ERC20");
+  const { handleERC20EscrowError } = useError();
 
   const {
     erc20DepositAmount,
@@ -36,7 +40,7 @@ export default function useDepositRewards(
     setTxListLoading,
   } = useDepositRewardsStore((state) => state);
 
-  const handleApproveAndDeposit = async (): Promise<void> => {
+  const handleApproveAndDeposit = async (depositKey: string): Promise<void> => {
     setIsLoading(true);
     try {
       const allowance = await readContract({
@@ -57,7 +61,7 @@ export default function useDepositRewards(
         tokenInfo.decimals,
       );
       if (allowance && allowance >= formattedDepositAmount) {
-        await depositERC20();
+        await depositERC20(depositKey);
       } else {
         toastLoading("Approve escrow to manage your reward tokens.", true);
         const approveTx = await writeContract({
@@ -73,7 +77,7 @@ export default function useDepositRewards(
 
         if (approveReceipt.status === "success") {
           dismissToast();
-          await depositERC20();
+          await depositERC20(depositKey);
         }
       }
     } catch (error) {
@@ -81,9 +85,10 @@ export default function useDepositRewards(
     }
   };
 
-  const depositERC20 = async (): Promise<void> => {
+  const depositERC20 = async (depositKey: string): Promise<void> => {
     toastLoading("Deposit request sent to wallet", true);
     const balanceError = await checkUserERC20Balance();
+
     if (!balanceError) {
       try {
         const tokenInfo: FetchTokenResult = await fetchToken({
@@ -95,11 +100,13 @@ export default function useDepositRewards(
           tokenInfo.decimals,
         );
 
+        const depositKeyBytes32 = encodeBytes32String(depositKey);
+
         const depositTx = await writeContract({
           address: escrowAddress as `0x${string}`,
           abi: erc20Abi,
           functionName: "depositBudget",
-          args: [formattedDepositAmount, rewardAddress],
+          args: [formattedDepositAmount, depositKeyBytes32],
         });
 
         const depositReceipt = await waitForTransaction({
@@ -306,7 +313,7 @@ export default function useDepositRewards(
       toastError("Insufficient allowance for reward token");
       return;
     }
-    handleEscrowContractError(error);
+    handleERC20EscrowError(error, "Failed to deposit ERC20");
   };
 
   return {
