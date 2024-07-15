@@ -1,14 +1,17 @@
 import { circleChains, initiateCircleSdk } from "~/configs/circle";
 import { relayChains } from "~/configs/openzeppelin";
-import { Defender } from "@openzeppelin/defender-sdk";
 import LoyaltyObjectivesAbi from "../contractsAndAbis/0.03/LoyaltyProgram/LoyaltyObjectivesAbi.json";
-import {
-  type TransactionReceipt,
-  type JsonRpcProvider,
-  Contract,
-} from "ethers";
+import LoyaltyProgram from "../contractsAndAbis/0.03/LoyaltyProgram/LoyaltyProgram.json";
 import { type WalletResponse } from "@circle-fin/developer-controlled-wallets/dist/types/clients/developer-controlled-wallets";
 import { db } from "~/server/db";
+import { type ContractRunner, Contract } from "ethers";
+import {
+  DefenderRelaySigner,
+  DefenderRelayProvider,
+} from "@openzeppelin/defender-relay-client/lib/ethers";
+import { handleError } from "./error";
+
+// const {DefenderRelaySigner, Defend} = require("@openzeppelin/defender-relay-client/lib/ethers");
 
 //can make a server side TRPC caller factory for these db procedures.
 //so that this logic can be put inside a TRPC router like my handling for
@@ -388,133 +391,221 @@ export const assignWallet = async (externalUserId: string): Promise<string> => {
 
 //completing objectives transaction relaying
 
-export const createOpenZepRelayerClient = async (
+export const initOpenZepRelayer = (
   chainId: number,
-): Promise<{
-  client: Defender;
-  signer: typeof signer;
-  provider: typeof defenderProvider;
-}> => {
+): {
+  provider: DefenderRelayProvider;
+  signer: DefenderRelaySigner;
+} => {
   const [relayChain] = relayChains.filter((chain) => chain.id === chainId);
-  const client = new Defender({
-    relayerApiKey: relayChain?.relayerKey,
-    relayerApiSecret: relayChain?.relayerSecret,
-  });
 
-  const defenderProvider = client.relaySigner.getProvider() as JsonRpcProvider;
-  const signer = client.relaySigner.getSigner(defenderProvider, {
+  const credentials = {
+    apiKey: relayChain?.relayerKey ?? "",
+    apiSecret: relayChain?.relayerSecret ?? "",
+  };
+
+  const provider = new DefenderRelayProvider(credentials);
+  const signer = new DefenderRelaySigner(credentials, provider, {
     speed: "fast",
-    validForSeconds: 300,
   });
-
-  return { client, signer, provider: defenderProvider };
+  return { provider, signer };
 };
 
-export const relayerCompleteObjective = async (
-  objectiveIndex: number,
-  userAddress: string,
+
+
+export const estimateRelayTransactionOutcome = async (
   loyaltyAddress: string,
   chainId: number,
-): Promise<TransactionReceipt | { error: string }> => {
+  contractFnName: string,
+  ...contractFnArgs: any[]
+): Promise<{ data: any } | { error: string }> => {
   try {
-    const { signer, provider } = await createOpenZepRelayerClient(chainId);
+    const { signer } = initOpenZepRelayer(chainId);
 
     const loyaltyProgramContract = new Contract(
       loyaltyAddress,
-      LoyaltyObjectivesAbi,
-      signer as any,
+      LoyaltyProgram.abi,
+      signer as unknown as ContractRunner,
     );
 
-    const transaction =
-      await loyaltyProgramContract.completeUserAuthorityObjective?.(
-        objectiveIndex,
-        userAddress,
-        { gasLimit: 900_000 },
-      );
+    const transaction = await loyaltyProgramContract[
+      contractFnName
+    ]?.staticCall(...contractFnArgs);
 
-    const receipt = await provider.waitForTransaction(transaction?.hash, 1);
+    return { data: transaction };
+  } catch (error) {
+    console.log("STATIC CALL ERROR", error);
+    return { error: handleRelayTxErrors(error) };
+  }
+};
+
+export const doRelayerTransaction = async (
+  loyaltyAddress: string,
+  chainId: number,
+  contractFnName: string,
+  ...contractFnArgs: any[]
+): Promise<{ data: any } | { error: string }> => {
+  try {
+    const NUM_CONFIRMATIONS = 1;
+    const TX_TIMEOUT = 300;
+
+    const { provider, signer } = initOpenZepRelayer(chainId);
+
+    const loyaltyProgramContract = new Contract(
+      loyaltyAddress,
+      LoyaltyProgram.abi,
+      signer as unknown as ContractRunner,
+    );
+
+    const transaction = await loyaltyProgramContract[contractFnName]?.(
+      ...contractFnArgs,
+    );
+
+    const receipt = await provider.waitForTransaction(
+      transaction?.hash,
+      NUM_CONFIRMATIONS,
+      TX_TIMEOUT,
+    );
+    console.log("RELAYER TX RECEIPT", receipt);
 
     if (!receipt || receipt.status === 0) {
       return { error: "Transaction reverted" };
     }
 
-    return receipt;
+    return { data: receipt };
   } catch (error) {
-    const errorMessage = handleRelayTxErrors(error);
-    return { error: errorMessage };
-  }
-};
-
-export const listRelayerTransactions = async (
-  chainId: number,
-  options?: {
-    sinceDate?: Date;
-    status?: "pending" | "mined" | "failed";
-    limit?: number;
-  },
-): Promise<typeof transactions> => {
-  const { client } = await createOpenZepRelayerClient(chainId);
-
-  const transactions = await client.relaySigner.listTransactions(
-    options && { ...options },
-  );
-
-  return transactions;
-};
-
-export const getRelayTransactionReceipt = async (
-  chainId: number,
-  transactionHash: string,
-): Promise<typeof txReceipt> => {
-  const { provider } = await createOpenZepRelayerClient(chainId);
-  const txReceipt = await provider.getTransactionReceipt(transactionHash);
-
-  return txReceipt;
-};
-
-export const queryRelayTransactionId = async (
-  chainId: number,
-  transactionId: string,
-): Promise<typeof transaction> => {
-  const { client } = await createOpenZepRelayerClient(chainId);
-  const transaction = await client.relaySigner.getTransaction(transactionId);
-
-  return transaction;
-};
-
-export const estimateRelayTransactionOutcome = async (
-  objectiveIndex: number,
-  userAddress: string,
-  loyaltyAddress: string,
-  chainId: number,
-): Promise<any> => {
-  try {
-    const { signer } = await createOpenZepRelayerClient(chainId);
-    const loyaltyProgramContract = new Contract(
-      loyaltyAddress,
-      LoyaltyObjectivesAbi,
-      signer as any,
-    );
-
-    const transaction =
-      await loyaltyProgramContract.completeUserAuthorityObjective?.staticCall(
-        objectiveIndex,
-        userAddress,
-        { gasLimit: 900_000 },
-      );
-
-    return transaction;
-  } catch (error) {
+    console.log("RELAYER TX ERROR", error);
     return { error: handleRelayTxErrors(error) };
   }
 };
+
+// export const createOpenZepRelayerClient = async (
+//   chainId: number,
+// ): Promise<{
+//   client: Defender;
+//   signer: typeof signer;
+//   provider: typeof defenderProvider;
+// }> => {
+//   const [relayChain] = relayChains.filter((chain) => chain.id === chainId);
+//   const client = new Defender({
+//     relayerApiKey: relayChain?.relayerKey,
+//     relayerApiSecret: relayChain?.relayerSecret,
+//   });
+
+//   const defenderProvider = client.relaySigner.getProvider() as any;
+//   const signer = await client.relaySigner.getSigner(defenderProvider, {
+//     speed: "fast",
+//     validForSeconds: 300,
+//   });
+
+//   return { client, signer, provider: defenderProvider };
+// };
+
+// export const relayerCompleteObjective = async (
+//   objectiveIndex: number,
+//   userAddress: string,
+//   loyaltyAddress: string,
+//   chainId: number,
+// ): Promise<TransactionReceipt | { error: string }> => {
+//   try {
+//     const { signer, provider } = await createOpenZepRelayerClient(chainId);
+
+//     const loyaltyProgramContract = new Contract(
+//       loyaltyAddress,
+//       LoyaltyObjectivesAbi,
+//       signer as any,
+//     );
+
+//     const transaction =
+//       await loyaltyProgramContract.completeUserAuthorityObjective?.(
+//         objectiveIndex,
+//         userAddress,
+//         { gasLimit: 900_000 },
+//       );
+
+//     const receipt = await provider.waitForTransaction(transaction?.hash, 1);
+
+//     if (!receipt || receipt.status === 0) {
+//       return { error: "Transaction reverted" };
+//     }
+
+//     return receipt;
+//   } catch (error) {
+//     const errorMessage = handleRelayTxErrors(error);
+//     return { error: errorMessage };
+//   }
+// };
+
+// export const listRelayerTransactions = async (
+//   chainId: number,
+//   options?: {
+//     sinceDate?: Date;
+//     status?: "pending" | "mined" | "failed";
+//     limit?: number;
+//   },
+// ): Promise<typeof transactions> => {
+//   const { client } = await createOpenZepRelayerClient(chainId);
+
+//   const transactions = await client.relaySigner.listTransactions(
+//     options && { ...options },
+//   );
+
+//   return transactions;
+// };
+
+// export const getRelayTransactionReceipt = async (
+//   chainId: number,
+//   transactionHash: string,
+// ): Promise<typeof txReceipt> => {
+//   const { provider } = await createOpenZepRelayerClient(chainId);
+//   const txReceipt = await provider.getTransactionReceipt(transactionHash);
+
+//   return txReceipt;
+// };
+
+// export const queryRelayTransactionId = async (
+//   chainId: number,
+//   transactionId: string,
+// ): Promise<typeof transaction> => {
+//   const { client } = await createOpenZepRelayerClient(chainId);
+//   const transaction = await client.relaySigner.getTransaction(transactionId);
+
+//   return transaction;
+// };
+
+// export const estimateRelayTransactionOutcome = async (
+//   objectiveIndex: number,
+//   userAddress: string,
+//   loyaltyAddress: string,
+//   chainId: number,
+// ): Promise<any> => {
+//   try {
+//     const { signer } = await createOpenZepRelayerClient(chainId);
+//     const loyaltyProgramContract = new Contract(
+//       loyaltyAddress,
+//       LoyaltyObjectivesAbi,
+//       signer as any,
+//     );
+
+//     const transaction =
+//       await loyaltyProgramContract.completeUserAuthorityObjective?.staticCall(
+//         objectiveIndex,
+//         userAddress,
+//         { gasLimit: 900_000 },
+//       );
+//     console.log("TX outcome", transaction);
+//     return transaction;
+//   } catch (error) {
+//     console.log("ERROR FROM OUTCOME -->", error);
+//     return { error: handleRelayTxErrors(error) };
+//   }
+// };
 
 export const handleRelayTxErrors = (error: any): string => {
   //TODO in future, handle possible errors better here
   const code = error?.code;
   const reason = error?.reason;
   const path = error?.request?.path;
-
   const status = error?.response?.status;
   const message = error?.response?.data?.message;
 

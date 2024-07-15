@@ -10,7 +10,7 @@ import {
 } from "../../../utils/apiValidation";
 import {
   estimateRelayTransactionOutcome,
-  relayerCompleteObjective,
+  doRelayerTransaction,
 } from "~/utils/transactionRelayUtils";
 import { getEsHashByApiKey } from "~/utils/apiUtils";
 import { validateCipherTextFromEncryptedHash } from "~/utils/encryption";
@@ -139,22 +139,24 @@ export default async function handler(
       completingObjectiveAddress = walletAgent.address;
     }
 
-    const txReceipt = await relayerCompleteObjective(
-      objectiveIndex,
-      completingObjectiveAddress,
-      loyaltyContractAddress,
-      Number(chainId),
-    );
-
-    // const txReceipt = await estimateRelayTransactionOutcome(
-    //   objectiveIndex,
-    //   completingObjectiveAddress,
+    // const staticCallRes = await estimateRelayTransactionOutcome(
     //   loyaltyContractAddress,
     //   Number(chainId),
+    //   "completeUserAuthorityObjective",
+    //   objectiveIndex,
+    //   completingObjectiveAddress,
     // );
 
-    if ("error" in txReceipt) {
-      relayResult.errorMessage = txReceipt.error;
+    const staticCallRes = await doRelayerTransaction(
+      loyaltyContractAddress,
+      Number(chainId),
+      "givePointsToUser",
+      completingObjectiveAddress,
+      100,
+    );
+
+    if ("error" in staticCallRes) {
+      relayResult.errorMessage = staticCallRes.error;
       relayResult.status = 500;
       const { data, status, errors } = await handleApiResponseWithIdempotency(
         idempotencyKey,
@@ -164,7 +166,6 @@ export default async function handler(
       return res.status(status).json({ data, error: errors });
     }
 
-    relayResult.contractWritten = "error" in txReceipt ? false : true;
     relayResult.status = 200;
 
     const { data, status } = await handleApiResponseWithIdempotency(
@@ -172,7 +173,7 @@ export default async function handler(
       req.url ?? "",
       idempotencyMetadata,
     );
-    const dataWithTxReceipt = { ...data, receipt: txReceipt };
+    const dataWithTxReceipt = { ...data, receipt: staticCallRes.data };
     return res.status(status).json(dataWithTxReceipt);
   } catch (error) {
     console.error("error from serv -->", error);

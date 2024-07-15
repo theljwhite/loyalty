@@ -6,6 +6,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
+  console.log("REACHED");
   const input = apiBasicHeadersSchema.safeParse(req);
 
   if (!input.success) {
