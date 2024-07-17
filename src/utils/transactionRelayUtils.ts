@@ -9,6 +9,7 @@ import {
   DefenderRelaySigner,
   DefenderRelayProvider,
 } from "@openzeppelin/defender-relay-client/lib/ethers";
+import { TEN_MIN_MS } from "~/constants/timeAndDate";
 import { handleError } from "./error";
 import {
   Relayer,
@@ -439,13 +440,12 @@ export const estimateRelayTransactionOutcome = async (
       signer as unknown as ContractRunner,
     );
 
-    const transaction = await loyaltyProgramContract[
+    const transactionResult = await loyaltyProgramContract[
       contractFnName
     ]?.staticCall(...contractFnArgs);
 
-    return { data: transaction };
+    return { data: transactionResult };
   } catch (error) {
-    console.log("STATIC CALL ERROR", error);
     return { error: handleRelayTxErrors(error) };
   }
 };
@@ -458,7 +458,7 @@ export const doRelayerTransaction = async (
 ): Promise<{ data: any } | { error: string }> => {
   try {
     const NUM_CONFIRMATIONS = 1;
-    const TX_TIMEOUT = 300;
+    const TX_TIMEOUT = TEN_MIN_MS; //TODO
 
     const { provider, signer } = initOpenZepRelayer(chainId);
 
@@ -471,13 +471,11 @@ export const doRelayerTransaction = async (
     const transaction = await loyaltyProgramContract[contractFnName]?.(
       ...contractFnArgs,
     );
-
     const receipt = await provider.waitForTransaction(
       transaction?.hash,
       NUM_CONFIRMATIONS,
       TX_TIMEOUT,
     );
-    console.log("RELAYER TX RECEIPT", receipt);
 
     if (!receipt || receipt.status === 0) {
       return { error: "Transaction reverted" };
@@ -485,7 +483,6 @@ export const doRelayerTransaction = async (
 
     return { data: receipt };
   } catch (error) {
-    console.log("RELAYER TX ERROR", error);
     return { error: handleRelayTxErrors(error) };
   }
 };
@@ -514,6 +511,7 @@ export const listTransactions = async (
 
 export const handleRelayTxErrors = (error: any): string => {
   //TODO in future, handle possible errors better here
+  console.error("TX Relay Error:", error);
   const code = error?.code;
   const reason = error?.reason;
   const path = error?.request?.path;

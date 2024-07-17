@@ -33,6 +33,8 @@ export default async function handler(
 
   const input = relayRequestSchema.safeParse(req);
 
+  console.log("req.body", req.body);
+
   if (!input.success) {
     const errorMessages = input.error.issues.map((issue) => issue.message);
     return res.status(400).json({ error: errorMessages });
@@ -41,8 +43,8 @@ export default async function handler(
   const apiKey = String(req.headers["x-loyalty-api-key"]);
   const loyaltyContractAddress = String(req.headers["x-loyalty-address"]);
   const idempotencyKey = String(req.headers["x-idempotency-key"]);
-  const version = String(req.headers["x-loyalty-version"]);
-  const backendAdapter = String(req.headers["x-loyalty-be-adapter"]);
+  const version = String(req.headers["x-loyalty-version"]); //TODO
+  const backendAdapter = String(req.headers["x-loyalty-be-adapter"]); //TODO
 
   const body = req.body;
   const userWalletAddress = body.userWalletAddress;
@@ -85,6 +87,7 @@ export default async function handler(
   const relayResult: RelayTransactionResult = {
     contractWritten: false,
     generatedWallet: false,
+    staticCallPass: true,
     txReverted: false,
     walletError: false,
     networkError: false,
@@ -139,24 +142,38 @@ export default async function handler(
       completingObjectiveAddress = walletAgent.address;
     }
 
-    // const staticCallRes = await estimateRelayTransactionOutcome(
-    //   loyaltyContractAddress,
-    //   Number(chainId),
-    //   "completeUserAuthorityObjective",
-    //   objectiveIndex,
-    //   completingObjectiveAddress,
-    // );
-
-    const staticCallRes = await doRelayerTransaction(
+    const staticCallRes = await estimateRelayTransactionOutcome(
       loyaltyContractAddress,
       Number(chainId),
-      "givePointsToUser",
+      "completeUserAuthorityObjective",
+      objectiveIndex,
       completingObjectiveAddress,
-      100,
     );
 
     if ("error" in staticCallRes) {
       relayResult.errorMessage = staticCallRes.error;
+      relayResult.staticCallPass = false;
+      relayResult.status = 500;
+      const { data, status, errors } = await handleApiResponseWithIdempotency(
+        idempotencyKey,
+        req.url ?? "",
+        idempotencyMetadata,
+      );
+      return res.status(status).json({ data, error: errors });
+    }
+
+    console.log("Static call res", staticCallRes);
+
+    const relayTx = await doRelayerTransaction(
+      loyaltyContractAddress,
+      Number(chainId),
+      "completeUserAuthorityObjective",
+      objectiveIndex,
+      completingObjectiveAddress,
+    );
+
+    if ("error" in relayTx) {
+      relayResult.errorMessage = relayTx.error;
       relayResult.status = 500;
       const { data, status, errors } = await handleApiResponseWithIdempotency(
         idempotencyKey,
@@ -173,7 +190,8 @@ export default async function handler(
       req.url ?? "",
       idempotencyMetadata,
     );
-    const dataWithTxReceipt = { ...data, receipt: staticCallRes.data };
+    const dataWithTxReceipt = { ...data, receipt: relayTx.data };
+
     return res.status(status).json(dataWithTxReceipt);
   } catch (error) {
     console.error("error from serv -->", error);

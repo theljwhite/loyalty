@@ -33,6 +33,7 @@ export type RelayRequestSchema = z.infer<typeof relayRequestSchema>;
 export type RelayTransactionResult = {
   contractWritten: boolean;
   generatedWallet: boolean;
+  staticCallPass: boolean;
   txReverted: boolean;
   walletError: boolean;
   networkError: boolean;
@@ -101,8 +102,9 @@ export const relayRequestSchema = z.object({
       userWalletAddress: z
         .string()
         .refine(isAddress, "Invalid user wallet address")
+        .nullable()
         .optional(),
-      userId: z.string().uuid().optional(),
+      userId: z.string().uuid().nullable().optional(),
       entitySecretCipherText: z.string().length(684),
     })
     .superRefine((b, ctx) => {
@@ -461,7 +463,12 @@ export const getProgramAndApiKey = async (
       select: {
         rsaPublicKey: true,
         loyaltyPrograms: {
-          where: { address: loyaltyAddress },
+          where: {
+            address: {
+              contains: loyaltyAddress,
+              mode: "insensitive",
+            },
+          },
           select: {
             chain: true,
             chainId: true,
@@ -481,7 +488,8 @@ export const getProgramAndApiKey = async (
       return null;
     }
     const program = user.loyaltyPrograms.find(
-      (program) => program.address === loyaltyAddress,
+      (program) =>
+        program.address.toLowerCase() === loyaltyAddress.toLowerCase(),
     );
 
     if (!program || !program.address || !program.chain || !program.chainId) {
