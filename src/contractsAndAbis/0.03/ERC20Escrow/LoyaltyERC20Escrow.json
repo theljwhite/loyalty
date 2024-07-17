@@ -541,19 +541,6 @@
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "inIssuance",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
       "inputs": [
         {
           "internalType": "address",

@@ -66,7 +66,8 @@ export function useDeployEscrow() {
 
         const escrowContractAddress = await escrowContract.getAddress();
         setDeployEscrowData(transaction.hash, escrowContractAddress);
-        await attachEscrowToLoyalty();
+
+        await attachEscrowToLoyalty(escrowContractAddress);
 
         setIsLoading(false);
         setIsSuccess(true);
@@ -89,7 +90,9 @@ export function useDeployEscrow() {
     }
   };
 
-  const attachEscrowToLoyalty = async (): Promise<void> => {
+  const attachEscrowToLoyalty = async (
+    escrowAddress: string,
+  ): Promise<void> => {
     const loyaltyContractConfig = {
       address: deployLoyaltyData.address as `0x${string}`,
       abi: loyaltyAbi,
@@ -98,7 +101,7 @@ export function useDeployEscrow() {
     const writeConfig = await prepareWriteContract({
       ...loyaltyContractConfig,
       functionName: "setEscrowContract",
-      args: [deployLoyaltyData.address, rewardType],
+      args: [escrowAddress, rewardType],
     });
 
     const { hash } = await writeContract(writeConfig);
