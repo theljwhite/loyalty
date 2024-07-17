@@ -415,7 +415,7 @@ export const initOpenZepRelayer = (
   return { provider, signer };
 };
 
-export const createRelayerInfoCLient = (chainId: number): Relayer => {
+export const createRelayerInfoClient = (chainId: number): Relayer => {
   const [relayChain] = relayChains.filter((chain) => chain.id === chainId);
   const relayer = new Relayer({
     apiKey: relayChain?.relayerKey ?? "",
@@ -494,7 +494,7 @@ export const queryRelayTransactionId = async (
   chainId: number,
   transactionId: string,
 ): Promise<RelayerTransaction> => {
-  const relayer = createRelayerInfoCLient(chainId);
+  const relayer = createRelayerInfoClient(chainId);
   const transaction = await relayer.query(transactionId);
   return transaction;
 };
@@ -507,7 +507,7 @@ export const listTransactions = async (
     limit?: number;
   },
 ): Promise<typeof transactions> => {
-  const relayer = createRelayerInfoCLient(chainId);
+  const relayer = createRelayerInfoClient(chainId);
   const transactions = await relayer.list(options && { ...options });
   return transactions;
 };
