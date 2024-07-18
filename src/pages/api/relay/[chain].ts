@@ -33,8 +33,6 @@ export default async function handler(
 
   const input = relayRequestSchema.safeParse(req);
 
-  console.log("req.body", req.body);
-
   if (!input.success) {
     const errorMessages = input.error.issues.map((issue) => issue.message);
     return res.status(400).json({ error: errorMessages });
@@ -162,8 +160,6 @@ export default async function handler(
       return res.status(status).json({ data, error: errors });
     }
 
-    console.log("Static call res", staticCallRes);
-
     const relayTx = await doRelayerTransaction(
       loyaltyContractAddress,
       Number(chainId),
@@ -184,17 +180,17 @@ export default async function handler(
     }
 
     relayResult.status = 200;
+    relayResult.contractWritten = true;
 
     const { data, status } = await handleApiResponseWithIdempotency(
       idempotencyKey,
       req.url ?? "",
       idempotencyMetadata,
     );
-    const dataWithTxReceipt = { ...data, receipt: relayTx.data };
+    const dataWithTxReceipt = { data: { ...data, receipt: relayTx.data } };
 
     return res.status(status).json(dataWithTxReceipt);
   } catch (error) {
-    console.error("error from serv -->", error);
     relayResult.unknownError = true;
     relayResult.errorMessage = "Internal Server Error";
     relayResult.status = 500;

@@ -471,6 +471,7 @@ export const doRelayerTransaction = async (
     const transaction = await loyaltyProgramContract[contractFnName]?.(
       ...contractFnArgs,
     );
+
     const receipt = await provider.waitForTransaction(
       transaction?.hash,
       NUM_CONFIRMATIONS,
