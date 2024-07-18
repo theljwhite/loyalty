@@ -15,12 +15,12 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const input = eventApiRouteSchema.safeParse(req);
+  // const input = eventApiRouteSchema.safeParse(req);
 
-  if (!input.success) {
-    const errorMessages = input.error.issues.map((issue) => issue.message);
-    return res.status(400).json({ error: errorMessages });
-  }
+  // if (!input.success) {
+  //   const errorMessages = input.error.issues.map((issue) => issue.message);
+  //   return res.status(400).json({ error: errorMessages });
+  // }
 
   const signature = req.headers["x-signature"];
 
@@ -32,26 +32,25 @@ export default async function handler(
   }
 
   const data = req.body;
+  const txHash = data.logs[0].transactionHash;
 
-  const payloadCount: number | null = await redisInstance.get(
-    `CE-${signature}`,
-  );
+  const payloadCount: number | null = await redisInstance.get(`CE-${txHash}`);
 
   //handles the correct order of received webhooks (unconfirmed first, then confirmed)
   if (!data.confirmed && !payloadCount) {
-    await redisInstance.set(`CE-${signature}`, 1);
+    await redisInstance.set(`CE-${txHash}`, 1);
     return res.status(202).end();
   }
 
   //handles incorrect order, if confirmed is sent before unconfirmed
   if (data.confirmed && payloadCount !== 1) {
-    await redisInstance.set(`CE-${signature}`, 1);
+    await redisInstance.set(`CE-${txHash}`, 1);
     return res.status(202).end();
   }
 
   //as long as a prior webhook has been received, regardless of order, perform operations
   if (payloadCount === 1) {
-    await redisInstance.set(`CE-${signature}`, 2);
+    await redisInstance.set(`CE-${txHash}`, 2);
 
     const eventName = getEventName(data.abi);
 
@@ -59,24 +58,22 @@ export default async function handler(
       return res.status(500).json({ error: "Incorrect event name" });
     }
 
-    if (data.abi.length !== 1) {
-      return res.status(500).json({ error: "Invalid abi length" });
-    }
+    // const isValidInputs = parseEventReqBodyInputs(
+    //   eventName,
+    //   data.abi[0].inputs,
+    // );
 
-    const isValidInputs = parseEventReqBodyInputs(
-      eventName,
-      data.abi[0].inputs,
-    );
-
-    if (!isValidInputs) {
-      return res.status(500).json({ error: "Invalid input properties" });
-    }
+    // if (!isValidInputs) {
+    //   return res.status(500).json({ error: "Invalid input properties" });
+    // }
 
     const relevantDataFromEvent = decodeProgramEventLogs(data, eventName);
 
     if (!relevantDataFromEvent) {
       return res.status(500).json({ error: "Failed to decode event logs" });
     }
+
+    console.log("RELEVANT DATA FROM EVENT *** -->", relevantDataFromEvent);
 
     //TODO - store results in different db for tracking
     //await store(relevantDataFromEvent)

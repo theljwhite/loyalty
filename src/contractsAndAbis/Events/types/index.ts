@@ -6,13 +6,13 @@ type UserAddressEventLog = string | `0x${string}`;
 export type ObjectiveCompleteEvent = {
   user: UserAddressEventLog;
   objectiveIndex: number;
-  authority: Authority;
   completedAt: Date;
+  totalPoints: number;
 };
 
 export type PointsUpdateEvent = {
   user: UserAddressEventLog;
-  total: number;
+  totalPoints: number;
   amount: number;
   updatedAt: Date;
 };

@@ -519,14 +519,14 @@ export const handleRelayTxErrors = (error: any): string => {
   const status = error?.response?.status;
   const message = error?.response?.data?.message;
 
-  let newErrorMessage: string = "";
+  let newErrorMessage: string = error;
 
-  if (code === "CALL_EXCEPTION") {
-    newErrorMessage = "Transaction likely would revert";
-  }
-
-  if (reason === "require(false)") {
-    newErrorMessage = "Transaction would revert due to bad request";
+  if (
+    code === "CALL_EXCEPTION" ||
+    code === "BAD_DATA" ||
+    reason === "require(false)"
+  ) {
+    newErrorMessage = "TX halted after static call. TX would likely fail.";
   }
 
   if (

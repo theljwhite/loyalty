@@ -157,8 +157,8 @@ export const decodeProgramEventLogs = (
     return {
       user: decodedObjEvent[0].user,
       objectiveIndex: Number(decodedObjEvent[0].objectiveIndex),
-      authority: decodedObjEvent[0].authority,
       completedAt: new Date(Number(decodedObjEvent[0].completedAt)),
+      totalPoints: Number(decodedObjEvent[0].totalPoints),
       contractAddress: data.logs[0]?.address ?? "",
       chainId: Number(data.chainId),
     };
@@ -172,7 +172,7 @@ export const decodeProgramEventLogs = (
 
     return {
       user: decodedEvent[0].user,
-      total: decodedEvent[0].total,
+      totalPoints: decodedEvent[0].totalPoints,
       amount: decodedEvent[0].amount,
       updatedAt: new Date(Number(decodedEvent[0].updatedAt)),
       contractAddress: data.logs[0]?.address ?? "",

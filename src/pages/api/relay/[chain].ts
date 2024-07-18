@@ -23,6 +23,8 @@ import { validateCipherTextFromEncryptedHash } from "~/utils/encryption";
 //as in, at least this app's NextJS api routes prob wont be used as REST API
 //itll be moved elsewhere. same with the encryption aspects.
 
+//TODO 7/18 better handle possible errors
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,

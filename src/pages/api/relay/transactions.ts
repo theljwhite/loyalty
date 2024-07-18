@@ -1,5 +1,5 @@
 import { type NextApiRequest, type NextApiResponse } from "next";
-import { listRelayerTransactions } from "~/utils/transactionRelayUtils";
+import { listTransactions } from "~/utils/transactionRelayUtils";
 
 //experimental, needs access control
 
@@ -16,7 +16,7 @@ export default async function handler(
   const options = body.options;
 
   try {
-    const transactions = await listRelayerTransactions(chainId, options);
+    const transactions = await listTransactions(chainId, options);
 
     if (!transactions) {
       return res.status(500).json({ error: "Failed to fetch transactions" });

@@ -1,76 +1,64 @@
 [
   {
-    "name": "ObjectiveCompleted",
-    "type": "event",
     "anonymous": false,
     "inputs": [
       {
-        "type": "address",
-        "name": "user",
         "indexed": true,
-        "abi.0.inputs.0.name": "user",
-        "abi.0.inputs.0.type": "address"
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
       },
       {
-        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256",
         "name": "objectiveIndex",
-        "indexed": false,
-        "abi.0.inputs.1.name": "objectiveIndex",
-        "abi.0.inputs.1.type": "uint256"
+        "type": "uint256"
       },
       {
-        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256",
         "name": "completedAt",
-        "indexed": false,
-        "abi.0.inputs.2.name": "completedAt",
-        "abi.0.inputs.2.type": "uint256"
+        "type": "uint256"
       },
       {
-        "type": "bytes32",
-        "name": "authority",
         "indexed": false,
-        "abi.0.inputs.3.name": "authority",
-        "abi.0.inputs.3.type": "bytes32"
+        "internalType": "uint256",
+        "name": "totalPoints",
+        "type": "uint256"
       }
     ],
-    "abi.0.type": "event",
-    "abi.0.name": "ObjectiveCompleted"
+    "name": "ObjectiveCompleted",
+    "type": "event"
   },
   {
-    "name": "PointsUpdate",
-    "type": "event",
     "anonymous": false,
     "inputs": [
       {
-        "type": "address",
-        "name": "user",
         "indexed": true,
-        "abi.1.inputs.0.name": "user",
-        "abi.1.inputs.0.type": "address"
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
       },
       {
-        "type": "uint256",
-        "name": "total",
         "indexed": false,
-        "abi.1.inputs.1.name": "total",
-        "abi.1.inputs.1.type": "uint256"
+        "internalType": "uint256",
+        "name": "totalPoints",
+        "type": "uint256"
       },
       {
-        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256",
         "name": "amount",
-        "indexed": false,
-        "abi.1.inputs.2.name": "amount",
-        "abi.1.inputs.2.type": "uint256"
+        "type": "uint256"
       },
       {
-        "type": "uint256",
-        "name": "updatedAt",
         "indexed": false,
-        "abi.1.inputs.3.name": "updatedAt",
-        "abi.1.inputs.3.type": "uint256"
+        "internalType": "uint256",
+        "name": "updatedAt",
+        "type": "uint256"
       }
     ],
-    "abi.1.type": "event",
-    "abi.1.name": "PointsUpdate"
+    "name": "PointsUpdate",
+    "type": "event"
   }
 ]
