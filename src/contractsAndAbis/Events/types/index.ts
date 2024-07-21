@@ -19,8 +19,7 @@ export type PointsUpdateEvent = {
 
 export type ERC20RewardedEvent = {
   user: UserAddressEventLog;
-  amount: number; //this may need to be bigint
-  rewardCondition: ERC20RewardCondition;
+  amount: bigint;
   rewardedAt: Date;
 };
 

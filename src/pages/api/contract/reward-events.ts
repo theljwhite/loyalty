@@ -1,26 +1,17 @@
 import { type NextApiRequest, type NextApiResponse } from "next";
+import { redisInstance } from "~/utils/apiValidation";
 import { id } from "ethers";
 import {
-  decodeProgramEventLogs,
-  eventApiRouteSchema,
+  decodeEscrowRewardLogs,
   getEventName,
-  parseEventReqBodyInputs,
 } from "~/utils/contractEventListener";
-import { redisInstance } from "~/utils/apiValidation";
 
-//TODO - unfinished (this will also prob not be done from this app, but elsewhere)
-//for now, parsing inputs is commented out
+//TODO - parsing inputs commented out for now
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  // const input = eventApiRouteSchema.safeParse(req);
-
-  // if (!input.success) {
-  //   const errorMessages = input.error.issues.map((issue) => issue.message);
-  //   return res.status(400).json({ error: errorMessages });
-  // }
   const signature = req.headers["x-signature"];
 
   const generatedSignature = id(
@@ -32,24 +23,24 @@ export default async function handler(
 
   const data = req.body;
   const txHash = data.logs[0].transactionHash;
+  const payloadCount: number | null = await redisInstance.get(`RE-${txHash}`);
 
-  const payloadCount: number | null = await redisInstance.get(`CE-${txHash}`);
+  console.log("REWARD EVENT PAYLOAD COUNT -->", payloadCount);
 
-  //handles the correct order of received webhooks (unconfirmed first, then confirmed)
   if (!data.confirmed && !payloadCount) {
-    await redisInstance.set(`CE-${txHash}`, 1);
+    await redisInstance.set(`RE-${txHash}`, 1);
     return res.status(202).end();
   }
 
   //handles incorrect order, if confirmed is sent before unconfirmed
   if (data.confirmed && payloadCount !== 1) {
-    await redisInstance.set(`CE-${txHash}`, 1);
+    await redisInstance.set(`RE-${txHash}`, 1);
     return res.status(202).end();
   }
 
   //as long as a prior webhook has been received, regardless of order, perform operations
   if (payloadCount === 1) {
-    await redisInstance.set(`CE-${txHash}`, 2);
+    await redisInstance.set(`RE-${txHash}`, 2);
 
     const eventName = getEventName(data.abi);
 
@@ -57,16 +48,9 @@ export default async function handler(
       return res.status(500).json({ error: "Incorrect event name" });
     }
 
-    // const isValidInputs = parseEventReqBodyInputs(
-    //   eventName,
-    //   data.abi[0].inputs,
-    // );
+    //TODO - parse inputs;
 
-    // if (!isValidInputs) {
-    //   return res.status(500).json({ error: "Invalid input properties" });
-    // }
-
-    const relevantDataFromEvent = decodeProgramEventLogs(data, eventName);
+    const relevantDataFromEvent = decodeEscrowRewardLogs(data, eventName);
 
     if (!relevantDataFromEvent) {
       return res.status(500).json({ error: "Failed to decode event logs" });

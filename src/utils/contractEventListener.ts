@@ -9,6 +9,12 @@ import {
 } from "~/contractsAndAbis/Events/types";
 import LPEventsAbi from "../contractsAndAbis/Events/LPEventsAbi.json";
 import EscrowRewardEventsAbi from "../contractsAndAbis/Events/EscrowRewardEventsAbi.json";
+import LoyaltyERC20Escrow from "../contractsAndAbis/0.03/ERC20Escrow/LoyaltyERC20Escrow.json";
+import LoyaltyERC721Escrow from "../contractsAndAbis/0.03/ERC721Escrow/LoyaltyERC721Escrow.json";
+import LoyaltyERC1155Escrow from "../contractsAndAbis/0.03/ERC1155Escrow/LoyaltyERC1155Escrow.json";
+
+import LoyaltyProgram from "../contractsAndAbis/0.03/LoyaltyProgram/LoyaltyProgram.json";
+import { Interface } from "ethers";
 
 //TODO - decode logs can be made more dynamic if need be (if more events need to be listened to in future)
 
@@ -88,7 +94,7 @@ export const eventApiRouteSchema = z.object({
     erc20Approvals: eventReqBodyParamsEmptyArray,
     nftTransfers: eventReqBodyParamsEmptyArray,
     nativeBalances: z.array(z.any()),
-    nftTokenApprovals: z.any(),
+    nftTokenApprovals: z.array(z.any()),
     nftApprovals: z.object({
       ERC1155: eventReqBodyParamsEmptyArray,
       ERC721: eventReqBodyParamsEmptyArray,
@@ -146,35 +152,34 @@ export const decodeProgramEventLogs = (
   data: EventRequestBody,
   eventName: string,
 ): ProgramDecodedLogs | null => {
-  const tempData = data as any;
+  const lpInterface = new Interface(LoyaltyProgram.abi);
+
+  const logs = data.logs.map(({ topic0, topic1, topic2, topic3, ...log }) => ({
+    ...log,
+    topics: [topic0 ?? "0x", topic1 ?? "0x", topic2 ?? "0x", topic3 ?? "0x"],
+  }));
+
+  const decodedLogs = logs.map((log) => lpInterface.parseLog(log));
+
+  if (!decodedLogs || decodedLogs.length === 0) return null;
 
   if (eventName === "ObjectiveCompleted") {
-    const decodedObjEvent =
-      Moralis.Streams.parsedLogs<ObjectiveCompleteEvent>(tempData);
-
-    if (!decodedObjEvent || !decodedObjEvent[0]) return null;
-
     return {
-      user: decodedObjEvent[0].user,
-      objectiveIndex: Number(decodedObjEvent[0].objectiveIndex),
-      completedAt: new Date(Number(decodedObjEvent[0].completedAt)),
-      totalPoints: Number(decodedObjEvent[0].totalPoints),
+      user: decodedLogs[0]?.args[0],
+      objectiveIndex: Number(decodedLogs[0]?.args[1]),
+      completedAt: new Date(Number(decodedLogs[0]?.args[2]) * 1000),
+      totalPoints: Number(decodedLogs[0]?.args[3]),
       contractAddress: data.logs[0]?.address ?? "",
       chainId: Number(data.chainId),
     };
   }
 
   if (eventName === "PointsUpdate") {
-    const decodedEvent =
-      Moralis.Streams.parsedLogs<PointsUpdateEvent>(tempData);
-
-    if (!decodedEvent || !decodedEvent[0]) return null;
-
     return {
-      user: decodedEvent[0].user,
-      totalPoints: decodedEvent[0].totalPoints,
-      amount: decodedEvent[0].amount,
-      updatedAt: new Date(Number(decodedEvent[0].updatedAt)),
+      user: decodedLogs[0]?.args[0],
+      totalPoints: Number(decodedLogs[0]?.args[1]),
+      amount: Number(decodedLogs[0]?.args[2]),
+      updatedAt: new Date(decodedLogs[0]?.args[3]),
       contractAddress: data.logs[0]?.address ?? "",
       chainId: Number(data.chainId),
     };
@@ -187,47 +192,46 @@ export const decodeEscrowRewardLogs = (
   data: EventRequestBody,
   eventName: string,
 ): EscrowRewardDecodedLogs | null => {
-  const tempData = data as any;
+  const logs = data.logs.map(({ topic0, topic1, topic2, topic3, ...log }) => ({
+    ...log,
+    topics: [topic0 ?? "0x", topic1 ?? "0x", topic2 ?? "0x", topic3 ?? "0x"],
+  }));
 
   if (eventName === "ERC20Rewarded") {
-    const decodedERC20Event =
-      Moralis.Streams.parsedLogs<ERC20RewardedEvent>(tempData);
-    if (!decodedERC20Event || !decodedERC20Event[0]) return null;
+    const erc20EscrowInterface = new Interface(LoyaltyERC20Escrow.abi);
+    const decodedLogs = logs.map((log) => erc20EscrowInterface.parseLog(log));
+
     return {
-      user: decodedERC20Event[0].user,
-      amount: decodedERC20Event[0].amount,
-      rewardCondition: decodedERC20Event[0].rewardCondition,
-      rewardedAt: new Date(Number(decodedERC20Event[0].rewardedAt)),
+      user: decodedLogs[0]?.args[0],
+      amount: decodedLogs[0]?.args[1],
+      rewardedAt: new Date(Number(decodedLogs[0]?.args[2]) * 1000),
       contractAddress: data.logs[0]?.address ?? "",
       chainId: Number(data.chainId),
     };
   }
 
-  if (eventName === "ERC721TokenRewarded") {
-    const decodedERC721Event =
-      Moralis.Streams.parsedLogs<ERC721RewardedEvent>(tempData);
-    if (!decodedERC721Event || !decodedERC721Event[0]) return null;
+  if (eventName === "ERC721Rewarded") {
+    const erc721EscrowInterface = new Interface(LoyaltyERC721Escrow.abi);
+    const decodedLogs = logs.map((log) => erc721EscrowInterface.parseLog(log));
 
     return {
-      user: decodedERC721Event[0].user,
-      token: decodedERC721Event[0].token,
-      rewardedAt: new Date(Number(decodedERC721Event[0].rewardedAt)),
+      user: decodedLogs[0]?.args[0],
+      token: Number(decodedLogs[0]?.args[1]),
+      rewardedAt: new Date(Number(decodedLogs[0]?.args[2])),
       contractAddress: data.logs[0]?.address ?? "",
       chainId: Number(data.chainId),
     };
   }
 
   if (eventName === "ERC1155Rewarded") {
-    const decodedERC1155Event =
-      Moralis.Streams.parsedLogs<ERC1155RewardedEvent>(tempData);
-
-    if (!decodedERC1155Event || !decodedERC1155Event[0]) return null;
+    const erc1155EscrowInterface = new Interface(LoyaltyERC1155Escrow.abi);
+    const decodedLogs = logs.map((log) => erc1155EscrowInterface.parseLog(log));
 
     return {
-      user: decodedERC1155Event[0].user,
-      token: decodedERC1155Event[0].token,
-      amount: decodedERC1155Event[0].amount,
-      rewardedAt: new Date(Number(decodedERC1155Event[0]?.rewardedAt)),
+      user: decodedLogs[0]?.args[0],
+      token: Number(decodedLogs[0]?.args[1]),
+      amount: decodedLogs[0]?.args[2],
+      rewardedAt: new Date(Number(decodedLogs[0]?.args[2])),
       contractAddress: data.logs[0]?.address ?? "",
       chainId: Number(data.chainId),
     };

@@ -526,7 +526,8 @@ export const handleRelayTxErrors = (error: any): string => {
     code === "BAD_DATA" ||
     reason === "require(false)"
   ) {
-    newErrorMessage = "TX halted after static call. TX would likely fail.";
+    newErrorMessage =
+      "TX was manually halted after static call as it would likely fail.";
   }
 
   if (
