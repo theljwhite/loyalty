@@ -15,6 +15,7 @@ import { ZodError } from "zod";
 
 import { getServerAuthSession } from "~/server/auth";
 import { db } from "~/server/db";
+import { appRouter } from "./root";
 
 /**
  * 1. CONTEXT
@@ -129,3 +130,13 @@ const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
  * @see https://trpc.io/docs/procedures
  */
 export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
+
+/**
+ *
+ * Caller for server side calls from same server they're hosted in
+ *
+ */
+const { createCallerFactory } = t;
+const createCaller = createCallerFactory(appRouter);
+
+export const caller = createCaller({ db, session: null });
