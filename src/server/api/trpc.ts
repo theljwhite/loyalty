@@ -136,7 +136,5 @@ export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
  * Caller for server side calls from same server they're hosted in
  *
  */
-const { createCallerFactory } = t;
-const createCaller = createCallerFactory(appRouter);
-
-export const caller = createCaller({ db, session: null });
+// const createCaller = t.createCallerFactory(appRouter);
+// export const caller = createCaller({ db, session: null });

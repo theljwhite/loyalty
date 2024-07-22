@@ -4,6 +4,35 @@ import { isAddress } from "ethers";
 
 //TODO 6/7 - move zod schemas to separate file?
 
+export const walletEventNameShape = z.enum([
+  "ERC20UserWithdraw",
+  "ERC20CreatorWithdraw",
+  "ERC20Deposit",
+  "ERC721TokenReceived",
+  "ERC721BatchReceived",
+  "ERC721UserWithdraw",
+  "ERC721CreatorWithdraw",
+  "ERC1155TokenReceived",
+  "ERC1155BatchReceived",
+  "ERC1155CreatorWithdraw",
+  "ERC1155CreatorWithdrawAll",
+  "ERC1155UserWithdrawAll",
+]);
+
+export const progressionEventNameShape = z.enum([
+  "ObjectiveCompleted",
+  "PointsUpdate",
+]);
+
+export const rewardEventNameShape = z.enum([
+  "ERC20Rewarded",
+  "ERC721Rewarded",
+  "ERC1155Rewarded",
+]);
+
+export type ProgressionEventName = z.infer<typeof progressionEventNameShape>;
+export type RewardEventName = z.infer<typeof rewardEventNameShape>;
+
 export const receivedEventBase = z.object({
   loyaltyAddress: z.string().refine(isAddress, "Invalid loyalty address"),
   transactionHash: z.string().length(66),
@@ -13,7 +42,7 @@ export const receivedEventBase = z.object({
 
 export const progressionEventSchema = z
   .object({
-    eventName: z.enum(["ObjectiveCompleted", "PointsUpdate"]),
+    eventName: progressionEventNameShape,
     pointsChange: z.number().optional(),
     objectiveIndex: z.number().optional(),
     userPointsTotal: z.number(),
@@ -53,21 +82,6 @@ export const rewardEventSchema = z
       });
     }
   });
-
-export const walletEventNameShape = z.enum([
-  "ERC20UserWithdraw",
-  "ERC20CreatorWithdraw",
-  "ERC20Deposit",
-  "ERC721TokenReceived",
-  "ERC721BatchReceived",
-  "ERC721UserWithdraw",
-  "ERC721CreatorWithdraw",
-  "ERC1155TokenReceived",
-  "ERC1155BatchReceived",
-  "ERC1155CreatorWithdraw",
-  "ERC1155CreatorWithdrawAll",
-  "ERC1155UserWithdrawAll",
-]);
 
 const erc1155BatchEventShape = z
   .object({
@@ -123,97 +137,6 @@ export const walletEscrowEventSchema = baseWalletEscrowEventSchema.superRefine(
 );
 
 export const eventsRouter = createTRPCRouter({
-  createProgressionEvent: protectedProcedure
-    .input(progressionEventSchema)
-    .mutation(async ({ ctx, input }) => {
-      const {
-        eventName,
-        pointsChange,
-        objectiveIndex,
-        userPointsTotal,
-        loyaltyAddress,
-        transactionHash,
-        userAddress,
-        timestamp,
-      } = input;
-
-      const event = await ctx.db.progressionEvent.create({
-        data: {
-          objectiveIndex,
-          pointsChange,
-          timestamp: new Date(timestamp * 1000),
-          userPointsTotal,
-          eventName,
-          loyaltyAddress,
-          transactionHash,
-          userAddress,
-        },
-      });
-
-      return event;
-    }),
-  createRewardEvent: protectedProcedure
-    .input(rewardEventSchema)
-    .mutation(async ({ ctx, input }) => {
-      const {
-        eventName,
-        loyaltyAddress,
-        transactionHash,
-        userAddress,
-        timestamp,
-        tokenId,
-        tokenAmount,
-        erc20Amount,
-        escrowType,
-      } = input;
-
-      const event = await ctx.db.rewardEvent.create({
-        data: {
-          tokenId: tokenId,
-          tokenAmount,
-          erc20Amount,
-          timestamp: new Date(timestamp * 1000),
-          escrowType,
-          eventName,
-          loyaltyAddress,
-          transactionHash,
-          userAddress,
-        },
-      });
-      return event;
-    }),
-  createWalletEscrowEvent: protectedProcedure
-    .input(walletEscrowEventSchema)
-    .mutation(async ({ ctx, input }) => {
-      const {
-        eventName,
-        loyaltyAddress,
-        transactionHash,
-        userAddress,
-        timestamp,
-        tokenId,
-        tokenAmount,
-        erc20Amount,
-        erc721Batch,
-        erc1155Batch,
-      } = input;
-
-      const event = await ctx.db.walletEscrowEvent.create({
-        data: {
-          timestamp: new Date(timestamp * 1000),
-          transactorAddress: userAddress,
-          eventName,
-          loyaltyAddress,
-          transactionHash,
-          tokenId,
-          tokenAmount,
-          erc20Amount,
-          erc721Batch,
-          erc1155Batch,
-        },
-      });
-      return event;
-    }),
   getAllProgEventsByUser: protectedProcedure
     .input(z.object({ userAddress: z.string(), loyaltyAddress: z.string() }))
     .query(async ({ ctx, input }) => {

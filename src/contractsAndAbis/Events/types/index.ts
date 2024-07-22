@@ -1,12 +1,9 @@
-import { type Authority } from "@prisma/client";
-import { type ERC20RewardCondition } from "~/customHooks/useEscrowSettings/types";
-
 type UserAddressEventLog = string | `0x${string}`;
 
 export type ObjectiveCompleteEvent = {
   user: UserAddressEventLog;
   objectiveIndex: number;
-  completedAt: Date;
+  timestamp: number;
   totalPoints: number;
 };
 
@@ -14,24 +11,24 @@ export type PointsUpdateEvent = {
   user: UserAddressEventLog;
   totalPoints: number;
   amount: number;
-  updatedAt: Date;
+  timestamp: number;
 };
 
 export type ERC20RewardedEvent = {
   user: UserAddressEventLog;
   amount: bigint;
-  rewardedAt: Date;
+  rewardedAt: number;
 };
 
 export type ERC721RewardedEvent = {
   user: UserAddressEventLog;
   token: number;
-  rewardedAt: Date;
+  rewardedAt: number;
 };
 
 export type ERC1155RewardedEvent = {
   user: UserAddressEventLog;
   token: number;
   amount: number;
-  rewardedAt: Date;
+  rewardedAt: number;
 };

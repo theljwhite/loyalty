@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { walletEscrowEventSchema } from "./events";
+import { rewardEventNameShape } from "./events";
 
-const rewardEventUpdateInputSchema = z.object({
-  eventName: z.enum(["ERC20Rewarded", "ERC721Rewarded", "ERC1155Rewarded"]),
+export const rewardEventUpdateInputSchema = z.object({
+  eventName: rewardEventNameShape,
   userAddress: z.string(),
   loyaltyAddress: z.string(),
   topics: z.object({
@@ -115,106 +115,6 @@ export const analyticsRouter = createTRPCRouter({
         (analytics.returningUsers / analytics.totalUniqueUsers) * 100;
 
       return retentionRate;
-    }),
-  updateTotalsFromProgressionEvents: protectedProcedure
-    .input(
-      z.object({
-        eventName: z.enum(["ObjectiveCompleted", "PointsUpdate"]),
-        userAddress: z.string(),
-        loyaltyAddress: z.string(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { eventName, userAddress, loyaltyAddress } = input;
-
-      const isObjectiveEvent = eventName === "ObjectiveCompleted";
-
-      await ctx.db.$transaction(async (tx) => {
-        const userProgEventsCount = await tx.progressionEvent.count({
-          where: { loyaltyAddress, userAddress },
-        });
-
-        let returningUsersIncrement = 0;
-        let totalUniqueUsersIncrement = 0;
-
-        if (userProgEventsCount === 0) totalUniqueUsersIncrement = 1;
-        if (userProgEventsCount === 1) returningUsersIncrement = 1;
-
-        await tx.programAnalyticsSummary.update({
-          where: { loyaltyAddress },
-          data: {
-            totalUniqueUsers: { increment: totalUniqueUsersIncrement },
-            returningUsers: { increment: returningUsersIncrement },
-            totalObjectivesCompleted: isObjectiveEvent
-              ? { increment: 1 }
-              : undefined,
-          },
-        });
-      });
-    }),
-  updateTotalsFromRewardEvents: protectedProcedure
-    .input(rewardEventUpdateInputSchema)
-    .mutation(async ({ ctx, input }) => {
-      //this is possibly temporary
-      const { eventName, userAddress, loyaltyAddress, topics } = input;
-      const { erc20Amount, tokenAmount, tokenId } = topics;
-
-      const isERC20Event = eventName === "ERC20Rewarded" && erc20Amount;
-      const isERC721Event = eventName === "ERC721Rewarded" && !tokenAmount;
-      const isERC1155Event =
-        eventName === "ERC1155Rewarded" && tokenAmount && tokenId;
-
-      await ctx.db.$transaction(async (tx) => {
-        const userRewardEventsCount = await tx.rewardEvent.count({
-          where: { loyaltyAddress, userAddress },
-        });
-
-        const totalUniqueRewardedIncrement =
-          userRewardEventsCount === 0 ? 1 : 0;
-
-        const unclaimedTokensIncrement = isERC721Event
-          ? 1
-          : isERC1155Event
-            ? tokenAmount
-            : 0;
-
-        await tx.programAnalyticsSummary.update({
-          where: { loyaltyAddress },
-          data: {
-            totalUniqueRewarded: { increment: totalUniqueRewardedIncrement },
-            totalUnclaimedERC20: isERC20Event
-              ? { increment: erc20Amount }
-              : undefined,
-            totalUnclaimedTokens: { increment: unclaimedTokensIncrement },
-          },
-        });
-      });
-    }),
-  updateTotalsFromWithdrawEvents: protectedProcedure
-    .input(walletEscrowEventSchema)
-    .mutation(async ({ ctx, input }) => {
-      //possibly temp
-      const { loyaltyAddress, eventName, erc20Amount, erc1155Batch } = input;
-
-      let totalUserWithdrawnIncrement = 0;
-
-      if (eventName === "ERC1155UserWithdrawAll") {
-        //TODO maybe track amounts with tkn ids too for erc1155
-        totalUserWithdrawnIncrement = erc1155Batch?.tokenIds.length ?? 0;
-      }
-
-      if (eventName === "ERC721UserWithdraw") totalUserWithdrawnIncrement = 1;
-
-      const update = await ctx.db.programAnalyticsSummary.update({
-        where: { loyaltyAddress },
-        data: {
-          ...(totalUserWithdrawnIncrement > 0 && {
-            totalTokensWithdrawn: totalUserWithdrawnIncrement,
-          }),
-          ...(erc20Amount && { totalERC20Withdrawn: erc20Amount }),
-        },
-      });
-      return update.totalTokensWithdrawn;
     }),
   getMonthlyAndDailyUsers: protectedProcedure
     .input(z.object({ loyaltyAddress: z.string() }))

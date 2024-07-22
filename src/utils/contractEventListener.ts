@@ -1,20 +1,22 @@
 import Moralis from "moralis";
 import { z } from "zod";
 import {
-  type ObjectiveCompleteEvent,
-  type PointsUpdateEvent,
   type ERC20RewardedEvent,
   type ERC721RewardedEvent,
   type ERC1155RewardedEvent,
 } from "~/contractsAndAbis/Events/types";
+import {
+  type ProgressionEventName,
+  type RewardEventName,
+} from "~/server/api/routers/events";
+import { Interface } from "ethers";
+import { type EscrowType } from "@prisma/client";
 import LPEventsAbi from "../contractsAndAbis/Events/LPEventsAbi.json";
 import EscrowRewardEventsAbi from "../contractsAndAbis/Events/EscrowRewardEventsAbi.json";
 import LoyaltyERC20Escrow from "../contractsAndAbis/0.03/ERC20Escrow/LoyaltyERC20Escrow.json";
 import LoyaltyERC721Escrow from "../contractsAndAbis/0.03/ERC721Escrow/LoyaltyERC721Escrow.json";
 import LoyaltyERC1155Escrow from "../contractsAndAbis/0.03/ERC1155Escrow/LoyaltyERC1155Escrow.json";
-
 import LoyaltyProgram from "../contractsAndAbis/0.03/LoyaltyProgram/LoyaltyProgram.json";
-import { Interface } from "ethers";
 
 //TODO - decode logs can be made more dynamic if need be (if more events need to be listened to in future)
 
@@ -23,15 +25,22 @@ export type WithChainLogs = {
   chainId: number;
 };
 
-export type ProgramDecodedLogs = (ObjectiveCompleteEvent | PointsUpdateEvent) &
-  WithChainLogs;
+export type ProgressionDecodedLogs = {
+  user: string;
+  timestamp: number;
+  totalPoints: number;
+  objectiveIndex?: number;
+  amount?: number;
+} & WithChainLogs;
 
-export type EscrowRewardDecodedLogs = (
-  | ERC20RewardedEvent
-  | ERC721RewardedEvent
-  | ERC1155RewardedEvent
-) &
-  WithChainLogs;
+export type EscrowRewardDecodedLogs = {
+  user: string;
+  rewardedAt: number;
+  erc20Amount?: bigint;
+  tokenAmount?: number;
+  tokenId?: number;
+  escrowType: EscrowType;
+} & WithChainLogs;
 
 type EventRequestBody = z.infer<typeof eventApiRouteSchema.shape.body>;
 type EventInputs = z.infer<typeof eventReqBodyInputsShape>;
@@ -125,14 +134,24 @@ export const parseEventReqBodyInputs = (
   return valuesMatch;
 };
 
-export const getEventName = (abis: EventReqBodyAbiShape): string | null => {
+export const getEventName = (
+  abis: EventReqBodyAbiShape,
+): {
+  progEventName?: ProgressionEventName;
+  rewardEventName?: RewardEventName;
+} => {
   const onlyEvents = abis.filter((item) => item.type === "event");
-  const matchingEvent = onlyEvents.find(
-    (event) =>
-      programEventNames.includes(event.name) ||
-      escrowEventNames.includes(event.name),
+  const progEvent = onlyEvents.find((event) =>
+    programEventNames.includes(event.name),
   );
-  return matchingEvent ? matchingEvent.name : null;
+  const rewardEvent = onlyEvents.find((event) =>
+    escrowEventNames.includes(event.name),
+  );
+
+  return {
+    progEventName: progEvent?.name as ProgressionEventName,
+    rewardEventName: rewardEvent?.name as RewardEventName,
+  };
 };
 
 const getAbiEventInputs = (eventName: string): EventInputs | null => {
@@ -148,16 +167,13 @@ const getAbiEventInputs = (eventName: string): EventInputs | null => {
   return null;
 };
 
-export const decodeProgramEventLogs = (
+export const decodeProgressionEvent = (
   data: EventRequestBody,
   eventName: string,
-): ProgramDecodedLogs | null => {
+): ProgressionDecodedLogs | null => {
   const lpInterface = new Interface(LoyaltyProgram.abi);
 
-  const logs = data.logs.map(({ topic0, topic1, topic2, topic3, ...log }) => ({
-    ...log,
-    topics: [topic0 ?? "0x", topic1 ?? "0x", topic2 ?? "0x", topic3 ?? "0x"],
-  }));
+  const logs = moralisLogsToEthers(data);
 
   const decodedLogs = logs.map((log) => lpInterface.parseLog(log));
 
@@ -167,7 +183,7 @@ export const decodeProgramEventLogs = (
     return {
       user: decodedLogs[0]?.args[0],
       objectiveIndex: Number(decodedLogs[0]?.args[1]),
-      completedAt: new Date(Number(decodedLogs[0]?.args[2]) * 1000),
+      timestamp: decodedLogs[0]?.args[2],
       totalPoints: Number(decodedLogs[0]?.args[3]),
       contractAddress: data.logs[0]?.address ?? "",
       chainId: Number(data.chainId),
@@ -179,12 +195,11 @@ export const decodeProgramEventLogs = (
       user: decodedLogs[0]?.args[0],
       totalPoints: Number(decodedLogs[0]?.args[1]),
       amount: Number(decodedLogs[0]?.args[2]),
-      updatedAt: new Date(decodedLogs[0]?.args[3]),
+      timestamp: decodedLogs[0]?.args[3],
       contractAddress: data.logs[0]?.address ?? "",
       chainId: Number(data.chainId),
     };
   }
-
   return null;
 };
 
@@ -192,10 +207,7 @@ export const decodeEscrowRewardLogs = (
   data: EventRequestBody,
   eventName: string,
 ): EscrowRewardDecodedLogs | null => {
-  const logs = data.logs.map(({ topic0, topic1, topic2, topic3, ...log }) => ({
-    ...log,
-    topics: [topic0 ?? "0x", topic1 ?? "0x", topic2 ?? "0x", topic3 ?? "0x"],
-  }));
+  const logs = moralisLogsToEthers(data);
 
   if (eventName === "ERC20Rewarded") {
     const erc20EscrowInterface = new Interface(LoyaltyERC20Escrow.abi);
@@ -203,10 +215,11 @@ export const decodeEscrowRewardLogs = (
 
     return {
       user: decodedLogs[0]?.args[0],
-      amount: decodedLogs[0]?.args[1],
-      rewardedAt: new Date(Number(decodedLogs[0]?.args[2]) * 1000),
+      erc20Amount: decodedLogs[0]?.args[1],
+      rewardedAt: Number(decodedLogs[0]?.args[2]),
       contractAddress: data.logs[0]?.address ?? "",
       chainId: Number(data.chainId),
+      escrowType: "ERC20",
     };
   }
 
@@ -216,10 +229,11 @@ export const decodeEscrowRewardLogs = (
 
     return {
       user: decodedLogs[0]?.args[0],
-      token: Number(decodedLogs[0]?.args[1]),
-      rewardedAt: new Date(Number(decodedLogs[0]?.args[2])),
+      tokenId: Number(decodedLogs[0]?.args[1]),
+      rewardedAt: Number(decodedLogs[0]?.args[2]),
       contractAddress: data.logs[0]?.address ?? "",
       chainId: Number(data.chainId),
+      escrowType: "ERC721",
     };
   }
 
@@ -229,15 +243,32 @@ export const decodeEscrowRewardLogs = (
 
     return {
       user: decodedLogs[0]?.args[0],
-      token: Number(decodedLogs[0]?.args[1]),
-      amount: decodedLogs[0]?.args[2],
-      rewardedAt: new Date(Number(decodedLogs[0]?.args[2])),
+      tokenId: Number(decodedLogs[0]?.args[1]),
+      tokenAmount: decodedLogs[0]?.args[2],
+      rewardedAt: Number(decodedLogs[0]?.args[2]),
       contractAddress: data.logs[0]?.address ?? "",
       chainId: Number(data.chainId),
+      escrowType: "ERC1155",
     };
   }
 
   return null;
+};
+
+const moralisLogsToEthers = (
+  data: EventRequestBody,
+): {
+  topics: string[];
+  data: string;
+  logIndex: string;
+  transactionHash: string;
+  address: string;
+}[] => {
+  const logs = data.logs.map(({ topic0, topic1, topic2, topic3, ...log }) => ({
+    ...log,
+    topics: [topic0 ?? "0x", topic1 ?? "0x", topic2 ?? "0x", topic3 ?? "0x"],
+  }));
+  return logs;
 };
 
 export const addContractAddressToStream = async (
@@ -258,7 +289,6 @@ export const addContractAddressToStream = async (
 
     return false;
   } catch (error) {
-    console.error("erro from add", error);
     return false;
   }
 };
