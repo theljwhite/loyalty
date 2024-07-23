@@ -34,7 +34,10 @@ export type ProgressionEventName = z.infer<typeof progressionEventNameShape>;
 export type RewardEventName = z.infer<typeof rewardEventNameShape>;
 
 export const receivedEventBase = z.object({
-  loyaltyAddress: z.string().refine(isAddress, "Invalid loyalty address"),
+  loyaltyAddress: z
+    .string()
+    .refine(isAddress, "Invalid loyalty address")
+    .optional(),
   transactionHash: z.string().length(66),
   userAddress: z.string().refine(isAddress, "Invalid user address"),
   timestamp: z.number().gt(1000000000),
@@ -63,6 +66,7 @@ export const progressionEventSchema = z
 
 export const rewardEventSchema = z
   .object({
+    escrowAddress: z.string(),
     eventName: z.enum(["ERC20Rewarded", "ERC721Rewarded", "ERC1155Rewarded"]),
     escrowType: z.enum(["ERC20", "ERC721", "ERC1155"]),
     tokenId: z.number().optional(),
@@ -93,6 +97,7 @@ const erc1155BatchEventShape = z
   });
 
 export const baseWalletEscrowEventSchema = z.object({
+  escrowAddress: z.string(),
   eventName: walletEventNameShape,
   erc20Amount: z.bigint().optional(),
   tokenId: z.number().optional(),

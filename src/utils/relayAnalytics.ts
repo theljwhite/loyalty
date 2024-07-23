@@ -29,7 +29,7 @@ export const createProgressionEvent = async (
       timestamp: new Date(timestamp * 1000),
       userPointsTotal,
       eventName,
-      loyaltyAddress,
+      loyaltyAddress: loyaltyAddress?.toLowerCase() ?? "",
       transactionHash,
       userAddress,
     },
@@ -42,8 +42,8 @@ export const createRewardEvent = async (
   input: z.infer<typeof rewardEventSchema>,
 ): Promise<typeof event> => {
   const {
+    escrowAddress,
     eventName,
-    loyaltyAddress,
     transactionHash,
     userAddress,
     timestamp,
@@ -53,6 +53,13 @@ export const createRewardEvent = async (
     escrowType,
   } = input;
 
+  //TODO - this first call wont be needed as LP address can also be emitted by
+  //escrow contract event as one way to avoid this additional call
+  const program = await db.loyaltyProgram.findUnique({
+    where: { escrowAddress },
+    select: { address: true },
+  });
+
   const event = await db.rewardEvent.create({
     data: {
       tokenId: tokenId,
@@ -61,7 +68,7 @@ export const createRewardEvent = async (
       timestamp: new Date(timestamp * 1000),
       escrowType,
       eventName,
-      loyaltyAddress,
+      loyaltyAddress: program?.address.toLowerCase() ?? "",
       transactionHash,
       userAddress,
     },
@@ -73,8 +80,8 @@ export const createWalletEvent = async (
   input: z.infer<typeof walletEscrowEventSchema>,
 ): Promise<typeof event> => {
   const {
+    escrowAddress,
     eventName,
-    loyaltyAddress,
     transactionHash,
     userAddress,
     timestamp,
@@ -85,12 +92,17 @@ export const createWalletEvent = async (
     erc1155Batch,
   } = input;
 
+  const program = await db.loyaltyProgram.findUnique({
+    where: { escrowAddress },
+    select: { address: true },
+  });
+
   const event = await db.walletEscrowEvent.create({
     data: {
       timestamp: new Date(timestamp * 1000),
       transactorAddress: userAddress,
       eventName,
-      loyaltyAddress,
+      loyaltyAddress: program?.address.toLowerCase() ?? "",
       transactionHash,
       tokenId,
       tokenAmount,

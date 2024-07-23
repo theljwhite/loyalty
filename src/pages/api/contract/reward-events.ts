@@ -59,7 +59,8 @@ export default async function handler(
         return res.status(500).json({ error: "Failed to decode event logs" });
       }
 
-      await createRewardEvent({
+      const dbEvent = await createRewardEvent({
+        escrowAddress: data.logs[0].address,
         eventName: rewardEventName,
         loyaltyAddress: decodedEvent.contractAddress,
         transactionHash: data.logs[0].transactionHash,
@@ -74,7 +75,7 @@ export default async function handler(
       await updateTotalsFromRewardEvents({
         eventName: rewardEventName,
         userAddress: decodedEvent.user,
-        loyaltyAddress: decodedEvent.contractAddress,
+        loyaltyAddress: dbEvent.loyaltyAddress,
         topics: {
           erc20Amount: decodedEvent.erc20Amount,
           tokenAmount: decodedEvent.tokenAmount,
