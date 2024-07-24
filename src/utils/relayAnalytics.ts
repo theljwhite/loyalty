@@ -26,7 +26,7 @@ export const createProgressionEvent = async (
     data: {
       objectiveIndex,
       pointsChange,
-      timestamp: new Date(timestamp * 1000),
+      timestamp: new Date(Number(timestamp) * 1000),
       userPointsTotal,
       eventName,
       loyaltyAddress: loyaltyAddress?.toLowerCase() ?? "",
@@ -56,7 +56,7 @@ export const createRewardEvent = async (
   //TODO - this first call wont be needed as LP address can also be emitted by
   //escrow contract event as one way to avoid this additional call
   const program = await db.loyaltyProgram.findUnique({
-    where: { escrowAddress },
+    where: { escrowAddress: escrowAddress.toLowerCase() },
     select: { address: true },
   });
 
@@ -65,7 +65,7 @@ export const createRewardEvent = async (
       tokenId: tokenId,
       tokenAmount,
       erc20Amount,
-      timestamp: new Date(timestamp * 1000),
+      timestamp: new Date(Number(timestamp) * 1000),
       escrowType,
       eventName,
       loyaltyAddress: program?.address.toLowerCase() ?? "",
@@ -123,7 +123,7 @@ export const updateTotalsFromProgressionEvents = async (
 
   await db.$transaction(async (tx) => {
     const userProgEventsCount = await tx.progressionEvent.count({
-      where: { loyaltyAddress, userAddress },
+      where: { loyaltyAddress: loyaltyAddress.toLowerCase(), userAddress },
     });
 
     let returningUsersIncrement = 0;
