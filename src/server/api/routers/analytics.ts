@@ -1,17 +1,25 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { rewardEventNameShape } from "./events";
+import { progressionEventNameShape, rewardEventNameShape } from "./events";
 
 export const rewardEventUpdateInputSchema = z.object({
   eventName: rewardEventNameShape,
   userAddress: z.string(),
   loyaltyAddress: z.string(),
+  timestamp: z.number().gt(1000000000),
   topics: z.object({
     erc20Amount: z.bigint().optional(),
     tokenId: z.number().optional(),
     tokenAmount: z.number().optional(),
   }),
+});
+
+export const progressionEventUpdateInputSchema = z.object({
+  eventName: progressionEventNameShape,
+  userAddress: z.string(),
+  loyaltyAddress: z.string(),
+  timestamp: z.number().gt(1000000000),
 });
 
 export const analyticsRouter = createTRPCRouter({

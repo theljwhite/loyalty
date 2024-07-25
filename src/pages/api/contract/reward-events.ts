@@ -81,6 +81,7 @@ export default async function handler(
           tokenAmount: decodedEvent.tokenAmount,
           tokenId: decodedEvent.tokenId,
         },
+        timestamp: decodedEvent.rewardedAt,
       });
 
       return res.status(200).json({ data: "TODO - success" });

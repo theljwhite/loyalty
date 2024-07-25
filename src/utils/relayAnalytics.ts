@@ -1,12 +1,16 @@
 import { z } from "zod";
-import { rewardEventUpdateInputSchema } from "~/server/api/routers/analytics";
+import {
+  rewardEventUpdateInputSchema,
+  progressionEventUpdateInputSchema,
+} from "~/server/api/routers/analytics";
 import {
   progressionEventSchema,
   rewardEventSchema,
   walletEscrowEventSchema,
 } from "~/server/api/routers/events";
-import { progressionEventNameShape } from "~/server/api/routers/events";
 import { db } from "~/server/db";
+
+//TODO - some of these db calls can be optimized
 
 export const createProgressionEvent = async (
   input: z.infer<typeof progressionEventSchema>,
@@ -31,7 +35,7 @@ export const createProgressionEvent = async (
       eventName,
       loyaltyAddress: loyaltyAddress?.toLowerCase() ?? "",
       transactionHash,
-      userAddress,
+      userAddress: userAddress.toLowerCase(),
     },
   });
 
@@ -70,7 +74,7 @@ export const createRewardEvent = async (
       eventName,
       loyaltyAddress: program?.address.toLowerCase() ?? "",
       transactionHash,
-      userAddress,
+      userAddress: userAddress.toLowerCase(),
     },
   });
   return event;
@@ -115,15 +119,19 @@ export const createWalletEvent = async (
 };
 
 export const updateTotalsFromProgressionEvents = async (
-  eventName: z.infer<typeof progressionEventNameShape>,
-  userAddress: string,
-  loyaltyAddress: string,
+  input: z.infer<typeof progressionEventUpdateInputSchema>,
 ): Promise<void> => {
+  const { eventName, userAddress, loyaltyAddress, timestamp } = input;
+
   const isObjectiveEvent = eventName === "ObjectiveCompleted";
 
   await db.$transaction(async (tx) => {
     const userProgEventsCount = await tx.progressionEvent.count({
-      where: { loyaltyAddress: loyaltyAddress.toLowerCase(), userAddress },
+      where: {
+        loyaltyAddress,
+        userAddress: userAddress.toLowerCase(),
+        timestamp: { lt: new Date(Number(timestamp) * 1000) },
+      },
     });
 
     let returningUsersIncrement = 0;
@@ -133,7 +141,7 @@ export const updateTotalsFromProgressionEvents = async (
     if (userProgEventsCount === 1) returningUsersIncrement = 1;
 
     await tx.programAnalyticsSummary.update({
-      where: { loyaltyAddress },
+      where: { loyaltyAddress: loyaltyAddress.toLowerCase() },
       data: {
         totalUniqueUsers: { increment: totalUniqueUsersIncrement },
         returningUsers: { increment: returningUsersIncrement },
@@ -148,7 +156,7 @@ export const updateTotalsFromProgressionEvents = async (
 export const updateTotalsFromRewardEvents = async (
   input: z.infer<typeof rewardEventUpdateInputSchema>,
 ): Promise<void> => {
-  const { eventName, userAddress, loyaltyAddress, topics } = input;
+  const { eventName, userAddress, loyaltyAddress, timestamp, topics } = input;
   const { erc20Amount, tokenAmount, tokenId } = topics;
 
   const isERC20Event = eventName === "ERC20Rewarded" && erc20Amount;
@@ -158,7 +166,11 @@ export const updateTotalsFromRewardEvents = async (
 
   await db.$transaction(async (tx) => {
     const userRewardEventsCount = await tx.rewardEvent.count({
-      where: { loyaltyAddress, userAddress },
+      where: {
+        loyaltyAddress,
+        userAddress: userAddress.toLowerCase(),
+        timestamp: { lt: new Date(Number(timestamp) * 1000) },
+      },
     });
 
     const totalUniqueRewardedIncrement = userRewardEventsCount === 0 ? 1 : 0;

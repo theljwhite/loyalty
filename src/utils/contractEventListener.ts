@@ -1,11 +1,6 @@
 import Moralis from "moralis";
 import { z } from "zod";
 import {
-  type ERC20RewardedEvent,
-  type ERC721RewardedEvent,
-  type ERC1155RewardedEvent,
-} from "~/contractsAndAbis/Events/types";
-import {
   type ProgressionEventName,
   type RewardEventName,
 } from "~/server/api/routers/events";

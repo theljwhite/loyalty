@@ -74,11 +74,12 @@ export default async function handler(
         timestamp: decodedEvent.timestamp,
       });
 
-      await updateTotalsFromProgressionEvents(
-        progEventName,
-        decodedEvent.user,
-        decodedEvent.contractAddress,
-      );
+      await updateTotalsFromProgressionEvents({
+        eventName: progEventName,
+        userAddress: decodedEvent.user,
+        loyaltyAddress: decodedEvent.contractAddress,
+        timestamp: decodedEvent.timestamp,
+      });
 
       return res.status(200).json({ data: "TODO - success" });
     }
