@@ -89,7 +89,7 @@ export function useDeployLoyalty() {
           chain?.name ?? "",
           chain?.id ?? 0,
           deployReceipt.transactionHash,
-          loyaltyContractAddress,
+          loyaltyContractAddress.toLowerCase(),
           address as string,
         );
 
@@ -98,7 +98,7 @@ export function useDeployLoyalty() {
           description,
           state:
             rewardType === RewardType.Points ? "Idle" : "AwaitingEscrowSetup",
-          address: loyaltyContractAddress,
+          address: loyaltyContractAddress.toLowerCase(),
           creatorId: session?.user.id ?? "",
           objectives: objectives,
           tiers: tierSortingEnabled ? tiers : undefined,

@@ -74,7 +74,7 @@ export function useDeployEscrow() {
         toastSuccess("Escrow contract successfully deployed");
 
         createEscrowDbRecord({
-          address: escrowContractAddress,
+          address: escrowContractAddress.toLowerCase(),
           creatorId: session?.user.id ?? "",
           escrowType,
           state: "AwaitingEscrowApprovals",
