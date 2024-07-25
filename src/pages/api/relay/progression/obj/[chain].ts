@@ -1,13 +1,13 @@
 import { type NextApiRequest, type NextApiResponse } from "next";
 import {
-  relayRequestSchema,
   validateKeyCacheProgram,
   handleWalletCacheGenerateWallet,
+  objRequestSchema,
   type ObjectivesIdempotencyPayload,
   type RelayIdempotencyMetadata,
   type RelayTransactionResult,
   handleApiResponseWithIdempotency,
-} from "../../../utils/apiValidation";
+} from "~/utils/apiValidation";
 import {
   estimateRelayTransactionOutcome,
   doRelayerTransaction,
@@ -33,7 +33,7 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const input = relayRequestSchema.safeParse(req);
+  const input = objRequestSchema.safeParse(req);
 
   if (!input.success) {
     const errorMessages = input.error.issues.map((issue) => issue.message);

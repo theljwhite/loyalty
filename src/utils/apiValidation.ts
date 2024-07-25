@@ -21,6 +21,7 @@ import {
 //by developers on their own apps/websites.
 
 //TODO 4/16 - some of these zod schemas can be consolidated/broken down better
+//explore better way to include superRefine with every relay req since shape cant be extended
 
 export const redisInstance = new Redis({
   url: process.env.UPSTASH_URL ?? "",
@@ -56,7 +57,7 @@ export type ObjectivesIdempotencyPayload = {
   objectiveIndex: number;
 } & IdOrWallet;
 
-export type GiveUserPointsIdempotencyPayload = {
+export type PointsIdempotencyPayload = {
   loyaltyContractAddress: string;
   pointsAmount: number;
 } & IdOrWallet;
@@ -96,34 +97,6 @@ export const relayRequestSchema = z.object({
   headers: apiBasicHeadersSchema.shape.headers.extend({
     "x-idempotency-key": z.string().uuid(),
   }),
-  body: z
-    .object({
-      objectiveIndex: z.number().min(0).max(MAX_OBJECTIVES_LENGTH),
-      userWalletAddress: z
-        .string()
-        .refine(isAddress, "Invalid user wallet address")
-        .nullable()
-        .optional(),
-      userId: z.string().uuid().nullable().optional(),
-      entitySecretCipherText: z.string().length(684),
-    })
-    .superRefine((b, ctx) => {
-      if (b.userWalletAddress && b.userId) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["userWalletAddress", "userId"],
-          message: "Cannot pass both userWalletAddress and userId",
-        });
-      }
-      if (!b.userWalletAddress && !b.userId) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["userWalletAddress", "userId"],
-          message: "Either userWalletAddress or userId must be provided",
-        });
-      }
-      return true;
-    }),
   query: z.object({
     chain: z
       .string()
@@ -131,6 +104,70 @@ export const relayRequestSchema = z.object({
         relayChains.some((relayChain) => relayChain.id === Number(chainId)),
       ),
   }),
+});
+
+export const relayCommonBodySchema = z.object({
+  userWalletAddress: z
+    .string()
+    .refine(isAddress, "Invalid user wallet address")
+    .nullable()
+    .optional(),
+  userId: z.string().uuid().nullable().optional(),
+  entitySecretCipherText: z.string().length(684),
+});
+
+export const objRelayBodySchema = z
+  .object({
+    ...relayCommonBodySchema.shape,
+    objectiveIndex: z.number().min(0).max(MAX_OBJECTIVES_LENGTH),
+  })
+  .superRefine((b, ctx) => {
+    if (b.userWalletAddress && b.userId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["userWalletAddress", "userId"],
+        message: "Cannot pass both userWalletAddress and userId",
+      });
+    }
+    if (!b.userWalletAddress && !b.userId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["userWalletAddress", "userId"],
+        message: "Either userWalletAddress or userId must be provided",
+      });
+    }
+    return true;
+  });
+
+export const pointsRelayBodySchema = z
+  .object({
+    ...relayCommonBodySchema.shape,
+    points: z.number(),
+  })
+  .superRefine((b, ctx) => {
+    if (b.userWalletAddress && b.userId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["userWalletAddress", "userId"],
+        message: "Cannot pass both userWalletAddress and userId",
+      });
+    }
+    if (!b.userWalletAddress && !b.userId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["userWalletAddress", "userId"],
+        message: "Either userWalletAddress or userId must be provided",
+      });
+    }
+    return true;
+  });
+
+export const objRequestSchema = relayRequestSchema.extend({
+  body: objRelayBodySchema,
+});
+
+export const pointsRequestSchema = relayRequestSchema.extend({
+  body: pointsRelayBodySchema,
 });
 
 export const keyCreationHeadersSchema = z.object({
