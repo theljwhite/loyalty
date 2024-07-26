@@ -37,7 +37,7 @@ export default async function handler(
   const body = req.body;
   const userWalletAddress = body.userWalletAddress;
   const userId = body.userId;
-  const pointsAmount = body.points;
+  const pointsAmount = body.pointsAmount;
   const entitySecretCipherText = body.entitySecretCipherText;
 
   const { chain } = req.query;

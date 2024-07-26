@@ -6,6 +6,13 @@ import {
 } from "~/server/api/routers/events";
 import { Interface } from "ethers";
 import { type EscrowType } from "@prisma/client";
+import {
+  OBJ_COMPLETE_SIG,
+  POINTS_UPDATE_SIG,
+  ERC20_REWARDED_SIG,
+  ERC721_REWARDED_SIG,
+  ERC1155_REWARDED_SIG,
+} from "~/contractsAndAbis/Events/eventSignatures";
 import LPEventsAbi from "../contractsAndAbis/Events/LPEventsAbi.json";
 import EscrowRewardEventsAbi from "../contractsAndAbis/Events/EscrowRewardEventsAbi.json";
 import LoyaltyERC20Escrow from "../contractsAndAbis/0.03/ERC20Escrow/LoyaltyERC20Escrow.json";
@@ -129,23 +136,29 @@ export const parseEventReqBodyInputs = (
   return valuesMatch;
 };
 
+// - TODO there needs to be an easier way to get the name of the emitted event lol. odd.
+// - this should not require any additional work tbh.
+// - (Moralis says eventually stream data will contain the event name)
+// - so this prob temporary and will be changed, thats why kinda hardcoded for now
 export const getEventName = (
-  abis: EventReqBodyAbiShape,
+  logs: EventRequestBody["logs"],
 ): {
-  progEventName?: ProgressionEventName;
-  rewardEventName?: RewardEventName;
+  progEventName: ProgressionEventName | null;
+  rewardEventName: RewardEventName | null;
 } => {
-  const onlyEvents = abis.filter((item) => item.type === "event");
-  const progEvent = onlyEvents.find((event) =>
-    programEventNames.includes(event.name),
-  );
-  const rewardEvent = onlyEvents.find((event) =>
-    escrowEventNames.includes(event.name),
-  );
+  let progEvent: ProgressionEventName | null = null;
+  let rewardEvent: RewardEventName | null = null;
+  const topic0 = logs[0]?.topic0;
+
+  if (topic0 === OBJ_COMPLETE_SIG) progEvent = "ObjectiveCompleted";
+  if (topic0 === POINTS_UPDATE_SIG) progEvent = "PointsUpdate";
+  if (topic0 === ERC20_REWARDED_SIG) rewardEvent = "ERC20Rewarded";
+  if (topic0 === ERC721_REWARDED_SIG) rewardEvent = "ERC721Rewarded";
+  if (topic0 === ERC1155_REWARDED_SIG) rewardEvent = "ERC1155Rewarded";
 
   return {
-    progEventName: progEvent?.name as ProgressionEventName,
-    rewardEventName: rewardEvent?.name as RewardEventName,
+    progEventName: progEvent,
+    rewardEventName: rewardEvent,
   };
 };
 

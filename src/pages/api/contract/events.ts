@@ -50,7 +50,7 @@ export default async function handler(
     if (payloadCount === 1) {
       await redisInstance.set(`CE-${txHash}`, 2);
 
-      const { progEventName } = getEventName(data.abi);
+      const { progEventName } = getEventName(data.logs);
 
       if (!progEventName) {
         return res.status(500).json({ error: "Incorrect event name" });
@@ -68,6 +68,7 @@ export default async function handler(
         eventName: progEventName,
         objectiveIndex: decodedEvent.objectiveIndex,
         userPointsTotal: decodedEvent.totalPoints,
+        pointsUpdate: decodedEvent.amount,
         loyaltyAddress: decodedEvent.contractAddress,
         transactionHash: data.logs[0].transactionHash,
         userAddress: decodedEvent.user,

@@ -17,7 +17,7 @@ export const createProgressionEvent = async (
 ): Promise<typeof event> => {
   const {
     eventName,
-    pointsChange,
+    pointsUpdate,
     objectiveIndex,
     userPointsTotal,
     loyaltyAddress,
@@ -29,7 +29,7 @@ export const createProgressionEvent = async (
   const event = await db.progressionEvent.create({
     data: {
       objectiveIndex,
-      pointsChange,
+      pointsChange: pointsUpdate,
       timestamp: new Date(Number(timestamp) * 1000),
       userPointsTotal,
       eventName,

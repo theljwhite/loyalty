@@ -142,7 +142,7 @@ export const objRelayBodySchema = z
 export const pointsRelayBodySchema = z
   .object({
     ...relayCommonBodySchema.shape,
-    points: z.number(),
+    pointsAmount: z.number(),
   })
   .superRefine((b, ctx) => {
     if (b.userWalletAddress && b.userId) {

@@ -46,20 +46,20 @@ export const receivedEventBase = z.object({
 export const progressionEventSchema = z
   .object({
     eventName: progressionEventNameShape,
-    pointsChange: z.number().optional(),
+    pointsUpdate: z.number().optional(),
     objectiveIndex: z.number().optional(),
     userPointsTotal: z.number(),
     ...receivedEventBase.shape,
   })
   .superRefine((data, ctx) => {
     if (
-      (data.pointsChange && data.objectiveIndex) ||
-      (!data.pointsChange && !data.objectiveIndex)
+      (data.pointsUpdate && data.objectiveIndex) ||
+      (!data.pointsUpdate && !data.objectiveIndex)
     ) {
       ctx.addIssue({
         code: "custom",
-        path: ["pointsChange", "objectiveIndex"],
-        message: "Must pass one but only one of pointsChange or objectiveIndex",
+        path: ["pointsUpdate", "objectiveIndex"],
+        message: "Must pass one but only one of pointsUpdate or objectiveIndex",
       });
     }
   });
