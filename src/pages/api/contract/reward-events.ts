@@ -76,6 +76,7 @@ export default async function handler(
         eventName: rewardEventName,
         userAddress: decodedEvent.user,
         loyaltyAddress: dbEvent.loyaltyAddress,
+        chainId: Number(data.chainId),
         topics: {
           erc20Amount: decodedEvent.erc20Amount,
           tokenAmount: decodedEvent.tokenAmount,

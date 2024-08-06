@@ -7,6 +7,7 @@ export const rewardEventUpdateInputSchema = z.object({
   eventName: rewardEventNameShape,
   userAddress: z.string(),
   loyaltyAddress: z.string(),
+  chainId: z.number(), 
   timestamp: z.number().gt(1000000000),
   topics: z.object({
     erc20Amount: z.bigint().optional(),

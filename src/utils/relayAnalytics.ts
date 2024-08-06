@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { bigint, z } from "zod";
 import {
   rewardEventUpdateInputSchema,
   progressionEventUpdateInputSchema,
@@ -9,6 +9,7 @@ import {
   walletEscrowEventSchema,
 } from "~/server/api/routers/events";
 import { db } from "~/server/db";
+import { fetchToken } from "wagmi/actions";
 
 //TODO - some of these db calls can be optimized
 
@@ -156,7 +157,8 @@ export const updateTotalsFromProgressionEvents = async (
 export const updateTotalsFromRewardEvents = async (
   input: z.infer<typeof rewardEventUpdateInputSchema>,
 ): Promise<void> => {
-  const { eventName, userAddress, loyaltyAddress, timestamp, topics } = input;
+  const { eventName, userAddress, loyaltyAddress, chainId, timestamp, topics } =
+    input;
   const { erc20Amount, tokenAmount, tokenId } = topics;
 
   const isERC20Event = eventName === "ERC20Rewarded" && erc20Amount;
@@ -180,6 +182,23 @@ export const updateTotalsFromRewardEvents = async (
       : isERC1155Event
         ? tokenAmount
         : 0;
+
+    let erc20AmountToContractDecimals = 0;
+
+    //these erc20 escrow specific calls can also prob be avoided/optimized
+    if (isERC20Event) {
+      const erc20Escrow = await db.escrow.findUnique({
+        where: { loyaltyAddress },
+        select: { rewardAddress: true },
+      });
+
+      const rewardToken = await fetchToken({
+        address: loyaltyAddress as `0x${string}`,
+        chainId,
+      });
+
+      //TODO 7/29 finish this - bigint may not be good enough
+    }
 
     await tx.programAnalyticsSummary.update({
       where: { loyaltyAddress },
