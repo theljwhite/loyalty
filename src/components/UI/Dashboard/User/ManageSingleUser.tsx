@@ -191,6 +191,7 @@ export default function ManageSingleUser() {
       <UserContractStats
         progression={progression}
         dataLoading={contractDataLoading}
+        searchQuery={searchQuery}
       />
       <section className="flex flex-col gap-4">
         <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">

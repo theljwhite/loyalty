@@ -41,9 +41,7 @@ export function useContractProgression(
 
     const receipt = await waitForTransaction({ chainId, hash: tx.hash });
 
-    if (receipt.status === "success") return true;
-
-    return false;
+    return receipt.status === "success";
   };
 
   const completeUserAuthorityObjective = async (
@@ -57,10 +55,7 @@ export function useContractProgression(
     });
 
     const receipt = await waitForTransaction({ chainId, hash: tx.hash });
-
-    if (receipt.status === "success") return true;
-
-    return false;
+    return receipt.status === "success";
   };
 
   const givePointsToUser = async (
@@ -74,10 +69,7 @@ export function useContractProgression(
     });
 
     const receipt = await waitForTransaction({ chainId, hash: tx.hash });
-
-    if (receipt.status === "success") return true;
-
-    return false;
+    return receipt.status === "success";
   };
 
   const deductPointsFromUser = async (
@@ -92,9 +84,7 @@ export function useContractProgression(
 
     const receipt = await waitForTransaction({ chainId, hash: tx.hash });
 
-    if (receipt.status === "success") return true;
-
-    return false;
+    return receipt.status === "success";
   };
 
   const getUserProgression = async (

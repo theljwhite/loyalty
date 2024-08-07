@@ -7,6 +7,7 @@ export const SPACE_BETWEEN_CAPITALS_REGEX = /([a-z])([A-Z])/g;
 
 export const NUMBERS_SEPARATED_BY_COMMAS_REGEX = /^\d+(,\d+)*$/;
 export const NUMBERS_ONLY_REGEX = /^[0-9]*$/;
+export const NUMBERS_ONLY_POS_OR_NEG = /^-?[1-9]\d*$/;
 export const NUMBERS_OR_FLOATS_SEPARATED_BY_COMMAS_REGEX =
   /^(\d+(\.\d+)?)(,\s*\d+(\.\d+)?)*$/;
 export const NUMBERS_OR_FLOATS_ONLY_REGEX = /^\d+(\.\d+)?$/;

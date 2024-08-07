@@ -1,25 +1,34 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { useContractProgression } from "~/customHooks/useContractProgression";
+import { useLoyaltyContractRead } from "~/customHooks/useLoyaltyContractRead/useLoyaltyContractRead";
 import { api } from "~/utils/api";
+import { NUMBERS_ONLY_POS_OR_NEG } from "~/constants/regularExpressions";
 import { type ProgressionDisplay } from "./ManageSingleUser";
 import { DashboardLoadingSpinnerTwo } from "../../Misc/Spinners";
 import DashboardSimpleInputModal from "../DashboardSimpleInputModal";
+import { toastLoading, toastSuccess, toastError } from "../../Toast/Toast";
 import { InfoIcon, PointsIconTwo, TiersIconOne, CoinsOne } from "../Icons";
 
 //TODO can clean this up a little
 //TODO 8/5 - ERC721 and ERC1155 balance (a better visual display for them)
+//TODO 8/5 - make a "ghost" btn instead of <tr> to disable,
+//buttons responsible for opening modals when no valid user found
 
 interface UserContractStatsProps {
   progression: ProgressionDisplay;
   dataLoading: boolean;
+  searchQuery: string;
 }
 
 export default function UserContractStats({
   progression,
   dataLoading,
+  searchQuery,
 }: UserContractStatsProps) {
   const [isEditingPoints, setIsEditingPoints] = useState<boolean>(false);
+  const [pointsValue, setPointsValue] = useState<string>("");
+  const [isPointsValid, setIsPointsValid] = useState<boolean>(true);
   const router = useRouter();
   const { address: loyaltyAddress } = router.query;
 
@@ -35,6 +44,59 @@ export default function UserContractStats({
     String(loyaltyAddress),
     chainId ?? 0,
   );
+  const { getTotalPointsPossible } = useLoyaltyContractRead(
+    String(loyaltyAddress),
+  );
+
+  const onPointsChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const { value } = e.target;
+
+    setPointsValue(value);
+
+    if (!NUMBERS_ONLY_POS_OR_NEG.test(value) && value.length > 0) {
+      setIsPointsValid(false);
+    } else setIsPointsValid(true);
+  };
+
+  const handlePointsContractWrite = async (): Promise<void> => {
+    toastLoading("Request sent to wallet.", true);
+    const points = Number(pointsValue);
+
+    try {
+      const totalPointsPossible = await getTotalPointsPossible();
+
+      if (!totalPointsPossible) {
+        toastError("Error reading contract data. Try again later.");
+        return;
+      }
+
+      if (points >= totalPointsPossible || points === 0) {
+        toastError("Points out of range. Try changing the amount.");
+        return;
+      }
+
+      setIsEditingPoints(false);
+
+      if (points > 0) {
+        const txReceipt = await givePointsToUser(searchQuery, points);
+
+        if (!txReceipt) throw new Error();
+
+        toastSuccess(`Gave ${points} points to user.`);
+      } else {
+        const txReceipt = await deductPointsFromUser(
+          searchQuery,
+          Math.abs(points),
+        );
+
+        if (!txReceipt) throw new Error();
+
+        toastSuccess(`Deducted ${points} points from user.`);
+      }
+    } catch (error) {
+      toastError("Error writing to contract. Try again later.");
+    }
+  };
 
   return (
     <>
@@ -42,22 +104,22 @@ export default function UserContractStats({
         <DashboardSimpleInputModal
           modalTitle="Edit points"
           modalDescription="Write to your smart contract to reward or deduct points for a user"
-          bannerInfo="This will write to your smart contract directly and require you to pay small gas fees"
+          bannerInfo="This will write to your smart contract directly and require you to cover minor gas fees."
           inputLabel="Points amount"
-          inputHelpMsg="To deduct points, make the amount a negative number"
-          inputInstruction="Add a '-' to make a negative number and deduct points"
-          inputOnChange={(e) => console.log("e")}
-          inputState="LOL"
+          inputHelpMsg="To deduct points, make the amount a negative number."
+          inputInstruction="Enter a positive or negative points value to give or deduct points to the selected user"
+          inputOnChange={onPointsChange}
+          inputState={pointsValue}
           inputDisabled={false}
-          inputValid={true}
-          inputPlaceholder="Points amount eg: 100"
+          inputValid={isPointsValid}
+          inputPlaceholder="Points value eg:100 or -100"
           btnTitle="Submit"
-          btnDisabled={false}
-          onActionBtnClick={() => console.log("TODO")}
+          btnDisabled={!isPointsValid || !pointsValue}
+          onActionBtnClick={handlePointsContractWrite}
           setIsModalOpen={setIsEditingPoints}
         />
       )}
-      <section className="relative isolate overflow-hidden rounded-lg bg-dashboardLight-body p-1">
+      <section className="relative overflow-hidden rounded-lg bg-dashboardLight-body p-1">
         <div className="relative overflow-hidden">
           <header className="grid grid-rows-1 items-center gap-x-6 gap-y-0.5 p-4 ">
             <h2 className="col-start-1 row-start-1 text-balance text-[15px] font-semibold text-dashboardLight-primary">
@@ -78,9 +140,11 @@ export default function UserContractStats({
               </colgroup>
               <thead className="sr-only"></thead>
               <tbody>
-                <tr>
+                <tr
+                  className={`cursor-pointer hover:bg-gray-50`}
+                  onClick={() => setIsEditingPoints(!isEditingPoints)}
+                >
                   <td className="flex items-center gap-3 p-4">
-                    <button className="absolute inset-0 p-0 outline-none" />
                     <div className="relative -ml-1 text-dashboard-lightGray2">
                       <span className="size-5 shrink-0 overflow-visible stroke-[1.25]">
                         <PointsIconTwo color="currentColor" size={16} />
@@ -103,7 +167,6 @@ export default function UserContractStats({
                 </tr>
                 <tr className="border-t border-dashboard-primary">
                   <td className="flex items-center gap-3 p-4">
-                    <button className="absolute inset-0 p-0 outline-none focus:bg-gray-50 focus-visible:ring-0" />
                     <div className="relative -ml-1 text-dashboard-lightGray2">
                       <span className="size-5 shrink-0 overflow-visible stroke-[1.25]">
                         <TiersIconOne color="currentColor" size={16} />
@@ -124,9 +187,8 @@ export default function UserContractStats({
                     )}
                   </td>
                 </tr>
-                <tr className="border-t border-dashboard-primary">
+                <tr className="cursor-pointer border-t border-dashboard-primary hover:bg-gray-50">
                   <td className="flex items-center gap-3 p-4">
-                    <button className="absolute inset-0 p-0 outline-none focus:bg-gray-50 focus-visible:ring-0" />
                     <div className="relative -ml-1 text-dashboard-lightGray2">
                       <span className="size-5 shrink-0 overflow-visible stroke-[1.25]">
                         <CoinsOne color="currentColor" size={16} />
