@@ -2,9 +2,11 @@ import { DashboardLoadingSpinner } from "../Misc/Spinners";
 import DashboardActionButton from "./DashboardActionButton";
 import { FormErrorIcon } from "./Icons";
 
+//TODO 8/8 - fix rounding on td's
 interface DashboardDataTableProps {
   data: any[];
   columnNames: string[];
+  onRowClick?: (id: number, ...args: any[]) => any;
   noDataTitle: string;
   noDataMessage: string;
   noDataIcon?: JSX.Element;
@@ -17,6 +19,7 @@ interface DashboardDataTableProps {
 export default function DashboardDataTable({
   data,
   columnNames,
+  onRowClick,
   noDataTitle,
   noDataMessage,
   noDataIcon,
@@ -117,12 +120,20 @@ export default function DashboardDataTable({
                     data.map((item, index) => {
                       const values = Object.values(item);
                       return (
-                        <tr key={index} className="group table-row">
+                        <tr
+                          {...(onRowClick && {
+                            onClick: () => onRowClick(item.id ?? index),
+                          })}
+                          key={index}
+                          className={`${
+                            onRowClick && "cursor-pointer"
+                          } group table-row`}
+                        >
                           {values.map((value, valIndex) => {
                             return (
                               <td
                                 key={valIndex}
-                                className="table-cell overflow-hidden bg-white bg-clip-padding p-4 text-left group-[:nth-of-type(3)_&]:rounded-2xl"
+                                className="table-cell overflow-hidden bg-white bg-clip-padding p-4 text-left hover:bg-gray-50 group-[:nth-of-type(3)_&]:rounded-2xl"
                               >
                                 <span className="text-secondary text-base">
                                   {String(value)}

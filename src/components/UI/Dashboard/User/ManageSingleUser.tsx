@@ -2,15 +2,19 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import { useContractProgression } from "~/customHooks/useContractProgression";
-import { ETHEREUM_ADDRESS_REGEX } from "~/constants/regularExpressions";
+import {
+  DID_TYPE_CONFIRM,
+  ETHEREUM_ADDRESS_REGEX,
+} from "~/constants/regularExpressions";
 import DashboardInput from "../DashboardInput";
 import DashboardDataTable from "../DashboardDataTable";
 import shortenEthereumAddress from "~/helpers/shortenEthAddress";
 import UserContractStats from "./UserContractStats";
 import { UsersIconOne } from "../Icons";
+import { toastError } from "../../Toast/Toast";
+import DashboardSimpleInputModal from "../DashboardSimpleInputModal";
 
 //TODO - rate limit contract calls
-//TODO - complete objective input modal to contract
 
 export type ProgressionDisplay = {
   points: number;
@@ -32,6 +36,9 @@ export default function ManageSingleUser() {
   const [isSearchValid, setIsSearchValid] = useState<boolean>(true);
   const [isEditingObjectives, setIsEditingObjectives] =
     useState<boolean>(false);
+  const [editedObjIndex, setEditedObjIndex] = useState<number | null>(null);
+  const [confirmEntry, setConfirmEntry] = useState<string>("");
+  const [isConfirmed, setIsConfirmed] = useState<boolean>(false);
 
   const [contractDataLoading, setContractDataLoading] =
     useState<boolean>(false);
@@ -60,6 +67,7 @@ export default function ManageSingleUser() {
   const { chainId, rewardType, escrowAddress } = data?.loyaltyProgram ?? {};
 
   const {
+    completeCreatorAuthorityObjective,
     getUserProgression,
     getUserCompletedObjectives,
     getUserRewardsERC20,
@@ -105,6 +113,7 @@ export default function ManageSingleUser() {
 
       const objectivesWithUserCompletion = data?.objectives.map(
         (obj, index) => ({
+          index,
           title:
             obj.title.length > 32 ? `${obj.title.slice(0, 32)}...` : obj.title,
           points: obj.reward ?? 0,
@@ -160,10 +169,63 @@ export default function ManageSingleUser() {
     }
   };
 
+  const handleContractObjectiveWrite = async (): Promise<void> => {
+    try {
+      if (!editedObjIndex) throw new Error();
+      const txReceipt = await completeCreatorAuthorityObjective(
+        searchQuery,
+        editedObjIndex,
+      );
+
+      if (!txReceipt) throw new Error();
+    } catch (error) {
+      toastError("Error writing to smart contract. Try again later.");
+    }
+  };
+
+  const onObjectiveClick = async (objIndex: number): Promise<void> => {
+    if (userObjectives[editedObjIndex ?? 999]?.completed === "Yes") {
+      toastError("User has already completed this objective.");
+      return;
+    }
+
+    setIsEditingObjectives(true);
+    setEditedObjIndex(objIndex);
+  };
+
+  const onConfirmChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setConfirmEntry(e.target.value);
+    setIsConfirmed(DID_TYPE_CONFIRM(e.target.value));
+  };
+
   return (
     <>
       {isEditingObjectives && (
-        <div>TODO input modal to write to contract to complete objectives</div>
+        <DashboardSimpleInputModal
+          modalTitle="Confirm Objective Completion"
+          modalDescription="Please type Confirm below to verify your changes"
+          bannerInfo="This will write to your smart contract and mark the objective as completed, requiring you to cover minor gas fees."
+          inputLabel="Confirm Objective Completion"
+          inputHelpMsg={`This will complete objective index ${editedObjIndex} for the selected user (${shortenEthereumAddress(
+            searchQuery,
+            4,
+            4,
+          )}).`}
+          inputState={confirmEntry}
+          inputInstruction={`Please type 'Confirm' in order to complete the objective for (${shortenEthereumAddress(
+            searchQuery,
+            4,
+            4,
+          )}).`}
+          inputOnChange={onConfirmChange}
+          inputPlaceholder="Please type: Confirm"
+          inputValid={isConfirmed}
+          inputDisabled={false}
+          btnTitle="Complete Objective"
+          btnDisabled={!isConfirmed}
+          onActionBtnClick={handleContractObjectiveWrite}
+          setIsModalOpen={setIsEditingObjectives}
+        />
       )}
       <div className="flex items-center gap-3">
         <div className="lg:min-w-[580px]">
@@ -194,14 +256,17 @@ export default function ManageSingleUser() {
         searchQuery={searchQuery}
       />
       <section className="flex flex-col gap-4">
-        <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-          <div></div>
-        </header>
         <DashboardDataTable
           data={userObjectives}
           dataLoading={contractDataLoading}
           dataError={error}
-          columnNames={["Objective name", "Points reward", "User completed"]}
+          onRowClick={onObjectiveClick}
+          columnNames={[
+            "Index",
+            "Objective name",
+            "Points reward",
+            "User completed",
+          ]}
           noDataTitle={
             searchQuery && error ? "No user found" : "No user selected"
           }

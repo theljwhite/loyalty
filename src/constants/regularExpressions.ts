@@ -18,3 +18,8 @@ export const SPACE_BETWEEN_CAPITALS_REPLACE = (str: string) =>
 
 export const MAYBE_VALID_BASE64 =
   /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+
+export const DID_TYPE_CONFIRM = (input: string): boolean => {
+  const confirmRegex = /^confirm$/i;
+  return confirmRegex.test(input);
+};
