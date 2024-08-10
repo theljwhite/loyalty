@@ -19,12 +19,14 @@ interface UserContractStatsProps {
   progression: ProgressionDisplay;
   dataLoading: boolean;
   searchQuery: string;
+  setWriteSuccess: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export default function UserContractStats({
   progression,
   dataLoading,
   searchQuery,
+  setWriteSuccess,
 }: UserContractStatsProps) {
   const [isEditingPoints, setIsEditingPoints] = useState<boolean>(false);
   const [pointsValue, setPointsValue] = useState<string>("");
@@ -59,6 +61,7 @@ export default function UserContractStats({
   };
 
   const handlePointsContractWrite = async (): Promise<void> => {
+    setWriteSuccess(false);
     toastLoading("Request sent to wallet.", true);
     const points = Number(pointsValue);
 
@@ -93,6 +96,7 @@ export default function UserContractStats({
 
         toastSuccess(`Deducted ${points} points from user.`);
       }
+      setWriteSuccess(true);
     } catch (error) {
       toastError("Error writing to contract. Try again later.");
     }

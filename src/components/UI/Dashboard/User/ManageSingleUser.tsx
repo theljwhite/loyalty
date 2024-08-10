@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import { useContractProgression } from "~/customHooks/useContractProgression";
@@ -11,10 +11,11 @@ import DashboardDataTable from "../DashboardDataTable";
 import shortenEthereumAddress from "~/helpers/shortenEthAddress";
 import UserContractStats from "./UserContractStats";
 import { UsersIconOne } from "../Icons";
-import { toastError } from "../../Toast/Toast";
+import { toastError, toastSuccess } from "../../Toast/Toast";
 import DashboardSimpleInputModal from "../DashboardSimpleInputModal";
 
 //TODO - rate limit contract calls
+// this can prob be cleaned up to use less state
 
 export type ProgressionDisplay = {
   points: number;
@@ -39,6 +40,7 @@ export default function ManageSingleUser() {
   const [editedObjIndex, setEditedObjIndex] = useState<number | null>(null);
   const [confirmEntry, setConfirmEntry] = useState<string>("");
   const [isConfirmed, setIsConfirmed] = useState<boolean>(false);
+  const [writeSuccess, setWriteSuccess] = useState<boolean>(false);
 
   const [contractDataLoading, setContractDataLoading] =
     useState<boolean>(false);
@@ -78,6 +80,10 @@ export default function ManageSingleUser() {
     chainId ?? 0,
     escrowAddress ?? "",
   );
+
+  useEffect(() => {
+    if (writeSuccess) handleSearchGetContractData();
+  }, [writeSuccess, searchQuery]);
 
   const onSearchChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { value } = e.target;
@@ -170,6 +176,7 @@ export default function ManageSingleUser() {
   };
 
   const handleContractObjectiveWrite = async (): Promise<void> => {
+    setWriteSuccess(false);
     try {
       if (!editedObjIndex) throw new Error();
       const txReceipt = await completeCreatorAuthorityObjective(
@@ -178,14 +185,19 @@ export default function ManageSingleUser() {
       );
 
       if (!txReceipt) throw new Error();
+
+      setIsEditingObjectives(false);
+      setWriteSuccess(true);
+      toastSuccess("Contract write successful!");
     } catch (error) {
       toastError("Error writing to smart contract. Try again later.");
     }
   };
 
   const onObjectiveClick = async (objIndex: number): Promise<void> => {
-    if (userObjectives[editedObjIndex ?? 999]?.completed === "Yes") {
-      toastError("User has already completed this objective.");
+    if (userObjectives[objIndex]?.completed === "Yes") {
+      setIsEditingObjectives(false);
+      toastError(`User has already completed objective index #${objIndex}.`);
       return;
     }
 
@@ -254,6 +266,7 @@ export default function ManageSingleUser() {
         progression={progression}
         dataLoading={contractDataLoading}
         searchQuery={searchQuery}
+        setWriteSuccess={setWriteSuccess}
       />
       <section className="flex flex-col gap-4">
         <DashboardDataTable
