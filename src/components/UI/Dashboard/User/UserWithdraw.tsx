@@ -242,10 +242,7 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
               </div>
             </div>
           ) : (
-            <UserWithdrawIntro
-              program={program}
-              connected={connected ?? false}
-            />
+            <UserWithdrawIntro program={program} />
           )}
         </div>
       </div>
