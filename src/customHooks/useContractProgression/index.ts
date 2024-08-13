@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useEscrowAbi, useLoyaltyAbi } from "../useContractAbi/useContractAbi";
 import {
   writeContract,
@@ -14,6 +15,12 @@ export function useContractProgression(
   escrowAddress?: string,
   escrowType?: EscrowType,
 ) {
+  const [erc20Balance, setERC20Balance] = useState<string>("");
+  const [erc721Balance, setERC721Balance] = useState<number[]>([]);
+  const [erc1155Balance, setERC1155Balance] = useState<
+    { tokenId: number; amount: bigint }[]
+  >([]);
+
   const { abi: loyaltyAbi } = useLoyaltyAbi();
   const { abi: escrowAbi } = useEscrowAbi(escrowType ?? "ERC20");
 
@@ -134,6 +141,7 @@ export function useContractProgression(
   ): Promise<{
     rawBalance: bigint;
     amountToDecimals?: string;
+    name?: string;
     symbol?: string;
   }> => {
     const userERC20Balance = (await readContract({
@@ -159,9 +167,12 @@ export function useContractProgression(
       rewardToken.decimals,
     );
 
+    setERC20Balance(amountToDecimals);
+
     return {
       rawBalance: userERC20Balance,
       amountToDecimals,
+      name: rewardToken.name,
       symbol: rewardToken.symbol,
     };
   };
@@ -175,6 +186,8 @@ export function useContractProgression(
       args: [userAddress],
     });
     const userTokenBalanceNum = userTokenBalance.map((item) => Number(item));
+
+    setERC721Balance(userTokenBalanceNum);
     return userTokenBalanceNum;
   };
 
@@ -191,10 +204,20 @@ export function useContractProgression(
       tokenId: Number(item.tokenId),
       amount: item.amount,
     }));
+    setERC1155Balance(formattedBalance);
     return formattedBalance;
   };
 
+  const getUserRewards = async (userAddress: string): Promise<void> => {
+    if (escrowType === "ERC20") await getUserRewardsERC20(userAddress);
+    if (escrowType === "ERC721") await getUserRewardsERC721(userAddress);
+    if (escrowType === "ERC1155") await getUserRewardsERC1155(userAddress);
+  };
+
   return {
+    erc20Balance,
+    erc721Balance,
+    erc1155Balance,
     completeCreatorAuthorityObjective,
     completeUserAuthorityObjective,
     givePointsToUser,
@@ -202,6 +225,7 @@ export function useContractProgression(
     getUserProgression,
     getUserCompletedObjectives,
     getUserObjectivesCompleteCount,
+    getUserRewards,
     getUserRewardsERC20,
     getUserRewardsERC721,
     getUserRewardsERC1155,

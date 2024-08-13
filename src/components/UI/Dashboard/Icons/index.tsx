@@ -1030,3 +1030,22 @@ export const PercentArrow = ({ down }: { down?: boolean }): JSX.Element => (
     />
   </svg>
 );
+
+export const MovingArrow = ({ size }: { size: string }): JSX.Element => (
+  <svg
+    width={size}
+    height={size}
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 20 20"
+    className="h-[1em] min-h-[1rem] w-[1em] min-w-[1rem] shrink-0 text-neutral-19  opacity-0 [transition:all_100ms_ease_0s] group-hover:-translate-x-2 group-hover:opacity-100"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      d="M3.3 10h13.4m-5-5 5 5-5 5"
+    ></path>
+  </svg>
+);
