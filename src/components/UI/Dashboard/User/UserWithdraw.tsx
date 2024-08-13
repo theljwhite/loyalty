@@ -54,7 +54,7 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
   const { escrowAddress } = router.query;
 
   const { userWithdrawAll, userWithdrawERC20 } = useContractAccount(
-    program.address,
+    String(escrowAddress),
     escrowType,
     program.chainId,
   );
@@ -71,13 +71,15 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
 
   useEffect(() => {
     setIsClient(true);
-    if (userAddress) getTokenAndBalances();
-  }, [userAddress]);
+    if (userAddress || txStatus === "success") {
+      getTokenAndBalances();
+    }
+  }, [userAddress, txStatus]);
 
   const withdrawWithAmount = async (): Promise<void> => {
     setTxStatus("loading");
     try {
-      const txReceipt = await userWithdrawERC20(Number(erc20WithdrawAmount));
+      const txReceipt = await userWithdrawERC20(erc20WithdrawAmount);
 
       if (txReceipt.status === "reverted") throw new Error();
 

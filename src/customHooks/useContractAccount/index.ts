@@ -1,7 +1,7 @@
 import { type EscrowType } from "@prisma/client";
 import { type TransactionReceipt } from "viem";
 import { useEscrowAbi } from "../useContractAbi/useContractAbi";
-import { formatUnits } from "ethers";
+import { parseUnits } from "ethers";
 import { writeContract, waitForTransaction, signMessage } from "wagmi/actions";
 
 export default function useContractAccount(
@@ -24,9 +24,9 @@ export default function useContractAccount(
   };
 
   const userWithdrawERC20 = async (
-    amount: number,
+    amount: string,
   ): Promise<TransactionReceipt> => {
-    const amountInWei = formatUnits(amount, "wei");
+    const amountInWei = parseUnits(amount);
 
     await doSignMessage();
 
@@ -63,9 +63,9 @@ export default function useContractAccount(
   };
 
   const creatorWithdrawERC20 = async (
-    amount: number,
+    amount: string,
   ): Promise<TransactionReceipt> => {
-    const amountInWei = formatUnits(amount, "wei");
+    const amountInWei = parseUnits(amount);
 
     await doSignMessage();
 

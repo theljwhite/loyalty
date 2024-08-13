@@ -15,16 +15,17 @@ export default function DashboardDataActionDisplay({
 }: DashboardDataActionDisplayProps) {
   return (
     <>
-      <dt className="border-primary rounded-l-xl border border-r-0 bg-dashboardLight-body py-1 pl-2 pr-2.5 font-medium">
+      <dt className="border-primary rounded-md border border-r-0 bg-dashboardLight-body py-1 pl-2 pr-2.5 font-medium">
         {dataTitle}
       </dt>
       <dd className="flex gap-2.5">
         <div className="border-primary flex min-w-0 flex-1 items-center rounded-r-md border border-l-0 bg-dashboardLight-body pr-2">
           <span className="truncate text-dashboard-secondary">{data}</span>
         </div>
-        {dataActions.map((action) => {
+        {dataActions.map((action, index) => {
           return (
             <button
+              key={`${action.title}-${index}`}
               type="button"
               onClick={action.handler}
               disabled={action.disabled}
