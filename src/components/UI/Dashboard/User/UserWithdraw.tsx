@@ -229,21 +229,13 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
               <div className="flex flex-col gap-2">
                 <DashboardTertiaryButton
                   onClick={openAccountModal as React.MouseEventHandler}
-                  title={
-                    connected
-                      ? "Switch wallet accounts"
-                      : "Connect crypto wallet"
-                  }
+                  title={"Switch wallet accounts"}
                   imageSrc="/utilityImages/blankAvatar.svg"
                   withArrowIcon
                 />
                 <DashboardTertiaryButton
                   onClick={openChainModal as React.MouseEventHandler}
-                  title={
-                    connected
-                      ? "Switch blockchain networks"
-                      : "Connect crypto wallet"
-                  }
+                  title={"Switch blockchain networks"}
                   imageSrc="/providerImages/ethLogo.svg"
                   withArrowIcon
                 />
