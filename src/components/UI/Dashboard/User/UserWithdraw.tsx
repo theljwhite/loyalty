@@ -55,7 +55,7 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
 
   const { userWithdrawAll, userWithdrawERC20 } = useContractAccount(
     program.address,
-    program.escrow.escrowType,
+    escrowType,
     program.chainId,
   );
 
@@ -64,7 +64,7 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
       program.address,
       program.chainId,
       String(escrowAddress),
-      program.escrow.escrowType,
+      escrowType,
     );
 
   const connected = isConnected && userAddress && isClient;
