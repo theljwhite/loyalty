@@ -2,7 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { type EscrowPathProps } from "~/utils/handleServerAuth";
-import { MovingArrow } from "../Icons";
+import DashboardTertiaryButton from "../DashboardTertiaryButton";
+import { EthCircleIcon } from "../Icons";
 
 export default function UserWithdrawIntro({ program }: EscrowPathProps) {
   const { openConnectModal } = useConnectModal();
@@ -34,28 +35,12 @@ export default function UserWithdrawIntro({ program }: EscrowPathProps) {
 
           <div className="h-px flex-1 flex-row flex-nowrap items-stretch justify-start bg-[rgba(0,_0,_0,_0.16)]" />
         </div>
-
-        <button
-          type="button"
-          onClick={openConnectModal}
-          className="group relative m-0 inline-flex min-h-[2.25rem] w-full cursor-pointer items-center justify-start gap-4 truncate rounded-md border border-solid border-[rgba(0,0,0,0.08)] bg-[unset] px-5 py-2.5 text-sm font-normal leading-none tracking-[0.5px] text-black outline-none duration-100 [transition-property:background-color,_border-color,_color,_fill,_stroke,_opacity,_box-shadow,_transform] hover:bg-neutral-2"
-        >
-          <span className=" flex flex-[0_0_1.25rem] flex-row flex-nowrap items-center justify-center">
-            <Image
-              src="/providerImages/ethLogo.svg"
-              alt="wallet icon"
-              className="h-auto w-4 max-w-full"
-              width={20}
-              height={20}
-            />
-          </span>
-          <div className="flex w-full w-full flex-row flex-nowrap items-center justify-center gap-2 overflow-hidden">
-            <span className="truncate text-sm font-normal leading-5 text-black">
-              Connect crypto wallet
-            </span>
-          </div>
-          <MovingArrow size="20" />
-        </button>
+        <DashboardTertiaryButton
+          onClick={openConnectModal as React.MouseEventHandler}
+          title="Connect crypto wallet"
+          icon={<EthCircleIcon size="20" />}
+          withArrowIcon
+        />
       </div>
       <div className="flex flex-row flex-nowrap items-center justify-between">
         <span className="m-0 text-[0.8125rem] leading-tight text-black opacity-65">

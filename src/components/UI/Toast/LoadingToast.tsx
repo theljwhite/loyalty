@@ -1,5 +1,5 @@
 import React from "react";
-import { SpinnerOne } from "../Misc/Spinners";
+import { DashboardLoadingSpinnerTwo } from "../Misc/Spinners";
 
 interface LoadingToastProps {
   message: string;
@@ -12,7 +12,7 @@ export default function LoadingToast({
 }: LoadingToastProps) {
   return (
     <div className="flex items-center gap-2 pl-4">
-      <SpinnerOne size={20} />
+      <DashboardLoadingSpinnerTwo size={20} />
       <div className="flex flex-col">
         <p className="text-[14px] font-bold">{message}</p>
         {showSignMessage && (

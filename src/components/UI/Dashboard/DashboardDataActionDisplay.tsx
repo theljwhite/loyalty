@@ -15,7 +15,7 @@ export default function DashboardDataActionDisplay({
 }: DashboardDataActionDisplayProps) {
   return (
     <>
-      <dt className="border-primary rounded-md border border-r-0 bg-dashboardLight-body py-1 pl-2 pr-2.5 font-medium">
+      <dt className="border-primary rounded-l-md border border-r-0 bg-dashboardLight-body py-1 pl-2 pr-2.5 font-medium">
         {dataTitle}
       </dt>
       <dd className="flex gap-2.5">

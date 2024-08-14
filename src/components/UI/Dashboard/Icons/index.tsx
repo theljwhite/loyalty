@@ -1049,3 +1049,39 @@ export const MovingArrow = ({ size }: { size: string }): JSX.Element => (
     ></path>
   </svg>
 );
+
+export const EthCircleIcon = ({ size }: { size: string }): JSX.Element => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 256 256"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <defs>
+      <style></style>
+    </defs>
+    <g data-name="etherium eth ethcoin crypto" id="etherium_eth_ethcoin_crypto">
+      <g data-name="etherium eth" id="etherium_eth">
+        <circle fill="#acb7dd" cx="128" cy="128" r="128" />
+        <path
+          fillRule="evenodd"
+          fill="#828384"
+          d="M1144.2,652L1080,758.641l64.2,38.144,63.8-38.144ZM1080,771.355l64.2,37.735,63.8-37.735L1144.2,862Z"
+          transform="translate(-1016 -629)"
+        />
+        <path
+          fillRule="evenodd"
+          fill="#2f3030"
+          d="M1144.2,796.539V652l63.62,106.339Zm63.41-25.044L1144.2,862V809.256Z"
+          transform="translate(-1016 -629)"
+        />
+        <path
+          opacity={0.8}
+          fill="#131313"
+          d="M1144.2,729.93L1080,758.641l64.2,38.144,63.8-38.144Z"
+          transform="translate(-1016 -629)"
+        />
+      </g>
+    </g>
+  </svg>
+);

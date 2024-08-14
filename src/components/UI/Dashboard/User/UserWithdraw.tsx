@@ -9,18 +9,17 @@ import { useContractProgression } from "~/customHooks/useContractProgression";
 import { NUMBERS_OR_FLOATS_ONLY_REGEX } from "~/constants/regularExpressions";
 import shortenEthereumAddress from "~/helpers/shortenEthAddress";
 import { copyTextToClipboard } from "~/helpers/copyTextToClipboard";
-import { CoinsOne } from "../Icons";
-import { DashboardLoadingSpinnerTwo } from "../../Misc/Spinners";
+import { CoinsOne, InfoIcon, EthCircleIcon, ChainIcon } from "../Icons";
 import DashboardSimpleInputModal from "../DashboardSimpleInputModal";
 import DashboardTertiaryButton from "../DashboardTertiaryButton";
 import DashboardDataActionDisplay from "../DashboardDataActionDisplay";
-import { toastError, toastLoading, toastSuccess } from "../../Toast/Toast";
 import UserWithdrawIntro from "./UserWithdrawIntro";
+import { toastError, toastLoading, toastSuccess } from "../../Toast/Toast";
 
 //TODO 8-11 - fetch ERC721 and ERC1155 tkn/symbol through readContract prob
-//add withdraw specific amount for ERC20
-//error handle
+//error handle better
 //fix type assertions for onClick's
+//format balances better w/ always 2 decimal places
 
 type RewardTokenDisplay = {
   name: string;
@@ -78,6 +77,8 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
 
   const withdrawWithAmount = async (): Promise<void> => {
     setTxStatus("loading");
+    setIsAmountModalOpen(false);
+    toastLoading("Withdraw request sent to wallet", true);
     try {
       const txReceipt = await userWithdrawERC20(erc20WithdrawAmount);
 
@@ -87,6 +88,7 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
         `Withdrawal success. Transaction hash: ${txReceipt.transactionHash}`,
       );
       setTxStatus("success");
+      setERC20WithdrawAmount("");
     } catch (error) {
       toastError("Withdrawal failed. Please try again later.");
     }
@@ -94,6 +96,8 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
 
   const withdrawAll = async (): Promise<void> => {
     setTxStatus("loading");
+    setIsAmountModalOpen(false);
+    toastLoading("Withdraw request sent to wallet", true);
     try {
       const txReceipt = await userWithdrawAll();
 
@@ -110,6 +114,7 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
 
   const getTokenAndBalances = async (): Promise<void> => {
     setTxStatus("loading");
+    setIsAmountModalOpen(false);
     try {
       if (escrowType === "ERC20") {
         await fetchERC20TokenDetailsAndBalance();
@@ -219,7 +224,7 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
                     {
                       title: "Withdraw",
                       handler: () => setIsAmountModalOpen(true),
-                      disabled: Number(rewardToken.erc20Balance) === 0,
+                      disabled: rewardToken.erc20Balance === "0.0",
                     },
                     {
                       title: "Withdraw all",
@@ -232,15 +237,32 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
                 <DashboardTertiaryButton
                   onClick={openAccountModal as React.MouseEventHandler}
                   title={"Switch wallet accounts"}
-                  imageSrc="/utilityImages/blankAvatar.svg"
+                  icon={<EthCircleIcon size="20" />}
                   withArrowIcon
                 />
                 <DashboardTertiaryButton
                   onClick={openChainModal as React.MouseEventHandler}
                   title={"Switch blockchain networks"}
-                  imageSrc="/providerImages/ethLogo.svg"
+                  icon={<ChainIcon color="#1e3a8a" size="20" />}
                   withArrowIcon
                 />
+              </div>
+              <div className="flex flex-row items-start justify-center gap-1 text-xs text-dashboard-body">
+                <span className="text-primary-1">
+                  <InfoIcon size={12} color="currentColor" />
+                </span>
+                <span className="">
+                  You may need a small amount of native tokens to pay for minor
+                  gas fees in order to withdraw.{" "}
+                  <a
+                    className="text-primary-1 underline hover:opacity-75"
+                    target="_blank"
+                    rel="noreferrer"
+                    href="TODO"
+                  >
+                    Learn more.
+                  </a>
+                </span>
               </div>
             </div>
           ) : (
