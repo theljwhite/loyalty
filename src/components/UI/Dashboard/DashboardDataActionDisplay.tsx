@@ -1,3 +1,5 @@
+import { DashboardLoadingSpinnerTwo } from "../Misc/Spinners";
+
 interface DashboardDataActionDisplayProps {
   dataTitle: string;
   data: any;
@@ -6,12 +8,14 @@ interface DashboardDataActionDisplayProps {
     handler: (...args: any[]) => any;
     disabled?: boolean;
   }[];
+  dataLoading?: boolean;
 }
 
 export default function DashboardDataActionDisplay({
   dataTitle,
   data,
   dataActions,
+  dataLoading,
 }: DashboardDataActionDisplayProps) {
   return (
     <>
@@ -20,7 +24,11 @@ export default function DashboardDataActionDisplay({
       </dt>
       <dd className="flex gap-2.5">
         <div className="border-primary flex min-w-0 flex-1 items-center rounded-r-md border border-l-0 bg-dashboardLight-body pr-2">
-          <span className="truncate text-dashboard-secondary">{data}</span>
+          {dataLoading ? (
+            <DashboardLoadingSpinnerTwo size={12} />
+          ) : (
+            <span className="truncate text-dashboard-secondary">{data}</span>
+          )}
         </div>
         {dataActions.map((action, index) => {
           return (

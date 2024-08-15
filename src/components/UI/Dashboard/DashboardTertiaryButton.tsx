@@ -35,7 +35,7 @@ export default function DashboardTertiaryButton({
         {icon && icon}
       </span>
       <div className="flex w-full w-full flex-row flex-nowrap items-center justify-center gap-2 overflow-hidden">
-        <span className="truncate text-sm font-normal leading-5 text-black">
+        <span className="truncate text-sm font-normal leading-5 tracking-tight text-black">
           {title}
         </span>
       </div>

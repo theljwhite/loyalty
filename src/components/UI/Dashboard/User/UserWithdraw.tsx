@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { type EscrowPathProps } from "~/utils/handleServerAuth";
 import { useRouter } from "next/router";
 import { useAccountModal, useChainModal } from "@rainbow-me/rainbowkit";
-import { useAccount } from "wagmi";
+import { useAccount, useNetwork } from "wagmi";
 import { fetchBalance } from "wagmi/actions";
 import useContractAccount from "~/customHooks/useContractAccount";
 import { useContractProgression } from "~/customHooks/useContractProgression";
 import { NUMBERS_OR_FLOATS_ONLY_REGEX } from "~/constants/regularExpressions";
 import shortenEthereumAddress from "~/helpers/shortenEthAddress";
 import { copyTextToClipboard } from "~/helpers/copyTextToClipboard";
+import { ensureSameChain } from "~/utils/ensureSameChain";
 import { CoinsOne, InfoIcon, EthCircleIcon, ChainIcon } from "../Icons";
 import DashboardSimpleInputModal from "../DashboardSimpleInputModal";
 import DashboardTertiaryButton from "../DashboardTertiaryButton";
@@ -43,9 +44,11 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
   const [isAmountModalOpen, setIsAmountModalOpen] = useState<boolean>(false);
 
   const [txStatus, setTxStatus] = useState<WithdrawStatus>("idle");
+  const [dataLoading, setDataLoading] = useState<boolean>(false);
   const [isClient, setIsClient] = useState<boolean>(false);
 
   const { isConnected, address: userAddress } = useAccount();
+  const { chain } = useNetwork();
   const { openAccountModal } = useAccountModal();
   const { openChainModal } = useChainModal();
 
@@ -80,6 +83,13 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
     setIsAmountModalOpen(false);
     toastLoading("Withdraw request sent to wallet", true);
     try {
+      const incorrectChainMsg = await ensureSameChain(program.chainId);
+
+      if (incorrectChainMsg) {
+        toastError(incorrectChainMsg);
+        return;
+      }
+
       const txReceipt = await userWithdrawERC20(erc20WithdrawAmount);
 
       if (txReceipt.status === "reverted") throw new Error();
@@ -99,6 +109,13 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
     setIsAmountModalOpen(false);
     toastLoading("Withdraw request sent to wallet", true);
     try {
+      const incorrectChainMsg = await ensureSameChain(program.chainId);
+
+      if (incorrectChainMsg) {
+        toastError(incorrectChainMsg);
+        return;
+      }
+
       const txReceipt = await userWithdrawAll();
 
       if (txReceipt.status === "reverted") throw new Error();
@@ -113,7 +130,7 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
   };
 
   const getTokenAndBalances = async (): Promise<void> => {
-    setTxStatus("loading");
+    setDataLoading(true);
     setIsAmountModalOpen(false);
     try {
       if (escrowType === "ERC20") {
@@ -123,6 +140,7 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
         await getUserRewards(userAddress as string);
         //TODO
       }
+      setDataLoading(false);
     } catch (error) {
       setTxStatus("idle");
     }
@@ -158,16 +176,22 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
     } else setIsAmountValid(true);
   };
 
+  const onAmountModalClose = (): void => {
+    setERC20WithdrawAmount("");
+    setIsAmountModalOpen(false);
+    setIsAmountValid(false);
+  };
+
   return (
     <>
       {isAmountModalOpen && (
         <DashboardSimpleInputModal
           modalTitle="Withdraw ERC20 Amount"
-          modalDescription="Withdraw a specific ERC20 amount from your escrow rewards balance."
+          modalDescription={`Withdraw tokens that you have earned from "${program.name}" loyalty program. It will safely withdraw the tokens from the loyalty program into your crypto wallet.`}
           inputLabel="Amount"
           inputPlaceholder="eg 2 or 0.2"
           inputState={erc20WithdrawAmount}
-          inputHelpMsg={`This will withdraw tokens that you have earned from "${program.name}" loyalty program. It will safely withdraw the tokens from the loyalty program into your crypto wallet.`}
+          inputHelpMsg="You may need to top up on native tokens to cover minor gas fees when withdrawing."
           inputOnChange={onWithdrawAmountChange}
           inputDisabled={false}
           inputValid={isAmountValid}
@@ -175,7 +199,7 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
           btnTitle="Claim rewards"
           btnDisabled={!isAmountValid}
           onActionBtnClick={withdrawWithAmount}
-          setIsModalOpen={setIsAmountModalOpen}
+          setIsModalOpen={onAmountModalClose}
         />
       )}
       <div className="z-10 flex flex-col gap-6">
@@ -196,6 +220,7 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
                   dataTitle="Your Wallet Balance"
                   data={`${rewardToken.walletBalance} ${rewardToken.symbol}`}
                   dataActions={[]}
+                  dataLoading={dataLoading}
                 />
                 <DashboardDataActionDisplay
                   dataTitle="Rewards Contract Address"
@@ -210,6 +235,7 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
                         ),
                     },
                   ]}
+                  dataLoading={dataLoading}
                 />
                 <DashboardDataActionDisplay
                   dataTitle="Your Rewards Balance"
@@ -224,25 +250,37 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
                     {
                       title: "Withdraw",
                       handler: () => setIsAmountModalOpen(true),
-                      disabled: rewardToken.erc20Balance === "0.0",
+                      disabled:
+                        rewardToken.erc20Balance === "0.0" || dataLoading,
                     },
                     {
                       title: "Withdraw all",
                       handler: withdrawAll,
+                      disabled:
+                        rewardToken.erc20Balance === "0.0" || dataLoading,
                     },
                   ]}
+                  dataLoading={dataLoading}
                 />
               </div>
               <div className="flex flex-col gap-2">
                 <DashboardTertiaryButton
                   onClick={openAccountModal as React.MouseEventHandler}
-                  title={"Switch wallet accounts"}
+                  title={`Connected as: ${shortenEthereumAddress(
+                    userAddress,
+                    8,
+                    8,
+                  )}`}
                   icon={<EthCircleIcon size="20" />}
                   withArrowIcon
                 />
                 <DashboardTertiaryButton
                   onClick={openChainModal as React.MouseEventHandler}
-                  title={"Switch blockchain networks"}
+                  title={
+                    connected && chain
+                      ? `Connected on network: ${chain.name}`
+                      : "Switch blockchain networks"
+                  }
                   icon={<ChainIcon color="#1e3a8a" size="20" />}
                   withArrowIcon
                 />
@@ -258,7 +296,7 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
                     className="text-primary-1 underline hover:opacity-75"
                     target="_blank"
                     rel="noreferrer"
-                    href="TODO"
+                    href="https://www.unicoindcx.com/educare/what-are-native-tokens"
                   >
                     Learn more.
                   </a>
