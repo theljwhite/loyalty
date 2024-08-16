@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { type EscrowPathProps } from "~/utils/handleServerAuth";
 import { useRouter } from "next/router";
 import { useAccountModal, useChainModal } from "@rainbow-me/rainbowkit";
@@ -306,6 +307,36 @@ export default function UserWithdraw({ program }: EscrowPathProps) {
           ) : (
             <UserWithdrawIntro program={program} />
           )}
+        </div>
+        <div className="flex justify-between px-7 py-0">
+          <div>
+            <Link
+              className="text-[12px] text-white hover:opacity-65"
+              href={process.env.NEXT_PUBLIC_DOMAIN_URL as string}
+            >
+              © 2024 {process.env.NEXT_PUBLIC_PROJECT_NAME}
+            </Link>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`${process.env.NEXT_PUBLIC_DOMAIN_URL}/support`}
+              className="text-[12px] text-white hover:opacity-65"
+            >
+              Support
+            </Link>
+            <Link
+              href={`${process.env.NEXT_PUBLIC_DOMAIN_URL}/privacy`}
+              className="text-[12px] text-white hover:opacity-65"
+            >
+              Privacy
+            </Link>
+            <Link
+              href={`${process.env.NEXT_PUBLIC_DOMAIN_URL}/terms`}
+              className="text-[12px] text-white hover:opacity-65"
+            >
+              Terms
+            </Link>
+          </div>
         </div>
       </div>
     </>

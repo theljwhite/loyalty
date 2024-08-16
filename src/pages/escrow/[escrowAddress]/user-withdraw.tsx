@@ -14,7 +14,7 @@ export const getServerSideProps: GetServerSideProps = async (
 const EscrowUserWithdraw: NextPage<EscrowPathProps> = ({ program }) => {
   return (
     <>
-      <UserWithdraw program={program} />;
+      <UserWithdraw program={program} />; lol
     </>
   );
 };
