@@ -3,7 +3,9 @@ import Link from "next/link";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { type EscrowPathProps } from "~/utils/handleServerAuth";
 import DashboardTertiaryButton from "../DashboardTertiaryButton";
-import { EthCircleIcon } from "../Icons";
+import { EthCircleIcon, InfoIcon, PointsIconTwo } from "../Icons";
+
+//TODO - add user withdraw w dev controlled wallets
 
 export default function UserWithdrawIntro({ program }: EscrowPathProps) {
   const { openConnectModal } = useConnectModal();
@@ -29,22 +31,44 @@ export default function UserWithdrawIntro({ program }: EscrowPathProps) {
         </p>
       </div>
       <div className="flex flex-col flex-nowrap items-stretch justify-start gap-8">
-        <div className="grid grid-cols-[1fr] items-stretch justify-stretch gap-2 "></div>
+        <div className="grid grid-cols-[1fr] items-stretch justify-stretch gap-2">
+          <DashboardTertiaryButton
+            onClick={openConnectModal as React.MouseEventHandler}
+            title="Connect crypto wallet"
+            icon={<EthCircleIcon size="20" />}
+            withArrowIcon
+          />
+        </div>
         <div className="flex-norwap flex flex-row items-center justify-center">
           <div className="h-px flex-1 flex-row flex-nowrap items-stretch justify-start bg-[rgba(0,_0,_0,_0.16)]" />
-
+          <p className="mx-4 my-0 text-[0.8125rem] font-medium leading-[1.375] text-black opacity-65">
+            or
+          </p>
           <div className="h-px flex-1 flex-row flex-nowrap items-stretch justify-start bg-[rgba(0,_0,_0,_0.16)]" />
         </div>
         <DashboardTertiaryButton
-          onClick={openConnectModal as React.MouseEventHandler}
-          title="Connect crypto wallet"
-          icon={<EthCircleIcon size="20" />}
+          onClick={() => console.log("TODO")}
+          title="Claim rewards without a wallet"
+          icon={<PointsIconTwo color="#5639CC" size="16" />}
           withArrowIcon
         />
       </div>
-      <div className="flex flex-row flex-nowrap items-center justify-between">
-        <span className="m-0 text-[0.8125rem] leading-tight text-black opacity-65">
-          Connect your crypto wallet to withdraw rewards
+
+      <div className="flex flex-row items-start justify-center gap-1 text-xs text-dashboard-body">
+        <span className="text-primary-1">
+          <InfoIcon size={12} color="currentColor" />
+        </span>
+        <span className="">
+          Connect your crypto wallet to view and manage rewards. If loyalty
+          program is eligible, you can claim rewards without a wallet.{" "}
+          <a
+            className="text-primary-1 underline hover:opacity-75"
+            target="_blank"
+            rel="noreferrer"
+            href="TODO"
+          >
+            Learn more.
+          </a>
         </span>
       </div>
     </div>
