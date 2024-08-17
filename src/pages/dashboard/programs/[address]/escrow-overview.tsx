@@ -8,11 +8,7 @@ import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
 import DashboardPageLoading from "~/components/UI/Dashboard/DashboardPageLoading";
 import DashboardPageError from "~/components/UI/Dashboard/DashboardPageError";
 import DashboardStateStatus from "~/components/UI/Dashboard/DashboardStateStatus";
-import FreezeEscrow from "~/components/UI/Dashboard/Escrow/Overview/FreezeEscrow";
-import CancelEscrow from "~/components/UI/Dashboard/Escrow/Overview/CancelEscrow";
-
-//FreezeEscrow may be moved from here
-//CancelEscrow may be moved from here
+import DashboardCopyDataBox from "~/components/UI/Dashboard/DashboardCopyDataBox";
 
 export const getServerSideProps: GetServerSideProps = async (
   ctx: GetServerSidePropsContext,
@@ -42,18 +38,27 @@ const EscrowOverview: NextPage = () => {
           title="Escrow Overview"
           info="Basic overview and management of your escrow contract."
         />
-        {data?.escrow?.state && (
-          <DashboardStateStatus
-            escrowState={data?.escrow?.state}
-            containerBg="bg-white"
-          />
-        )}
-        {data?.escrow?.state === "InIssuance" && (
-          <>
-            <FreezeEscrow />
-            <CancelEscrow />
-          </>
-        )}
+
+        <DashboardCopyDataBox
+          title="Escrow Address"
+          description="The address of your escrow smart contract"
+          copyBoxLabel="Escrow address"
+          dataToCopy={data?.escrow?.address ?? ""}
+          copySuccessMessage="Copied"
+          containerBg="bg-neutral-2"
+        />
+        <DashboardCopyDataBox
+          title="Reward contract address"
+          description="ten ten ten ten"
+          copyBoxLabel="Reward address"
+          dataToCopy="lol"
+          copySuccessMessage="Copied"
+          containerBg="bg-neutral-2"
+        />
+        <DashboardStateStatus
+          escrowState={data?.escrow?.state}
+          containerBg="bg-white"
+        />
       </div>
     </>
   );

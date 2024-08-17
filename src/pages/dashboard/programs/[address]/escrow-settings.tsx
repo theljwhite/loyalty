@@ -13,6 +13,8 @@ import DashboardInfoBanner from "~/components/UI/Dashboard/DashboardInfoBanner";
 import ERC20EscrowSettings from "~/components/UI/Dashboard/Escrow/Settings/ERC20EscrowSettings";
 import ERC721EscrowSettings from "~/components/UI/Dashboard/Escrow/Settings/ERC721EscrowSettings";
 import ERC1155EscrowSettings from "~/components/UI/Dashboard/Escrow/Settings/ERC1155EscrowSettings";
+import FreezeEscrow from "~/components/UI/Dashboard/Escrow/Overview/FreezeEscrow";
+import CancelEscrow from "~/components/UI/Dashboard/Escrow/Overview/CancelEscrow";
 
 export const getServerSideProps: GetServerSideProps = async (
   ctx: GetServerSidePropsContext,
@@ -35,37 +37,53 @@ const EscrowSettings: NextPage = () => {
     { refetchOnWindowFocus: false },
   );
   const escrowType = contractsDb?.escrow?.escrowType;
+  const escrowState = contractsDb?.escrow?.state;
+  const inIssuance = escrowState === "InIssuance";
+
   const depositEndDate = contractsDb?.escrow?.depositEndDate ?? new Date();
   const depositDateNum: number = depositEndDate.getTime();
   const now: number = Math.floor(Date.now());
 
   if (contractDbLoading) return <DashboardPageLoading />;
   if (contractsDbErr) return <DashboardPageError />;
-  
+
   return (
     <div className="space-y-8">
       <DashboardHeader
         title="Escrow Settings"
-        info="Customize your escrow rewards settings for your escrow contract"
+        info={
+          inIssuance
+            ? "Settings for your escrow contract"
+            : "Customize your escrow rewards settings for your escrow contract"
+        }
       />
-      {now < depositDateNum && (
-        <DashboardInfoBox
-          infoType="warn"
-          info={`Your contract's deposit period is still active until ${depositEndDate.toLocaleTimeString()} on ${depositEndDate.toLocaleDateString()}. Once it is completed, you can customize your escrow settings. Go to Escrow Wallet tab to manage deposits.`}
-        />
-      )}
-      {now > depositDateNum && (
+      {inIssuance ? (
+        <>
+          <FreezeEscrow />
+          <CancelEscrow />
+        </>
+      ) : (
         <div>
-          <DashboardInfoBanner
-            infoType="warn"
-            info="Setting escrow settings will allow you to customize how your escrow contract issues rewards as users progress through your loyalty program. Once escrow settings are set, setting the loyalty program to active will then begin your loyalty program."
-          />
-          {escrowType === "ERC20" ? (
-            <ERC20EscrowSettings />
-          ) : escrowType === "ERC721" ? (
-            <ERC721EscrowSettings />
-          ) : (
-            escrowType === "ERC1155" && <ERC1155EscrowSettings />
+          {now < depositDateNum && (
+            <DashboardInfoBox
+              infoType="warn"
+              info={`Your contract's deposit period is still active until ${depositEndDate.toLocaleTimeString()} on ${depositEndDate.toLocaleDateString()}. Once it is completed, you can customize your escrow settings. Go to Escrow Wallet tab to manage deposits.`}
+            />
+          )}
+          {now > depositDateNum && (
+            <div>
+              <DashboardInfoBanner
+                infoType="warn"
+                info="Setting escrow settings will allow you to customize how your escrow contract issues rewards as users progress through your loyalty program. Once escrow settings are set, setting the loyalty program to active will then begin your loyalty program."
+              />
+              {escrowType === "ERC20" ? (
+                <ERC20EscrowSettings />
+              ) : escrowType === "ERC721" ? (
+                <ERC721EscrowSettings />
+              ) : (
+                escrowType === "ERC1155" && <ERC1155EscrowSettings />
+              )}
+            </div>
           )}
         </div>
       )}
