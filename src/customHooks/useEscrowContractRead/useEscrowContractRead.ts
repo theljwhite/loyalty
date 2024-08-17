@@ -4,6 +4,7 @@ import { useEscrowAbi } from "../useContractAbi/useContractAbi";
 import { type EscrowType } from "@prisma/client";
 import { type Abi } from "viem";
 import { formatEther } from "ethers/utils";
+import { EscrowState } from "@prisma/client";
 
 export enum EscrowStateReturn {
   Idle,
@@ -52,7 +53,7 @@ export function useEscrowContractRead(
         ...escrowContractConfig,
         functionName: "escrowState",
       })) as number;
-      if (escrowContractState in EscrowStateReturn) {
+      if (escrowContractState in EscrowState) {
         const formattedState = EscrowStateReturn[escrowContractState];
         return formattedState;
       } else return undefined;

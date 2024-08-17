@@ -90,6 +90,16 @@ export const escrowRouter = createTRPCRouter({
       });
       return updatedEscrowState.state;
     }),
+  getAllByLoyaltyAddress: protectedProcedure
+    .input(z.object({ loyaltyAddress: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const escrow = await ctx.db.loyaltyProgram.findUnique({
+        where: { address: input.loyaltyAddress },
+        select: { chainId: true, escrow: true },
+      });
+      if (!escrow) throw new TRPCError({ code: "NOT_FOUND" });
+      return escrow;
+    }),
   getEscrowDepositKey: protectedProcedure
     .input(z.object({ loyaltyAddress: z.string() }))
     .query(async ({ ctx, input }) => {
