@@ -108,7 +108,7 @@ export default function CancelProgram({ loyaltyAddress }: CancelProgramProps) {
             id="cancel-program-switch"
             onChange={() => setConfirmOpen(true)}
             checked={isChecked || program?.state === "Canceled"}
-            disableCheckbox={program?.state === "Canceled"}
+            disableCheckbox={isChecked || program?.state === "Canceled"}
             disableCheckboxTip="Your program has already been canceled. This action cannot be undone."
           />
         }

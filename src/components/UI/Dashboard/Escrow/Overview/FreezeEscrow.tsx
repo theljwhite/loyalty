@@ -81,8 +81,7 @@ export default function FreezeEscrow() {
     <DashboardContentBox
       title="Freeze Escrow"
       description="Freeze your escrow contract. This will prevent users, contract creator, and approved depositors from withdrawing or depositing to your escrow contract."
-      descriptionTwo="This will also prevent users from being rewarded tokens as they progress in your loyalty program."
-      warning="This will change the state of your escrow contract but is reversible, meaning that you can both freeze and unfreeze."
+      descriptionTwo="This will also prevent users from being rewarded tokens as they progress in your loyalty program. This will change the state of your escrow contract but is reversible, meaning that you can both freeze and unfreeze."
       content={
         <DashboardToggleSwitch
           id="freeze-escrow-switch"
