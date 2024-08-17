@@ -13,6 +13,7 @@ import {
 import DashboardHeader from "~/components/UI/Dashboard/DashboardHeader";
 import WalletStatsCard from "~/components/UI/Dashboard/Escrow/Wallet/WalletStatsCard";
 import StartProgram from "~/components/UI/Dashboard/LoyaltyProgram/StartProgram";
+import CancelProgram from "~/components/UI/Dashboard/LoyaltyProgram/CancelProgram";
 import DashboardPageLoading from "~/components/UI/Dashboard/DashboardPageLoading";
 import DashboardPageError from "~/components/UI/Dashboard/DashboardPageError";
 import {
@@ -120,6 +121,9 @@ const Overview: NextPage = () => {
         </div>
         {programState !== "Active" && (
           <StartProgram loyaltyAddress={String(loyaltyAddress)} />
+        )}
+        {programState === "Active" && (
+          <CancelProgram loyaltyAddress={String(loyaltyAddress)} />
         )}
       </div>
     </>

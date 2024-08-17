@@ -53,7 +53,6 @@ export default function UserWithdrawIntro({ program }: EscrowPathProps) {
           withArrowIcon
         />
       </div>
-
       <div className="flex flex-row items-start justify-center gap-1 text-xs text-dashboard-body">
         <span className="text-primary-1">
           <InfoIcon size={12} color="currentColor" />

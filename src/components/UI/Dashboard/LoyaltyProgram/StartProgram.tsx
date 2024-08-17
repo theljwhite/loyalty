@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLoyaltyAbi } from "~/customHooks/useContractAbi/useContractAbi";
 import { useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
+import useConfirmAction from "~/customHooks/useConfirmAction";
 import { useError } from "~/customHooks/useError";
 import { api } from "~/utils/api";
 import { writeContract, waitForTransaction } from "wagmi/actions";
@@ -16,11 +17,17 @@ interface StartProgramProps {
 
 export default function StartProgram({ loyaltyAddress }: StartProgramProps) {
   const [isChecked, setIsChecked] = useState<boolean>(false);
-  const [isConfirmOpen, setIsConfirmOpen] = useState<boolean>(false);
-  const [isConfirmValid, setIsConfirmValid] = useState<boolean>(false);
-  const [confirm, setConfirm] = useState<string>("");
 
+  const {
+    confirmEntry,
+    confirmOpen,
+    confirmValid,
+    setConfirmOpen,
+    onConfirmChange,
+    closeConfirm,
+  } = useConfirmAction();
   const { handleLoyaltyError } = useError();
+
   const { abi } = useLoyaltyAbi();
   const loyaltyContractConfig = {
     address: loyaltyAddress as `0x${string}`,
@@ -42,7 +49,7 @@ export default function StartProgram({ loyaltyAddress }: StartProgramProps) {
   const alreadyActiveProgram = programState === "Active";
   const chainId = data?.chainId;
 
-  const doSetActiveChecksOpenConfirm = async (): Promise<void> => {
+  const doSetActiveChecksOpenConfirm = (): void => {
     if (!isConnected || !userAddress) openConnectModal?.();
 
     const rewardType = data?.rewardType;
@@ -53,6 +60,7 @@ export default function StartProgram({ loyaltyAddress }: StartProgramProps) {
     if (rewardType === "Points" && programState !== "Idle") {
       toastError("Your program is not ready to be made active.");
     }
+
     if (rewardType !== "Points") {
       const escrowState = data?.escrowState;
 
@@ -62,11 +70,11 @@ export default function StartProgram({ loyaltyAddress }: StartProgramProps) {
       }
     }
 
-    setIsConfirmOpen(true);
+    setConfirmOpen(true);
   };
 
   const makeProgramActive = async (): Promise<void> => {
-    setIsConfirmOpen(false);
+    closeConfirm();
     toastLoading("Request sent to wallet", true);
     try {
       const setProgramActive = await writeContract({
@@ -102,35 +110,25 @@ export default function StartProgram({ loyaltyAddress }: StartProgramProps) {
     }
   };
 
-  const confirmReadyToBegin = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ): void => {
-    const { value } = e.target;
-    setConfirm(value);
-    const confirmRegex = /^confirm$/i;
-    if (confirmRegex.test(value)) setIsConfirmValid(true);
-    else setIsConfirmValid(false);
-  };
-
   return (
     <>
-      {isConfirmOpen && (
+      {confirmOpen && (
         <DashboardSimpleInputModal
           modalTitle="Confirm Begin Program"
           modalDescription="If you are ready to start your program, type 'Confirm' in the box below."
           bannerInfo="This action is irreversible. Make sure you understand the state cycle of your program before continuing."
           inputLabel="Type Confirm below"
-          inputState={confirm}
+          inputState={confirmEntry}
           inputPlaceholder="Type 'Confirm'"
           inputInstruction="Type 'Confirm' in the box below to verify that you are making your program active."
-          inputValid={isConfirmValid}
-          inputOnChange={confirmReadyToBegin}
+          inputValid={confirmValid}
+          inputOnChange={onConfirmChange}
           inputDisabled={false}
           inputHelpMsg="This is an immutable action. Are you sure you wish to proceed?"
           btnTitle="Make Program Active"
           onActionBtnClick={makeProgramActive}
-          btnDisabled={!isConfirmValid}
-          setIsModalOpen={setIsConfirmOpen}
+          btnDisabled={!confirmValid}
+          setIsModalOpen={closeConfirm}
         />
       )}
       <DashboardContentBox
