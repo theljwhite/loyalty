@@ -59,6 +59,10 @@ const EscrowSettings: NextPage = () => {
       />
       {inIssuance ? (
         <>
+          <DashboardInfoBanner
+            infoType="warn"
+            info="Some settings modifications may be permanent. Make sure to read our documentation for more info before making any changes."
+          />
           <FreezeEscrow />
           <CancelEscrow />
         </>

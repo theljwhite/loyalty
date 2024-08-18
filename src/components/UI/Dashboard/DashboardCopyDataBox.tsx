@@ -104,7 +104,7 @@ export default function DashboardCopyDataBox({
             ) : (
               <pre
                 className={`${
-                  isHidden
+                  isHidden && isSecret
                     ? "text-transparent [text-shadow:white_0px_0px_6px]"
                     : "text-white"
                 } whitespace-prewrap m-0 p-0 text-sm font-normal leading-5`}
