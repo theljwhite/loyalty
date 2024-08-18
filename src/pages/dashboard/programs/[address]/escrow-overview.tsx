@@ -44,16 +44,18 @@ const EscrowOverview: NextPage = () => {
           description="The address of your escrow smart contract"
           copyBoxLabel="Escrow address"
           dataToCopy={data?.escrow?.address ?? ""}
-          copySuccessMessage="Copied"
+          copySuccessMessage="Copied escrow address"
           containerBg="bg-neutral-2"
+          isSecret={false}
         />
         <DashboardCopyDataBox
           title="Reward contract address"
-          description="ten ten ten ten"
-          copyBoxLabel="Reward address"
-          dataToCopy="lol"
-          copySuccessMessage="Copied"
+          description="The address of rewards contract"
+          copyBoxLabel="Rewards address"
+          dataToCopy={data?.escrow?.rewardAddress ?? ""}
+          copySuccessMessage="Copied rewards address"
           containerBg="bg-neutral-2"
+          isSecret={false}
         />
         <DashboardStateStatus
           escrowState={data?.escrow?.state}
