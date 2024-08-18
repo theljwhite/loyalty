@@ -13,8 +13,9 @@ import DashboardInfoBanner from "~/components/UI/Dashboard/DashboardInfoBanner";
 import ERC20EscrowSettings from "~/components/UI/Dashboard/Escrow/Settings/ERC20EscrowSettings";
 import ERC721EscrowSettings from "~/components/UI/Dashboard/Escrow/Settings/ERC721EscrowSettings";
 import ERC1155EscrowSettings from "~/components/UI/Dashboard/Escrow/Settings/ERC1155EscrowSettings";
-import FreezeEscrow from "~/components/UI/Dashboard/Escrow/Overview/FreezeEscrow";
-import CancelEscrow from "~/components/UI/Dashboard/Escrow/Overview/CancelEscrow";
+import FreezeEscrow from "~/components/UI/Dashboard/Escrow/Settings/FreezeEscrow";
+import CancelEscrow from "~/components/UI/Dashboard/Escrow/Settings/CancelEscrow";
+import AddRelayer from "~/components/UI/Dashboard/Escrow/Settings/AddRelayer";
 
 export const getServerSideProps: GetServerSideProps = async (
   ctx: GetServerSidePropsContext,
@@ -63,6 +64,7 @@ const EscrowSettings: NextPage = () => {
             infoType="warn"
             info="Some settings modifications may be permanent. Make sure to read our documentation for more info before making any changes."
           />
+          <AddRelayer />
           <FreezeEscrow />
           <CancelEscrow />
         </>

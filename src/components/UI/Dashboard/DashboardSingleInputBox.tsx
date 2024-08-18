@@ -1,3 +1,5 @@
+import DashboardActionButton from "./DashboardActionButton";
+
 interface DashboardInputBoxProps {
   title: string;
   description: string;
@@ -8,6 +10,11 @@ interface DashboardInputBoxProps {
   isRequiredField?: boolean;
   disableCondition: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => any;
+  btnSettings?: {
+    handler: React.MouseEventHandler;
+    btnText: string;
+    disabled: boolean;
+  };
 }
 
 export default function DashboardSingleInputBox({
@@ -20,6 +27,7 @@ export default function DashboardSingleInputBox({
   isRequiredField,
   disableCondition,
   onChange,
+  btnSettings,
 }: DashboardInputBoxProps) {
   return (
     <div className="relative flex flex-1 flex-col rounded-2xl border border-dashboard-border1 py-8 pe-6 ps-6">
@@ -67,6 +75,17 @@ export default function DashboardSingleInputBox({
                         autoCorrect="off"
                         autoComplete="off"
                       />
+                      {btnSettings && (
+                        <div className="flex items-center justify-center">
+                          <DashboardActionButton
+                            btnType="button"
+                            btnText={btnSettings.btnText}
+                            disableCondition={btnSettings.disabled}
+                            onClick={btnSettings.handler}
+                            isPrimary
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
