@@ -2,12 +2,16 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { progressionEventNameShape, rewardEventNameShape } from "./events";
+import {
+  countProgEventsInDateRange,
+  countObjCompletionsInDateRange,
+} from "~/utils/programAnalytics";
 
 export const rewardEventUpdateInputSchema = z.object({
   eventName: rewardEventNameShape,
   userAddress: z.string(),
   loyaltyAddress: z.string(),
-  chainId: z.number(), 
+  chainId: z.number(),
   timestamp: z.number().gt(1000000000),
   topics: z.object({
     erc20Amount: z.bigint().optional(),
@@ -164,5 +168,36 @@ export const analyticsRouter = createTRPCRouter({
       });
 
       return { dailyUsers, monthlyUsers };
+    }),
+  getSummaryAndCharts: protectedProcedure
+    .input(
+      z.object({
+        loyaltyAddress: z.string(),
+        startDate: z.date().nullable(),
+        endDate: z.date(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const program = await ctx.db.loyaltyProgram.findUnique({
+        where: { address: input.loyaltyAddress },
+        select: { rewardType: true },
+      });
+      const summary = await ctx.db.programAnalyticsSummary.findUnique({
+        where: { loyaltyAddress: input.loyaltyAddress },
+      });
+
+      if (!summary) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const progressionEventCounts = await countProgEventsInDateRange(
+        ctx,
+        input,
+      );
+      const objEventCounts = await countObjCompletionsInDateRange(ctx, input);
+      return {
+        summary,
+        progressionEventCounts,
+        objEventCounts,
+        program,
+      };
     }),
 });

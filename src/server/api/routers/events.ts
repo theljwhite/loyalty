@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { isAddress } from "ethers";
+import {
+  countObjCompletionsInDateRange,
+  countProgEventsInDateRange,
+} from "~/utils/programAnalytics";
 
 //TODO 6/7 - move zod schemas to separate file?
 
@@ -30,8 +34,16 @@ export const rewardEventNameShape = z.enum([
   "ERC1155Rewarded",
 ]);
 
+const chartType = z.enum([
+  "PROG_EVENTS",
+  "TOTAL_OBJ_COMPLETE",
+  "ERC20_USER_WITHDRAWS",
+  "UNCLAIMED_USER_ERC20",
+]);
+
 export type ProgressionEventName = z.infer<typeof progressionEventNameShape>;
 export type RewardEventName = z.infer<typeof rewardEventNameShape>;
+export type ChartType = z.infer<typeof chartType>;
 
 export const receivedEventBase = z.object({
   loyaltyAddress: z
@@ -291,5 +303,74 @@ export const eventsRouter = createTRPCRouter({
       `;
 
       return topUsers;
+    }),
+  getProgEventsInDateRange: protectedProcedure
+    .input(
+      z.object({
+        loyaltyAddress: z.string(),
+        startDate: z.date(),
+        endDate: z.date(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { loyaltyAddress, startDate, endDate } = input;
+
+      const events = await ctx.db.progressionEvent.findMany({
+        where: {
+          loyaltyAddress,
+          timestamp: {
+            lte: endDate,
+            gte: startDate,
+          },
+        },
+      });
+      return events;
+    }),
+  countProgEventsInDateRange: protectedProcedure
+    .input(
+      z.object({
+        loyaltyAddress: z.string(),
+        startDate: z.date().nullable(),
+        endDate: z.date(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return await countProgEventsInDateRange(ctx, input);
+    }),
+  countObjCompletionsInDateRange: protectedProcedure
+    .input(
+      z.object({
+        loyaltyAddress: z.string(),
+        startDate: z.date(),
+        endDate: z.date(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return await countObjCompletionsInDateRange(ctx, input);
+    }),
+  getEventsForChart: protectedProcedure
+    .input(
+      z.object({
+        loyaltyAddress: z.string(),
+        startDate: z.date(),
+        endDate: z.date(),
+        chartType: chartType,
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      switch (input.chartType) {
+        case "PROG_EVENTS":
+          return await countProgEventsInDateRange(ctx, input);
+        case "TOTAL_OBJ_COMPLETE":
+          return await countObjCompletionsInDateRange(ctx, input);
+        case "ERC20_USER_WITHDRAWS":
+          //TODO
+          return;
+        case "UNCLAIMED_USER_ERC20":
+          //TODO
+          return;
+        default:
+          break;
+      }
     }),
 });

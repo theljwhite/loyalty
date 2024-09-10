@@ -16,7 +16,7 @@ const Analytics: NextPage = () => {
   return (
     <div className="space-y-8">
       <DashboardHeader
-        title="Program Analytics"
+        title="Analytics Summary"
         info="Aggregate analytics for your loyalty program"
       />
       <AnalyticsSummary />
