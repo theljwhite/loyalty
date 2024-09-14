@@ -5,6 +5,10 @@ import { progressionEventNameShape, rewardEventNameShape } from "./events";
 import {
   countProgEventsInDateRange,
   countObjCompletionsInDateRange,
+  getERC20EventsForChart,
+  getERC721EventsForChart,
+  getERC1155EventsForTokenChart,
+  countUniqueUserERC20EventsInDateRange,
 } from "~/utils/programAnalytics";
 
 export const rewardEventUpdateInputSchema = z.object({
@@ -169,6 +173,7 @@ export const analyticsRouter = createTRPCRouter({
 
       return { dailyUsers, monthlyUsers };
     }),
+  //TODO: getSummaryAndCharts will be updated to only get relevant reward events, based on the program.rewardType
   getSummaryAndCharts: protectedProcedure
     .input(
       z.object({
@@ -182,22 +187,40 @@ export const analyticsRouter = createTRPCRouter({
         where: { address: input.loyaltyAddress },
         select: { rewardType: true },
       });
-      const summary = await ctx.db.programAnalyticsSummary.findUnique({
-        where: { loyaltyAddress: input.loyaltyAddress },
-      });
 
-      if (!summary) throw new TRPCError({ code: "NOT_FOUND" });
+      if (!program) throw new TRPCError({ code: "NOT_FOUND" });
 
-      const progressionEventCounts = await countProgEventsInDateRange(
-        ctx,
-        input,
-      );
-      const objEventCounts = await countObjCompletionsInDateRange(ctx, input);
-      return {
+      const [
         summary,
         progressionEventCounts,
         objEventCounts,
+        userERC20Rewards,
+        userERC721Rewards,
+        erc1155RewardEventCounts,
+        uniqueERC20UserRewards,
+      ] = await Promise.all([
+        ctx.db.programAnalyticsSummary.findUnique({
+          where: { loyaltyAddress: input.loyaltyAddress },
+        }),
+        countProgEventsInDateRange(ctx, input),
+        countObjCompletionsInDateRange(ctx, input),
+        getERC20EventsForChart(ctx, input),
+        getERC721EventsForChart(ctx, input),
+        getERC1155EventsForTokenChart(ctx, input),
+        countUniqueUserERC20EventsInDateRange(ctx, input),
+      ]);
+
+      if (!summary) throw new TRPCError({ code: "NOT_FOUND" });
+
+      return {
         program,
+        summary,
+        progressionEventCounts,
+        objEventCounts,
+        userERC20Rewards,
+        userERC721Rewards,
+        erc1155RewardEventCounts,
+        uniqueERC20UserRewards,
       };
     }),
 });

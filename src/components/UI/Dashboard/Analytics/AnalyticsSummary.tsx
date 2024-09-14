@@ -3,8 +3,9 @@ import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import StatsAreaVisualizerCard from "./StatsAreaVisualizerCard";
 import StatsBarVisualizerCard from "./StatsBarVisualizerCard";
+import StatsHorizontalBarVisualizerCard from "./StatsHorizontalBarVisualizerCard";
 import DashboardPageError from "../DashboardPageError";
-import { ERC721Icon, EthIcon } from "../Icons";
+import { DashboardLoadingSpinnerTwo } from "../../Misc/Spinners";
 
 //useRef used here for date so that useQuery doesnt infinite loop
 //using a useMutation workaround for now to refetch here. this can be reorganized to use useQuery refetch
@@ -25,8 +26,16 @@ export default function AnalyticsSummary() {
         refetchOnWindowFocus: false,
       },
     );
-  const { program, summary, progressionEventCounts, objEventCounts } =
-    data ?? {};
+  const {
+    program,
+    summary,
+    progressionEventCounts,
+    objEventCounts,
+    userERC20Rewards,
+    userERC721Rewards,
+    erc1155RewardEventCounts,
+    uniqueERC20UserRewards,
+  } = data ?? {};
 
   const progEventCount = progressionEventCounts?.reduce(
     (prev, curr) => prev + curr.count,
@@ -37,7 +46,16 @@ export default function AnalyticsSummary() {
   );
   const progEventInitialXCat = progressionEventCounts?.map((item) => item.date);
 
-  if (isError) return <DashboardPageError />;
+  const uniqueUserERC20RewardsSum = uniqueERC20UserRewards?.reduce(
+    (prev, curr) => prev + Number(curr.count),
+    0,
+  );
+
+  if (isError) {
+    return (
+      <DashboardPageError message="Failed to load analytics summary. Try later." />
+    );
+  }
   return (
     <>
       <div className="flex items-stretch gap-3">
@@ -92,20 +110,75 @@ export default function AnalyticsSummary() {
       <h1 className="my-12 truncate text-2xl font-medium tracking-tight">
         Tokens
       </h1>
-      <div className="flex items-stretch gap-3">
-        {program?.rewardType === "ERC20" && (
-          <>
-            {/* TODO total erc20 user withdrawn */}
-            {/* TODO total erc20 unclaimed */}
-          </>
-        )}
-
-        {(program?.rewardType === "ERC721" ||
-          program?.rewardType === "ERC1155") && (
-          <>
-            {/* TODO total tokens withdrawn */}
-            {/* TODO total tokens unclaimed */}
-          </>
+      <div>
+        {isLoading ? (
+          <div className="flex min-h-[175px] w-full items-center justify-center">
+            <DashboardLoadingSpinnerTwo size={40} />
+          </div>
+        ) : (
+          <div className="flex items-stretch gap-3">
+            {program?.rewardType === "ERC20" ? (
+              <>
+                <StatsHorizontalBarVisualizerCard
+                  title="Total User ERC20 Rewarded"
+                  mainStat={summary?.totalUniqueRewarded?.toFixed(4) ?? ""}
+                  dropOptions={["Last 3 months", "Last 6 months", "Last year"]}
+                  defaultDropChoice="Last 3 months"
+                  fullReportPath={`/analytics/${loyaltyAddress}/erc20`}
+                  data={userERC20Rewards?.series ?? []}
+                  dataLoading={isLoading}
+                  xCategories={userERC20Rewards?.xCategories ?? []}
+                  chartType="ERC20_REWARD_AND_WITHDRAW"
+                  loyaltyAddress={String(loyaltyAddress)}
+                />
+                <StatsAreaVisualizerCard
+                  mainStat={String(uniqueUserERC20RewardsSum)}
+                  description="Unique Users Rewarded ERC20"
+                  dropOptions={["Last month", "Last 3 months", "Last 6 months"]}
+                  defaultDropChoice="Last 3 months"
+                  fullReportPath={`/analytics/${loyaltyAddress}/users-erc20`}
+                  dataLoading={isLoading || !uniqueERC20UserRewards}
+                  data={uniqueERC20UserRewards?.map((item) => item.count)}
+                  xCategories={uniqueERC20UserRewards?.map((item) => item.date)}
+                  loyaltyAddress={String(loyaltyAddress)}
+                  chartType="ERC20_UNIQUE_USERS_REWARDED"
+                />
+              </>
+            ) : program?.rewardType === "ERC721" ? (
+              <StatsHorizontalBarVisualizerCard
+                title="Total User ERC721 Rewarded"
+                mainStat={summary?.totalUniqueRewarded?.toFixed(4) ?? ""}
+                dropOptions={["Last 3 months", "Last 6 months", "Last year"]}
+                defaultDropChoice="Last 3 months"
+                fullReportPath={`/analytics/${loyaltyAddress}/erc721`}
+                data={userERC721Rewards?.series ?? []}
+                dataLoading={isLoading}
+                xCategories={userERC721Rewards?.xCategories ?? []}
+                chartType="ERC721_REWARD_AND_WITHDRAW"
+                loyaltyAddress={String(loyaltyAddress)}
+              />
+            ) : (
+              // TODO MORE STATS
+              program?.rewardType === "ERC1155" && (
+                <StatsBarVisualizerCard
+                  mainStat={summary?.totalUniqueRewarded?.toFixed(4) ?? ""}
+                  description="ERC1155 Token Ids Rewarded"
+                  fullReportPath={`/analytics/${loyaltyAddress}/erc1155`}
+                  data={[
+                    {
+                      name: "ERC1155 Token Ids Rewarded",
+                      color: "#5639CC",
+                      data: erc1155RewardEventCounts ?? [],
+                    },
+                  ]}
+                  dataLoading={isLoading}
+                  chartType="ERC1155_REWARD_TOKEN_IDS"
+                  loyaltyAddress={String(loyaltyAddress)}
+                />
+                // TODO MORE STATS
+              )
+            )}
+          </div>
         )}
       </div>
     </>

@@ -57,6 +57,12 @@ export default function StatsBarVisualizerCard({
   const { isLoading: refetchLoading, mutateAsync: getEventsInRange } =
     api.events.getEventsForChart.useMutation();
 
+  useEffect(() => {
+    if (data && data.length > 0 && !dataLoading) {
+      setSeries(data);
+    }
+  }, [data, dataLoading]);
+
   const handleDropOptionSelect = async (option: string): Promise<void> => {
     handleChoiceState(option);
     try {
@@ -105,12 +111,6 @@ export default function StatsBarVisualizerCard({
     setChoices(selectedChoice);
   };
 
-  useEffect(() => {
-    if (data && data.length > 0 && !dataLoading) {
-      setSeries(data);
-    }
-  }, [data, dataLoading]);
-
   return (
     <div className="w-full rounded-2xl border border-dashboard-border1 p-4 md:p-6">
       <div className="flex justify-between">
@@ -139,7 +139,7 @@ export default function StatsBarVisualizerCard({
         )}
       </div>
       {data && (
-        <div id="data-series-chart">
+        <div>
           {dataLoading || refetchLoading ? (
             <div className="flex min-h-[175px] items-center justify-center">
               <DashboardLoadingSpinnerTwo size={60} />

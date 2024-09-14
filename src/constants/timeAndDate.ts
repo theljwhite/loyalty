@@ -36,6 +36,14 @@ export const getStartDateFromDropOption = (timeOption: string): Date | null => {
   return date;
 };
 
+export const formatYYYYMMToMonthName = (dateStr: string): string => {
+  const [year, month] = dateStr.split("-");
+  const date = new Date(Number(year), Number(month) - 1);
+
+  const formatter = new Intl.DateTimeFormat("en-US", { month: "long" });
+  return formatter.format(date);
+};
+
 export const getElapsedTime = (startDate: Date, endDate: Date): string => {
   let timeDiff = endDate.getTime() - startDate.getTime();
 

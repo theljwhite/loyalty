@@ -175,7 +175,7 @@ model RewardEvent {
     timestamp       DateTime
     tokenId         Int?
     tokenAmount     Int?
-    erc20Amount     BigInt?
+    erc20Amount     Decimal?
     escrowType      EscrowType
     loyaltyProgram  LoyaltyProgram @relation(fields: [loyaltyAddress], references: [address], onDelete: Cascade)
 
@@ -191,7 +191,7 @@ model WalletEscrowEvent {
     loyaltyAddress    String
     transactionHash   String
     transactorAddress String //refers to user if a user event or creator if a creator event
-    erc20Amount       BigInt?
+    erc20Amount       Decimal?
     tokenId           Int?
     tokenAmount       Int?
     erc721Batch       Json?
@@ -206,9 +206,10 @@ model ProgramAnalyticsSummary {
     totalUniqueUsers         Int            @default(0)
     totalUniqueRewarded      Int            @default(0)
     totalTokensWithdrawn     Int            @default(0)
-    totalERC20Withdrawn      BigInt         @default(0)
+    totalERC20Rewarded       Decimal        @default(0)
+    totalERC20Withdrawn      Decimal        @default(0)
     totalUnclaimedTokens     Int            @default(0)
-    totalUnclaimedERC20      BigInt         @default(0)
+    totalUnclaimedERC20      Decimal        @default(0)
     avgUserWithdrawTime      Int            @default(0)
     dailyAverageUsers        Decimal        @default(0)
     monthlyAverageUsers      Decimal        @default(0)

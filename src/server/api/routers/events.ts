@@ -4,6 +4,10 @@ import { isAddress } from "ethers";
 import {
   countObjCompletionsInDateRange,
   countProgEventsInDateRange,
+  getERC20EventsForChart,
+  getERC721EventsForChart,
+  getERC1155EventsForTokenChart,
+  countUniqueUserERC20EventsInDateRange,
 } from "~/utils/programAnalytics";
 
 //TODO 6/7 - move zod schemas to separate file?
@@ -39,6 +43,10 @@ const chartType = z.enum([
   "TOTAL_OBJ_COMPLETE",
   "ERC20_USER_WITHDRAWS",
   "UNCLAIMED_USER_ERC20",
+  "ERC20_REWARD_AND_WITHDRAW",
+  "ERC721_REWARD_AND_WITHDRAW",
+  "ERC1155_REWARD_TOKEN_IDS",
+  "ERC20_UNIQUE_USERS_REWARDED",
 ]);
 
 export type ProgressionEventName = z.infer<typeof progressionEventNameShape>;
@@ -363,12 +371,20 @@ export const eventsRouter = createTRPCRouter({
           return await countProgEventsInDateRange(ctx, input);
         case "TOTAL_OBJ_COMPLETE":
           return await countObjCompletionsInDateRange(ctx, input);
+        case "ERC20_REWARD_AND_WITHDRAW":
+          return await getERC20EventsForChart(ctx, input);
+        case "ERC20_UNIQUE_USERS_REWARDED":
+          return await countUniqueUserERC20EventsInDateRange(ctx, input);
         case "ERC20_USER_WITHDRAWS":
           //TODO
           return;
         case "UNCLAIMED_USER_ERC20":
           //TODO
           return;
+        case "ERC721_REWARD_AND_WITHDRAW":
+          return await getERC721EventsForChart(ctx, input);
+        case "ERC1155_REWARD_TOKEN_IDS":
+          return await getERC1155EventsForTokenChart(ctx, input);
         default:
           break;
       }

@@ -69,6 +69,13 @@ export default function StatsAreaVisualizerCard({
   const { isLoading: refetchLoading, mutateAsync: getEventsInRange } =
     api.events.getEventsForChart.useMutation();
 
+  useEffect(() => {
+    if (data && data.length > 0 && !dataLoading) {
+      setSeries([{ name: description, color: "#5639CC", data }]);
+      setCategories(xCategories ?? []);
+    }
+  }, [data, dataLoading]);
+
   const handleDropOptionSelect = async (option: string): Promise<void> => {
     handleChoiceStateUponSelect(option);
     try {
@@ -108,12 +115,6 @@ export default function StatsAreaVisualizerCard({
     }));
     setChoices(selectedChoice);
   };
-
-  useEffect(() => {
-    if (data && data.length > 0 && !dataLoading) {
-      setSeries([{ name: description, color: "#5639CC", data }]);
-    }
-  }, [data, dataLoading]);
 
   return (
     <div className="w-full rounded-2xl border border-dashboard-border1 p-4 md:p-6">
