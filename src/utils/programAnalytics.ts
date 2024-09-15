@@ -3,6 +3,7 @@ import {
   formatYYYYMMToMonthName,
   getStartDateFromDropOption,
 } from "~/constants/timeAndDate";
+import { type Ctx } from "~/server/api/trpc";
 
 //I put these in a separate file so that these can better be reused if need be, not only from trpc routers.
 //TODO - fix ctx type where it is being passed from trpc protected procedures in routers (events.ts router)
@@ -90,7 +91,7 @@ export const countProgEventsInDateRange = async (
 };
 
 export const countObjCompletionsInDateRange = async (
-  ctx: any,
+  ctx: Ctx,
   input: LoyaltyAnalyticsEventDateRangeInput,
 ): Promise<XTitleYData[]> => {
   const { loyaltyAddress, startDate: start, endDate } = input;
@@ -121,7 +122,7 @@ export const countObjCompletionsInDateRange = async (
 };
 
 export const sumERC20EventsInDateRange = async (
-  ctx: any,
+  ctx: Ctx,
   input: LoyaltyAnalyticsEventDateRangeInput,
 ): Promise<ERC20RewardsByMonth[]> => {
   const { loyaltyAddress, startDate: start, endDate } = input;
@@ -151,7 +152,7 @@ export const sumERC20EventsInDateRange = async (
 };
 
 export const countUniqueUserERC20EventsInDateRange = async (
-  ctx: any,
+  ctx: Ctx,
   input: LoyaltyAnalyticsEventDateRangeInput,
 ): Promise<DateWithCount[]> => {
   const { loyaltyAddress, startDate: start, endDate } = input;
@@ -185,7 +186,7 @@ export const countUniqueUserERC20EventsInDateRange = async (
 };
 
 export const countERC721EventsInDateRange = async (
-  ctx: any,
+  ctx: Ctx,
   input: LoyaltyAnalyticsEventDateRangeInput,
 ): Promise<ERC721RewardsByMonth[]> => {
   const { loyaltyAddress, startDate: start, endDate } = input;
@@ -216,7 +217,7 @@ export const countERC721EventsInDateRange = async (
 };
 
 export const countDistinctERC1155Rewarded = async (
-  ctx: any,
+  ctx: Ctx,
   input: { loyaltyAddress: string },
 ): Promise<{ tokenId: string; count: number }[]> => {
   const result = await ctx.db.$queryRaw<{ tokenId: string; count: number }[]>`
@@ -234,7 +235,7 @@ export const countDistinctERC1155Rewarded = async (
 };
 
 export const getERC1155EventsForTokenChart = async (
-  ctx: any,
+  ctx: Ctx,
   input: LoyaltyAnalyticsEventDateRangeInput,
 ): Promise<XTitleYData[]> => {
   const result = await countDistinctERC1155Rewarded(ctx, input);
@@ -246,7 +247,7 @@ export const getERC1155EventsForTokenChart = async (
 };
 
 export const getERC721EventsForChart = async (
-  ctx: any,
+  ctx: Ctx,
   input: LoyaltyAnalyticsEventDateRangeInput,
 ): Promise<HorizontalBarReturnShape<ERC721RewardsByMonth[]>> => {
   const result = await countERC721EventsInDateRange(ctx, input);
@@ -281,7 +282,7 @@ export const getERC721EventsForChart = async (
 };
 
 export const getERC20EventsForChart = async (
-  ctx: any,
+  ctx: Ctx,
   input: LoyaltyAnalyticsEventDateRangeInput,
 ): Promise<HorizontalBarReturnShape<ERC20RewardsByMonth[]>> => {
   const result = await sumERC20EventsInDateRange(ctx, input);

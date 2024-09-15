@@ -15,7 +15,6 @@ import { ZodError } from "zod";
 
 import { getServerAuthSession } from "~/server/auth";
 import { db } from "~/server/db";
-import { appRouter } from "./root";
 
 /**
  * 1. CONTEXT
@@ -28,6 +27,7 @@ import { appRouter } from "./root";
 interface CreateContextOptions {
   session: Session | null;
 }
+export type Ctx = ReturnType<typeof createInnerTRPCContext>;
 
 /**
  * This helper generates the "internals" for a tRPC context. If you need to use it, you can export
