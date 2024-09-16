@@ -68,26 +68,20 @@ export default function DepositERC20() {
 
   return (
     <>
-      {isConnected && address ? (
-        <button
-          type="button"
-          onClick={() => setIsDepositModalOpen(true)}
-          className="relative inline-flex h-8 min-w-10 appearance-none items-center justify-center whitespace-nowrap rounded-md bg-primary-1 pe-3 ps-3 align-middle text-sm font-semibold leading-[1.2] text-white outline-none"
-        >
-          <span className="me-2 inline-flex shrink-0 self-center">
-            <CoinsOne size={16} color="currentColor" />
-          </span>
-          Deposit ERC20
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={openConnectModal}
-          className="relative inline-flex h-8 min-w-10 appearance-none items-center justify-center whitespace-nowrap rounded-md bg-primary-1 pe-3 ps-3 align-middle text-sm font-semibold leading-[1.2] text-white outline-none"
-        >
-          Connect Wallet
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={
+          isConnected && address
+            ? () => setIsDepositModalOpen(true)
+            : openConnectModal
+        }
+        className="relative inline-flex h-8 min-w-10 appearance-none items-center justify-center whitespace-nowrap rounded-md bg-primary-1 pe-3 ps-3 align-middle text-sm font-semibold leading-[1.2] text-white outline-none"
+      >
+        <span className="me-2 inline-flex shrink-0 self-center">
+          <CoinsOne size={16} color="currentColor" />
+        </span>
+        Deposit ERC20
+      </button>
       {isDepositModalOpen && (
         <DashboardSimpleInputModal
           modalTitle="Make ERC20 Deposit"

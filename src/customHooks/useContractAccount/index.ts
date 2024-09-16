@@ -4,6 +4,8 @@ import { useEscrowAbi } from "../useContractAbi/useContractAbi";
 import { parseUnits } from "ethers";
 import { writeContract, waitForTransaction, signMessage } from "wagmi/actions";
 
+//TODO - can move some useDepositRewards stuff here
+
 export default function useContractAccount(
   escrowAddress: string,
   escrowType: EscrowType,

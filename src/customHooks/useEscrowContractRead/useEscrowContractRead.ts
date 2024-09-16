@@ -4,17 +4,7 @@ import { useEscrowAbi } from "../useContractAbi/useContractAbi";
 import { type EscrowType } from "@prisma/client";
 import { type Abi } from "viem";
 import { formatEther } from "ethers/utils";
-import { EscrowState } from "@prisma/client";
-
-export enum EscrowStateReturn {
-  Idle,
-  DepositPeriod,
-  AwaitingEscrowSettings,
-  InIssuance,
-  Completed,
-  Frozen,
-  Canceled,
-}
+import { EscrowStateToSolidityEnum } from "~/constants/loyaltyConstants";
 
 export function useEscrowContractRead(
   escrowAddress: string,
@@ -53,10 +43,10 @@ export function useEscrowContractRead(
         ...escrowContractConfig,
         functionName: "escrowState",
       })) as number;
-      if (escrowContractState in EscrowState) {
-        const formattedState = EscrowStateReturn[escrowContractState];
-        return formattedState;
-      } else return undefined;
+
+      const formattedState = EscrowStateToSolidityEnum[escrowContractState];
+
+      return formattedState;
     } catch (error) {
       setReadContractError(JSON.stringify(error).slice(0, 50));
     }

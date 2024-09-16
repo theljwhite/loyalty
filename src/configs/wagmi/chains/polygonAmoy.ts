@@ -15,7 +15,10 @@ export const polygonAmoy: Chain = {
       http: ["https://rpc-amoy.polygon.technology/"],
     },
     default: {
-      http: [`${process.env.NEXT_PUBLIC_ALCHEMY_AMOY}`],
+      http: [
+        `${process.env.NEXT_PUBLIC_INFURA_AMOY}`,
+        `${process.env.NEXT_PUBLIC_ALCHEMY_AMOY}`,
+      ],
     },
   },
   blockExplorers: {
@@ -25,7 +28,6 @@ export const polygonAmoy: Chain = {
     },
     default: {
       name: "Polygon Amoy Oklink",
-      // url: "https://www.oklink.com/amoy",
       url: "https://amoy.polygonscan.com/",
     },
   },

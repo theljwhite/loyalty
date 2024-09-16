@@ -14,16 +14,12 @@ import { getElapsedTime } from "~/constants/timeAndDate";
 import DepositERC20 from "./DepositERC20";
 import DepositERC721 from "./DepositERC721";
 import DepositERC1155 from "./DepositERC1155";
+import CreatorWithdraw from "./CreatorWithdraw";
 import { SelectedCheck, SortIcon } from "../../Icons";
 import { DashboardLoadingSpinner } from "~/components/UI/Misc/Spinners";
 
-//TODO extra -
-//not entirely worried about the sorting/filtering yet until the actual meat and potatoes of this app...
-//...is finished. It should work for now, although can def be cleaned up later. Been awhile since I've done one of these lol.
-//will also add pagination to the transactions table at a later date.
-
-//also the term "Filter" doesnt really make that much sense here, it should be "SortOrder".
-//but works for now. this IS NOT an important feature of the app yet.
+//TODO 9/15 - redo this component soon
+//finish TX list (paginate), clean this up, move stuff, finish sort/filter
 
 type SortBy = "AGE" | "AMOUNT" | "TX_TYPE";
 type FilterBy =
@@ -110,7 +106,7 @@ export default function EscrowTransactionsTable() {
   const rewardAddress = contractsDb?.escrow?.rewardAddress ?? "";
   const escrowAddress = contractsDb?.escrow?.address ?? "";
   const deployedChainId = contractsDb?.loyaltyProgram?.chainId ?? 0;
-  const escrowType = contractsDb?.escrow?.escrowType;
+  const escrowType = contractsDb?.escrow?.escrowType ?? "ERC20";
 
   const { transactionList, txListLoading, isSuccess, setTransactionList } =
     useDepositRewardsStore((state) => state);
@@ -188,11 +184,10 @@ export default function EscrowTransactionsTable() {
     const [selectedSort] = sortOptions.filter(
       (option) => option.sortBy === sortBy,
     );
-    const sortSelection = sortOptions.map((option) =>
-      option.sortBy === sortBy
-        ? { ...option, selected: true }
-        : { ...option, selected: false },
-    );
+    const sortSelection = sortOptions.map((option) => ({
+      ...option,
+      selected: option.sortBy === sortBy,
+    }));
     if (selectedSort) {
       setSortOptions(sortSelection);
       setActiveFilter(selectedSort?.filterOptionIds);
@@ -213,11 +208,10 @@ export default function EscrowTransactionsTable() {
   };
 
   const selectFilter = (filterBy: FilterBy): void => {
-    const filterSelection = filterOptions.map((option) =>
-      option.filterBy === filterBy
-        ? { ...option, selected: true }
-        : { ...option, selected: false },
-    );
+    const filterSelection = filterOptions.map((option) => ({
+      ...option,
+      selected: filterBy === filterBy,
+    }));
     const [sortSelection] = sortOptions.filter((option) => option.selected);
 
     if (filterSelection && sortSelection) {
@@ -243,7 +237,12 @@ export default function EscrowTransactionsTable() {
                 </p>
               </div>
             </div>
-            <div className="ml-auto">
+            <div className="ml-auto flex flex-row items-center justify-center gap-2">
+              <CreatorWithdraw
+                escrowAddress={escrowAddress}
+                escrowType={escrowType}
+                chainId={deployedChainId}
+              />
               {escrowType === "ERC20" ? (
                 <DepositERC20 />
               ) : escrowType === "ERC721" ? (

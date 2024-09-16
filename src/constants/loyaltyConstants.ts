@@ -18,3 +18,13 @@ export const MAX_TIER_NAME_LENGTH = 30;
 export const MAX_DIFF_TOKEN_IDS_ERC1155 = 5;
 export const ERC20_PAYOUT_BUFFER = 5;
 export const ERC1155_PAYOUT_BUFFER = 4;
+
+export enum EscrowStateToSolidityEnum {
+  Idle = 0,
+  DepositPeriod = 1,
+  AwaitingEscrowSettings = 2,
+  InIssuance = 3,
+  Completed = 4,
+  Frozen = 5,
+  Canceled = 6,
+}
